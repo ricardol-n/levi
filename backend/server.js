@@ -7,21 +7,14 @@ require('dotenv').config();
 require('./cron/depositchecker'); // cron job
 const verifyToken = require('./middleware/auth');
 // ✅ Middlewares
-const allowedOrigins = ['http://localhost:5175', 'http://localhost:5185'];
-
-app.use((req, res, next) => {
-  const origin = req.headers.origin;
-  if (allowedOrigins.includes(origin)) {
-    res.setHeader("Access-Control-Allow-Origin", origin); // ✅ Set correct origin
-    res.setHeader("Access-Control-Allow-Credentials", "true");
-    res.setHeader("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE");
-    res.setHeader("Access-Control-Allow-Headers", "Content-Type,Authorization");
-  }
-  if (req.method === 'OPTIONS') {
-    return res.sendStatus(200); // ✅ Handle preflight properly
-  }
-  next();
-});
+app.use(cors({
+  origin: [
+    'http://localhost:5175', 
+    'http://localhost:5185',
+    'https://levi-indol.vercel.app', // ✅ ADD your live frontend
+  ],
+  credentials: true,
+}));
 
 app.use(express.json());
 
