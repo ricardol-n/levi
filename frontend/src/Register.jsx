@@ -105,8 +105,9 @@ const Register = () => {
 
     if (!validateForm()) return;
 
+    const API_BASE = import.meta.env.VITE_API_URL; 
     try {
-      const res = await fetch("/api/auth/register", {
+      const res = await fetch(`${API_BASE}/api/auth/register`,{
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
