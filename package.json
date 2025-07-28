@@ -1,0 +1,15 @@
+{
+  "name": "adminpanel",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently \"npm run dev --prefix frontend\" \"npm run server --prefix backend\""
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.0"
+  },
+  "dependencies": {
+    "@tatumio/tatum": "^4.2.53",
+    "axios": "^1.10.0"
+  }
+}
