@@ -11,7 +11,7 @@ app.use(cors({
   origin: [
     'http://localhost:5175', 
     'http://localhost:5185',
-    'https://levi-indol.vercel.app', // ✅ ADD your live frontend
+    'https://levi-6m1v-pjrz6a4rv-levis-projects-e13e0406.vercel.app', // ✅ ADD your live frontend
   ],
   credentials: true,
 }));
