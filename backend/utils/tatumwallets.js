@@ -1,5 +1,6 @@
 const axios = require('axios');
 const API_KEY = process.env.TATUM_API_KEY;
+const axiosRetry = require('axios-retry');
 
 const headers = {
   'x-api-key': API_KEY,
@@ -37,6 +38,12 @@ async function getDepositAddress(chain, xpub, index = 0) {
     throw error;
   }
 }
+
+axiosRetry(axios, {
+  retries: 3,
+  retryDelay: axiosRetry.exponentialDelay,
+});
+
 
 module.exports = {
   generateWallets,
