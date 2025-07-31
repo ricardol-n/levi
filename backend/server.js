@@ -58,7 +58,7 @@ app.use('/api/rates', rateRoutes);
 app.use('/api', require('./routes/users')); // ✅ Adjust path if needed
 app.use('/api', depositRoutes);
 app.use('/api/webhook', require('./routes/webhook'));
-app.use('/api', userRoutes);
+app.use('/api/user', userRoutes);
 app.use('/investments', verifyToken, investmentRoutes);
 app.use('/transactions', verifyToken, transactionRoutes);
 app.use('/withdrawals', verifyToken, withdrawalRoutes); // ✅ This line

@@ -223,23 +223,4 @@ router.get('/deposits', async (req, res) => {
 });
 
 
-router.get('/rates', async (req, res) => {
-  try {
-    const response = await axios.get(
-      'https://api.coingecko.com/api/v3/simple/price',
-      {
-        params: {
-          ids: 'bitcoin,ethereum,dogecoin,ripple,tether',
-          vs_currencies: 'usd',
-        },
-      }
-    );
-    res.json({ success: true, data: response.data });
-  } catch (err) {
-    console.error("Rate fetch failed:", err);
-    res.status(500).json({ success: false, message: 'Failed to fetch rates' });
-  }
-});
-
-
 module.exports = router;
