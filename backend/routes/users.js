@@ -103,7 +103,7 @@ router.post('/webhook/deposit', async (req, res) => {
 
 // ✅ GET user's wallet addresses
 // Get deposit wallets for a user
-router.get('/user/:userId/wallets', async (req, res) => {
+router.get('/:userId/wallets', async (req, res) => {
   try {
     const { userId } = req.params;
     const user = await User.findById(userId).select('depositAddresses');
