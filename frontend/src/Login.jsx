@@ -85,6 +85,7 @@ const Login = () => {
   const [currentBg, setCurrentBg] = useState(images[0]);
   const navigate = useNavigate();
   const { login } = useContext(AuthContext);
+  const API_BASE = import.meta.env.VITE_API_URL;
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -106,7 +107,7 @@ const Login = () => {
     }
 
     try {
-    const res = await fetch(`/api/auth/login`, {
+    const res = await fetch(`${API_BASE}/api/auth/login`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
