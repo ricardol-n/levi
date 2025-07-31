@@ -2,10 +2,10 @@ const axios = require('axios');
 require('dotenv').config();
 
 const API_KEY = process.env.TATUM_API_KEY;
-const NGROK_WEBHOOK_URL = process.env.NGROK_WEBHOOK_URL;
+const WEBHOOK_BASE_URL = process.env.WEBHOOK_BASE_URL;
 
-if (!NGROK_WEBHOOK_URL) {
-  console.warn("⚠️ Missing NGROK_WEBHOOK_URL in .env! Webhook registration will fail.");
+if (!WEBHOOK_BASE_URL) {
+  console.warn("⚠️ Missing WEBHOOK_BASE_URL in .env! Webhook registration will fail.");
 }
 
 
@@ -21,7 +21,7 @@ const registerWebhook = async (chain, address) => {
       address,
       chain ,
     },
-    url: 'https://d0454e28227c.ngrok-free.app/api/webhook/deposit',
+    url: `${WEBHOOK_BASE_URL}/api/webhook/tatum-deposit-webhook`,
   };
 
   try {
@@ -32,7 +32,7 @@ const registerWebhook = async (chain, address) => {
       },
     });
 
-    console.log("🔗 Final webhook URL:", `${NGROK_WEBHOOK_URL}/api/webhook/deposit`);
+    console.log("🔗 Final webhook URL:", `${WEBHOOK_BASE_URL}/api/webhook/deposit`);
     console.log("📦 Payload being sent:", JSON.stringify(payload, null, 2));
     console.log(`✅ Registered webhook for ${chain}:`, res.data);
   } catch (err) {

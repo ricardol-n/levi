@@ -3,6 +3,17 @@ const router = express.Router();
 const User = require('../models/user');
 const Transaction = require('../models/Transaction'); // your transaction model
 const axios = require('axios');
+const btcWebhookUrl = process.env.BTC_WEBHOOK_URL;
+
+
+
+
+router.post('/btc', async (req, res) => {
+  console.log("🚀 BTC Webhook hit:", req.body);
+  // Do something with the data, like verify the transaction
+  res.status(200).send("BTC webhook received");
+});
+
 
 router.post('/tatum-deposit-webhook', async (req, res) => {
   try {
