@@ -106,7 +106,7 @@ export const Deposit = () => {
 
   try {
     // 2. Fetch user wallet addresses from backend
-    const response = await axios.get(`/api/user/${userId}/wallets`);
+    const response = await axios.get(`/api/${userId}/wallets`);
 
     if (!response.data.success) {
       setMessage({ type: 'error', text: '❌ Failed to load wallet address.' });
