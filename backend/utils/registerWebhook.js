@@ -20,8 +20,8 @@ const registerWebhook = async (chain, address) => {
     attr: {
       address,
       chain ,
+      url: `${WEBHOOK_BASE_URL}/api/webhook/tatum-deposit-webhook`,
     },
-    url: `${WEBHOOK_BASE_URL}/api/webhook/tatum-deposit-webhook`,
   };
 
   try {
