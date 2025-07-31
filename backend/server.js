@@ -12,7 +12,7 @@ const allowedOrigins = [
   'http://localhost:5185',
   ...process.env.ALLOW_ALL_VERCEL === 'true'
     ? [/^https:\/\/levi-6m1v-.*\.vercel\.app$/]
-    : ['https://levi-6m1v-7i8qcej2h-levis-projects-e13e0406.vercel.app']
+    : ['levi-6m1v-git-main-levis-projects-e13e0406.vercel.app']
 ];
 
 
