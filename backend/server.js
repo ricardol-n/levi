@@ -10,8 +10,11 @@ const verifyToken = require('./middleware/auth');
 const allowedOrigins = [
   'http://localhost:5175',
   'http://localhost:5185',
-  'https://levi-6m1v-pjrz6a4rv-levis-projects-e13e0406.vercel.app'
+  ...process.env.ALLOW_ALL_VERCEL === 'true'
+    ? [/^https:\/\/levi-6m1v-.*\.vercel\.app$/]
+    : ['https://levi-6m1v-c63j17o3c-levis-projects-e13e0406.vercel.app']
 ];
+
 
 app.use((req, res, next) => {
   const origin = req.headers.origin;
