@@ -38,7 +38,16 @@ export const DepositConfirmationPage = () => {
     const fetchWalletAddress = async () => {
       try {
         const userId = localStorage.getItem('userId');
-        const res = await fetch(`/api/user/${userId}/wallets`);
+        const res = await fetch(`/api/${userId}/wallets`);
+        const contentType = res.headers.get("content-type");
+        if (!res.ok) {
+          const text = await res.text();
+          throw new Error(`Error ${res.status}: ${text}`);
+        }
+
+        if (!contentType.includes("application/json")) {
+          throw new Error("Invalid response type. Expected JSON.");
+        }
         const data = await res.json();
 
         if (data.success) {
