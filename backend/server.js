@@ -53,6 +53,7 @@ const depositRoutes = require('./routes/deposit');
 const webhookRoutes = require('./routes/webhook');
 
 // ✅ Register routes
+
 app.use('/api/auth', authRouter);
 app.use('/api/rates', rateRoutes);
 app.use('/api', userRoutes);

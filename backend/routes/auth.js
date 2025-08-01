@@ -65,8 +65,6 @@ router.post('/register', async (req, res) => {
   }
 });
 
-module.exports = router;
-
 // ✅ Login Route
 router.post('/login', async (req, res) => {
   const { email, password } = req.body;
@@ -109,4 +107,5 @@ router.post('/login', async (req, res) => {
 });
 
 
+router.SECRET_KEY = SECRET_KEY;
 module.exports = router;
