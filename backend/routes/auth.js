@@ -109,4 +109,4 @@ router.post('/login', async (req, res) => {
 });
 
 
-module.exports = { authRouter: router, SECRET_KEY };
+module.exports = router;
