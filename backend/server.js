@@ -43,7 +43,7 @@ mongoose.connect(process.env.MONGO_URI)
   .catch(err => console.error(err));
 
 // ✅ Import routes
-const { authRouter } = require('./routes/auth');
+const authRouter  = require('./routes/auth');
 const rateRoutes = require('./routes/rates');
 const userRoutes = require('./routes/users');
 const investmentRoutes = require('./routes/investments');
