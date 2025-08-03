@@ -95,6 +95,8 @@ router.post('/tatum-deposit-webhook', async (req, res) => {
     console.warn("🚨 Invalid or missing webhook secret:", secret);
     return res.status(403).json({ success: false, message: 'Forbidden: Invalid webhook secret' });
   }
+  console.log('📥 Webhook Payload:', req.body);
+  console.log('📥 Headers:', req.headers);
 
   try {
     const { address, amount, blockchain: chain, txId, type } = req.body;
