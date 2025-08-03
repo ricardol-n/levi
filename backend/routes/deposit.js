@@ -87,6 +87,10 @@ router.post('/generate-wallets/:userId', async (req, res) => {
 // ✅ Webhook: Automatically confirm deposits when Tatum notifies
 
 router.post('/tatum-deposit-webhook', async (req, res) => {
+
+  console.log("📥 Incoming Webhook Headers:", req.headers);
+  console.log("📥 Incoming Webhook Body:", req.body);
+  
   // ✅ 0. Verify webhook secret
   const secret = req.headers['x-webhook-secret'];
   const expectedSecret = process.env.TATUM_WEBHOOK_SECRET;
@@ -95,8 +99,7 @@ router.post('/tatum-deposit-webhook', async (req, res) => {
     console.warn("🚨 Invalid or missing webhook secret:", secret);
     return res.status(403).json({ success: false, message: 'Forbidden: Invalid webhook secret' });
   }
-  console.log('📥 Webhook Payload:', req.body);
-  console.log('📥 Headers:', req.headers);
+
 
   try {
     const { address, amount, blockchain: chain, txId, type } = req.body;
