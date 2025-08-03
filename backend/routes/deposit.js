@@ -84,74 +84,18 @@ router.post('/generate-wallets/:userId', async (req, res) => {
   }
 });
 
-// ✅ Manual verification (user clicks "Verify" on frontend)
-router.post('/verify-deposit', async (req, res) => {
-  const { address, amount, currency } = req.body;
-
-  if (!address || !amount || !currency) {
-    return res.status(400).json({ confirmed: false, message: "Missing parameters" });
-  }
-
-  if (!TATUM_API_KEY) {
-    return res.status(500).json({ confirmed: false, message: "Missing Tatum API key" });
-  }
-  console.log("🔑 Loaded TATUM_API_KEY:", process.env.TATUM_API_KEY);
-
-
-  const tatumCurrency = mapToTatumChain(currency);
-  if (!tatumCurrency) {
-    return res.status(400).json({ confirmed: false, message: "Unsupported currency" });
-  }
-
-  try {
-    const url = `https://api.tatum.io/v3/blockchain/address/balance/${tatumCurrency}/${address}`;
-    const response = await axios.get(url, {
-      headers: { 'x-api-key': TATUM_API_KEY }
-      
-    });
-
-    const balance = parseFloat(response.data.balance);
-    const isConfirmed = balance >= parseFloat(amount);
-
-    if (!isConfirmed) {
-      return res.json({ confirmed: false, balance });
-    }
-
-    const deposit = await Deposit.findOneAndUpdate(
-      { address, amount, currency, status: "pending" },
-      { status: "confirmed" },
-      { new: true }
-    );
-
-    if (!deposit) {
-      return res.status(404).json({ confirmed: false, message: "Matching deposit not found" });
-    }
-
-    const user = await User.findByIdAndUpdate(
-      deposit.userId,
-      { $inc: { balance: amount } },
-      { new: true }
-    );
-
-    return res.json({
-      confirmed: true,
-      message: "Deposit verified and credited",
-      balance,
-      user: {
-        email: user.email,
-        balance: user.balance,
-      }
-    });
-
-  } catch (error) {
-    console.error("❌ Tatum verification error:", error?.response?.data || error.message);
-    return res.status(500).json({ confirmed: false, message: "Blockchain check failed", error: error.message });
-  }
-});
-
 // ✅ Webhook: Automatically confirm deposits when Tatum notifies
 
-router.post('/webhook/deposit', async (req, res) => {
+router.post('/tatum-deposit-webhook', async (req, res) => {
+  // ✅ 0. Verify webhook secret
+  const secret = req.headers['x-webhook-secret'];
+  const expectedSecret = process.env.TATUM_WEBHOOK_SECRET;
+
+  if (!secret || secret !== expectedSecret) {
+    console.warn("🚨 Invalid or missing webhook secret:", secret);
+    return res.status(403).json({ success: false, message: 'Forbidden: Invalid webhook secret' });
+  }
+
   try {
     const { address, amount, blockchain: chain, txId, type } = req.body;
 
@@ -196,7 +140,6 @@ router.post('/webhook/deposit', async (req, res) => {
     );
 
     console.log(`✅ Deposit credited: ${amount} ${chain.toUpperCase()} to ${user.email}`);
-
     return res.json({ success: true, message: 'Deposit recorded and user credited' });
 
   } catch (err) {
