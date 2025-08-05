@@ -13,6 +13,7 @@
     "@tatumio/tatum": "^4.2.53",
     "axios": "^1.10.0",
     "axios-retry": "^4.5.0",
+    "coinbase-commerce-node": "^1.0.4",
     "mongodb": "^6.18.0"
   }
 }
