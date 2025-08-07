@@ -2,6 +2,8 @@ const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
 require('dotenv').config();
+const bodyParser = require('body-parser');
+
 require('./cron/depositchecker'); // cron job
 const verifyToken = require('./middleware/auth');
 
@@ -43,6 +45,7 @@ mongoose.connect(process.env.MONGO_URI)
   .catch(err => console.error(err));
 
 // ✅ Import routes
+
 const authRouter  = require('./routes/auth');
 const rateRoutes = require('./routes/rates');
 const userRoutes = require('./routes/users');
@@ -62,6 +65,8 @@ app.use('/api/webhook', webhookRoutes);
 app.use('/investments', verifyToken, investmentRoutes);
 app.use('/transactions', verifyToken, transactionRoutes);
 app.use('/withdrawals', verifyToken, withdrawalRoutes);
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 
 // ✅ Start server
 app.listen(port, () => {

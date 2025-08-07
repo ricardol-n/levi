@@ -1,28 +1,13 @@
 const express = require('express');
 const router = express.Router();
 const axios = require('axios');
+const crypto = require('crypto');
 require('dotenv').config();
-const { generateWallets, getDepositAddress } = require('../utils/tatumwallets');
+
 const User = require('../models/user');
 const Deposit = require('../models/Deposit');
-const registerWebhook = require('../utils/registerWebhook');
 
-const TATUM_API_KEY = process.env.TATUM_API_KEY;
-
-// 🧠 Map frontend currency names to Tatum-supported blockchain IDs
-const mapToTatumChain = (currency) => {
-  const currencyMap = {
-    "Bitcoin": "BTC",
-    "Dogecoin": "DOGE",
-    "Ethereum": "ETH",
-    "USDT ERC20": "ETH",
-    "USDT TRC20": "TRON",
-    "XRP": "XRP",
-  };
-  return currencyMap[currency] || null;
-};
-
-// ✅ Save a pending deposit (optional pre-verification step)
+// ✅ Save a pending deposit
 router.post('/pending-deposit', async (req, res) => {
   const { userId, address, amount, currency } = req.body || {};
 
@@ -47,112 +32,120 @@ router.post('/pending-deposit', async (req, res) => {
   }
 });
 
-router.post('/generate-wallets/:userId', async (req, res) => {
+// ✅ Create BTCPay invoice
+router.post('/create-invoice', async (req, res) => {
+  const { amount, currency = "BTC", userId } = req.body;
+
+  if (!amount || !userId) {
+    return res.status(400).json({ success: false, message: "Missing amount or userId" });
+  }
+
   try {
-    const { userId } = req.params;
-
-    const wallets = await generateWallets();
-
-    const depositAddresses = { BTC: btcAddress };
-
-
-    // Derive addresses from xpub for each chain
-    depositAddresses.Bitcoin = await getDepositAddress('bitcoin', wallets.Bitcoin.xpub);
-    depositAddresses.Ethereum = await getDepositAddress('ethereum', wallets.Ethereum.xpub);
-    depositAddresses.Dogecoin = await getDepositAddress('dogecoin', wallets.Dogecoin.xpub);
-    depositAddresses.XRP = wallets.XRP.address; // XRP doesn't use xpub; use 'address'
-    depositAddresses['USDT ERC20'] = depositAddresses.Ethereum;
-    depositAddresses['USDT TRC20'] = await getDepositAddress('tron', wallets.TRON.xpub);
-
-    // ✅ Register webhooks for each address
-    await registerWebhook('BTC', depositAddresses.Bitcoin);
-    await registerWebhook('ETH', depositAddresses.Ethereum);
-    await registerWebhook('DOGE', depositAddresses.Dogecoin);
-    await registerWebhook('XRP', depositAddresses.XRP);
-    await registerWebhook('TRON', depositAddresses['USDT TRC20']); // USDT on TRON chain
-
-    // save to user profile
-    const user = await User.findByIdAndUpdate(
-      userId,
-      { $set: { depositAddresses } },
-      { new: true }
+    const response = await axios.post(
+      `${process.env.BTCPAY_HOST}/api/v1/stores/${process.env.BTCPAY_STORE_ID}/invoices`,
+      {
+        amount,
+        currency,
+        metadata: {
+          userId,
+          purpose: "wallet deposit",
+        },
+        checkout: {
+          speedPolicy: "HighSpeed",
+        },
+      },
+      {
+        headers: {
+          Authorization: `token ${process.env.BTCPAY_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+      }
     );
 
-    res.json({ success: true, wallets: depositAddresses });
-  } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
-
-// ✅ Webhook: Automatically confirm deposits when Tatum notifies
-
-router.post('/tatum-deposit-webhook', async (req, res) => {
-
-  console.log("📥 Incoming Webhook Headers:", req.headers);
-  console.log("📥 Incoming Webhook Body:", req.body);
-  
-  // ✅ 0. Verify webhook secret
-  const secret = req.headers['x-webhook-secret'];
-  const expectedSecret = process.env.TATUM_WEBHOOK_SECRET;
-
-  if (!secret || secret !== expectedSecret) {
-    console.warn("🚨 Invalid or missing webhook secret:", secret);
-    return res.status(403).json({ success: false, message: 'Forbidden: Invalid webhook secret' });
-  }
-
-
-  try {
-    const { address, amount, blockchain: chain, txId, type } = req.body;
-
-    // ✅ 1. Validate incoming data
-    if (!address || !amount || !chain || !txId || type !== 'incoming') {
-      console.log("❌ Invalid webhook payload:", req.body);
-      return res.status(400).json({ success: false, message: 'Invalid webhook payload' });
-    }
-
-    // ✅ 2. Prevent double-processing by checking if txId already exists
-    const existing = await Deposit.findOne({ txId });
-    if (existing) {
-      console.log(`🔁 Duplicate txId ignored: ${txId}`);
-      return res.status(200).json({ success: true, message: 'Already processed' });
-    }
-
-    // ✅ 3. Match the address to a user’s wallet
-    const user = await User.findOne({ [`depositAddresses.${chain.toUpperCase()}`]: address });
-
-    if (!user) {
-      console.log(`❌ No user found for ${chain} address: ${address}`);
-      return res.status(404).json({ success: false, message: 'Address not linked to any user' });
-    }
-
-    // ✅ 4. Log the transaction in the deposit collection
-    const newDeposit = new Deposit({
-      userId: user._id,
-      address,
-      amount: parseFloat(amount),
-      currency: chain.toUpperCase(),
-      txId,
-      status: 'confirmed',
-      source: 'webhook',
+    const invoice = response.data;
+    res.json({
+      success: true,
+      invoiceId: invoice.id,
+      checkoutUrl: invoice.checkoutLink,
     });
-    await newDeposit.save();
-
-    // ✅ 5. Credit the user’s balance
-    await User.findByIdAndUpdate(
-      user._id,
-      { $inc: { balance: parseFloat(amount) } },
-      { new: true }
-    );
-
-    console.log(`✅ Deposit credited: ${amount} ${chain.toUpperCase()} to ${user.email}`);
-    return res.json({ success: true, message: 'Deposit recorded and user credited' });
 
   } catch (err) {
-    console.error("❌ Webhook handler error:", err);
-    return res.status(500).json({ success: false, message: 'Internal server error' });
+    console.error("❌ Failed to create BTCPay invoice:", err.response?.data || err.message);
+    res.status(500).json({ success: false, message: "Failed to create invoice" });
   }
 });
 
+// ✅ Webhook from BTCPay
+router.post('/btcpay-webhook', express.json(), async (req, res) => {
+  const rawBody = JSON.stringify(req.body);
+  const signature = req.headers['btcpay-sig'];
+  const secret = process.env.BTCPAY_WEBHOOK_SECRET;
+
+  // ✅ Verify webhook signature
+  const computedSig = `sha256=${crypto.createHmac('sha256', secret).update(rawBody).digest('hex')}`;
+  if (signature !== computedSig) {
+    console.warn("⚠️ Invalid BTCPay signature");
+    console.warn("Expected:", computedSig);
+    console.warn("Received:", signature);
+    return res.status(403).send("Invalid signature");
+  }
+
+  const event = req.body;
+  console.log('📩 BTCPay Webhook Event:', event?.type);
+
+  if (!event || !event.type || !event.invoiceId) {
+    return res.status(400).json({ success: false, message: "Invalid webhook payload" });
+  }
+
+  try {
+    if (event.type === "InvoiceSettled" || event.type === "InvoiceCompleted") {
+      const invoice = event.data;
+      const metadata = invoice.metadata || {};
+      const userId = metadata.userId;
+      const txId = invoice.id;
+      const amount = parseFloat(invoice.amountPaid || invoice.amount);
+
+      if (!userId || !amount || !txId) {
+        console.error("❌ Missing invoice data:", invoice);
+        return res.status(400).json({ success: false, message: "Missing invoice data" });
+      }
+
+      const existing = await Deposit.findOne({ txId });
+      if (existing) {
+        console.log(`🔁 Duplicate invoiceId ignored: ${txId}`);
+        return res.status(200).json({ success: true, message: 'Already processed' });
+      }
+
+      const user = await User.findById(userId);
+      if (!user) {
+        console.log(`❌ No user found for invoice: ${userId}`);
+        return res.status(404).json({ success: false, message: "User not found" });
+      }
+
+      const newDeposit = new Deposit({
+        userId,
+        address: invoice.address,
+        amount,
+        currency: invoice.currency || "BTC",
+        txId,
+        status: "confirmed",
+        source: "btcpay",
+      });
+      await newDeposit.save();
+
+      await User.findByIdAndUpdate(userId, {
+        $inc: { balance: amount },
+      });
+
+      console.log(`✅ BTCPay deposit credited: ${amount} BTC to user ${userId}`);
+    }
+
+    res.sendStatus(200);
+  } catch (err) {
+    console.error('❌ BTCPay webhook error:', err);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
 
 // 📄 Retrieve user deposits
 router.get('/deposits', async (req, res) => {
@@ -169,6 +162,5 @@ router.get('/deposits', async (req, res) => {
     res.status(500).json({ message: "Failed to fetch deposits" });
   }
 });
-
 
 module.exports = router;
