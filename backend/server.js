@@ -4,7 +4,7 @@ const mongoose = require('mongoose');
 require('dotenv').config();
 const bodyParser = require('body-parser');
 
-require('./cron/depositchecker'); // cron job
+
 const verifyToken = require('./middleware/auth');
 
 const app = express();

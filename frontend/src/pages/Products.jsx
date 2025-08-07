@@ -175,3 +175,54 @@ export const Deposit = () => {
     </div>
   );
 };
+
+
+
+export const DepositLog = () => {
+    
+    const { transactions } = useContext(BalanceContext);
+
+    const deposits = transactions.filter((tx) => tx.type === "Deposit");
+  
+    return (
+        
+        <div className="dashboard-container">
+        <Header />
+        <div className="dashboard-content">
+          <Sidebar />
+          <main className="main-content">
+        
+            <div className="team">
+            {deposits.length === 0 ? (
+                <p>No depoist yet.</p>
+            ) : (
+                <table className="transaction-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Method</th>
+                            <th>Amount ($)</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {deposits.map((tx, index) => (
+                            <tr key={index}>
+                                <td>{index + 1}</td>
+                                <td>{tx.method}</td>
+                                <td>${tx.amount.toFixed(2)}</td>
+                                <td>{tx.date}</td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            )}
+           </div>
+
+        </main>
+        </div>
+        
+        </div>
+
+
+    )};
