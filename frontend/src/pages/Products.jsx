@@ -86,7 +86,8 @@ export const Deposit = () => {
         return;
       }
 
-      const conversionRate = conversionRates['Bitcoin'] || 1;
+      const btcPrice = conversionRates['Bitcoin'] || 1;
+      const conversionRate = 1 / btcPrice;
 
       navigate('/depositconfirmationpage', {
         state: {

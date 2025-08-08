@@ -18,6 +18,7 @@ import { TwoFactor } from './pages/TwoFactor.jsx';
 import { DepositConfirmationPage } from "./pages/DepoistConfrim.jsx";
 import { Charts } from './pages/Charts.jsx';
 import { AuthContext } from './context/Authcontext.jsx'; // ✅ Add this line
+import CompanyInfo from "./CompanyInfo.jsx"
 
 function App() {
   const { token } = useContext(AuthContext); // ✅ Track token from context
@@ -30,6 +31,7 @@ function App() {
         {/* Public Routes */}
         {!isLoggedIn && (
           <>
+          <Route path="/" element={<CompanyInfo/>}  />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register onRegister={() => console.log("Registered")} />} />
           </>
