@@ -16,7 +16,7 @@ export const DepositConfirmationPage = () => {
 
   const { amount, charge, method, conversionRate } = location.state;
   const total = amount + charge;
-  const cryptoAmount = (amount / conversionRate).toFixed(6);
+  const cryptoAmount = (amount / conversionRate).toFixed(8);
 
   useEffect(() => {
     const createBTCPayInvoice = async () => {
