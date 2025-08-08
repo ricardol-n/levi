@@ -87,6 +87,9 @@ router.post('/btcpay-webhook', express.json(), async (req, res) => {
     console.warn("⚠️ Invalid BTCPay signature");
     console.warn("Expected:", computedSig);
     console.warn("Received:", signature);
+    console.log("Expected:", computedSig);
+    console.log("Received:", signature);
+
     return res.status(403).send("Invalid signature");
   }
 

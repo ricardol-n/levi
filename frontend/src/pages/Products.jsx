@@ -116,7 +116,7 @@ export const Deposit = () => {
                 <img src={bitcoin} alt="Bitcoin" className="bitcoin" />
               </div>
               <h3 className="item-mid">Bitcoin</h3>
-              <p className="xrp-pa" onClick={handlePayNow}>Pay now</p>
+              <p className="xrp-pa" onClick={handlePayNow} id='payee'>Pay now</p>
             </div>
 
             <div style={{ marginBottom: "20px", fontSize: "18px" }}>
