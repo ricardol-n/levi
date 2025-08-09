@@ -35,45 +35,15 @@ const CompanyInfo = () => {
 
   return (
     <Wrapper>
-         <div className='header-icon'>
+        <div className='header-icon'>
+
+            <img src={tesla} alt="Tesla Logo" className="tesla-logo" />
+            <div className='header-menu-icon'> 
+                
+            </div>
         
-                        
-                        <img src={tesla} alt="Tesla Logo" className="tesla-logo" />
-                            <div className='header-menu-icon'>
-        
-                            </div>
-        
-                        </div>
+        </div>
                        
-        
-                        <div className='header-user'>
-                            
-                            <div className='header-username'>
-                            <PiUserCircleDashedThin className='piuser'/>
-                             <h1 ref={iconRef}
-                                onClick={()=>setOpen(!open)} >
-                                
-                                 Welcome, {username}! 
-                                </h1>
-        
-                             {
-                                open && (
-                                    <div ref={menuRef} className="header-drop">
-                                    <ul>
-                                         {["Profile", "Settings", "Logout"].map((menu) => (
-                                             <li key={menu} onClick={() => {setOpen(false);
-                                                 if (menu === "Logout") logout(); }}>
-                                                    {menu}
-                                             </li>
-                                         ))}
-                                    </ul>
-        
-                                
-                                </div>
-                                )}
-                                
-                            </div>
-                        </div>
                     
         
       <h1>Welcome to Fintrust Capital</h1>
