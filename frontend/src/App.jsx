@@ -73,7 +73,7 @@ function App() {
         <Route path="/admin/*" element={<AdminPanel />} />
 
         {/* Default Redirects */}
-        {/* <Route path="/" element={<Navigate to={isLoggedIn ? "/" : "/login"} replace />} /> */}
+        <Route path="/" element={<Navigate to={isLoggedIn ? "/" : "/login"} replace />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>
