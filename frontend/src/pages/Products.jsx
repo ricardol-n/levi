@@ -16,7 +16,7 @@ export const Deposit = () => {
   const navigate = useNavigate();
   const { user } = useContext(AuthContext);
   const { balance } = useContext(BalanceContext);
-
+  const name = 'Bitcoin';
   const [conversionRates, setConversionRates] = useState({});
   const MIN_DEPOSIT = 500;
 
@@ -87,7 +87,7 @@ export const Deposit = () => {
       }
 
       const btcPrice = conversionRates['Bitcoin'] || 1;
-      const conversionRate = 1 / btcPrice;
+      const conversionRate = btcPrice;
 
       navigate('/depositconfirmationpage', {
         state: {
@@ -111,17 +111,65 @@ export const Deposit = () => {
       <div className="dashboard-content">
         <Sidebar />
         <main className="main-content">
+          <style>{`
+            .deposit-card { 
+              transition: transform .35s ease, box-shadow .35s ease;
+              will-change: transform;
+              border-radius: 12px;
+            }
+            .deposit-card:hover {
+              transform: translateY(-6px);
+              box-shadow: 0 14px 30px rgba(20,20,30,0.12);
+            }
+            .caption {
+              font-size: 14px;
+              color: #e77306ff;
+              margin-top: 8px;
+              margin-bottom: 12px;
+              display: inline-block;
+              animation: float 6s ease-in-out infinite;
+            }
+            @keyframes float {
+              0% { transform: translateY(0px); }
+              50% { transform: translateY(-4px); }
+              100% { transform: translateY(0px); }
+            }
+            .pay-btn {
+              display:inline-block;
+              padding: 8px 12px;
+              border-radius: 10px;
+              border: none;
+              margin:10px;
+              cursor: pointer;
+              font-weight: 600;
+              background: linear-gradient(to bottom right, #ffcc00 51%, #ff9933 96%);
+              color: white;
+              box-shadow: 0 6px 18px rgba(99,102,241,0.18);
+              transition: transform .15s ease, box-shadow .15s ease;
+            }
+            .pay-btn:active { transform: translateY(2px) scale(.995); box-shadow: 0 4px 12px rgba(99,102,241,0.12); }
+            .item-mid { margin: 10px 0 4px 0; font-weight:700; }
+            .item { text-align:center; padding:18px; }
+          `}</style>
+
           <div className="products">
             <div className="item">
+              {name === 'Bitcoin' && (
+                  <div className="caption">One small deposit for you, one giant leap for your balance. 🌕</div>
+                )}
               <div className="card-xrp">
+                
                 <img src={bitcoin} alt="Bitcoin" className="bitcoin" />
               </div>
-              <h3 className="item-mid">Bitcoin</h3>
-              <p className="xrp-pa" onClick={handlePayNow} id='payee'>Pay now</p>
+              {/* <h3 className="item-mid">Bitcoin</h3> */}
+
+
+
+              <p className="pay-btn" onClick={handlePayNow} id='payee'>Pay now</p>
             </div>
 
             <div style={{ marginBottom: "20px", fontSize: "18px" }}>
-              <strong>Current Balance:</strong> ${balance.toFixed(2)}
+              {/* <strong>Current Balance:</strong> ${balance.toFixed(2)} */}
             </div>
 
             {message.text && (
@@ -162,7 +210,7 @@ export const Deposit = () => {
                   style={{ marginLeft: "10px", padding: "8px", fontSize: "16px", width: "200px" }}
                 />
                 <button
-                  onClick={handleDeposit}
+                  onClick={handleDeposit} className='pay-btn'
                   style={{
                     marginTop: "10px", padding: "8px 12px", backgroundColor: "#008CBA",
                     color: "white", border: "none", borderRadius: "4px", cursor: "pointer"

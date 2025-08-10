@@ -33,6 +33,7 @@
 }
 
 .header{
+
   background:#15171c;
   height:60px;
   display:flex;
@@ -132,6 +133,13 @@
 .header-menu-icon .fill{
   color: rgba(106, 93, 19, 0.902);
   font-size: 21px;
+}
+.header-title,li{
+  display: flex;
+  padding: 50px;
+  color: rgb(197, 7, 7);
+  font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+  
 }
 .home-container-content{
   display: grid;

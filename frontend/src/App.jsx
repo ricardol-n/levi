@@ -40,16 +40,8 @@ function App() {
         {/* Protected Routes */}
         {isLoggedIn && (
           <>
-            <Route
-              path="/dashboard"
-              element={
-                <ProtectedRoute>
-                  <Header />
-                  <Sidebar />
-                  <Dashboard />
-                </ProtectedRoute>
-              }
-            />
+            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+            <Route path="/dashboard" element={ <ProtectedRoute> <Header /> <Sidebar /> <Dashboard /> </ProtectedRoute> }/>
             <Route path="/investmentplans" element={<ProtectedRoute><InvestmentPlans /></ProtectedRoute>} />
             <Route path="/InvestLog" element={<ProtectedRoute><InvestLog /></ProtectedRoute>} />
             <Route path="/deposit" element={<ProtectedRoute><Deposit /></ProtectedRoute>} />
@@ -73,7 +65,6 @@ function App() {
         <Route path="/admin/*" element={<AdminPanel />} />
 
         {/* Default Redirects */}
-        <Route path="/" element={<Navigate to={isLoggedIn ? "/" : "/login"} replace />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>

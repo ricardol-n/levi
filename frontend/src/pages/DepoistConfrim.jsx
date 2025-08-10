@@ -63,7 +63,7 @@ export const DepositConfirmationPage = () => {
             <p><strong>Amount:</strong> ${amount.toFixed(2)}</p>
             <p><strong>Fee:</strong> ${charge.toFixed(2)}</p>
             <p><strong>Total:</strong> ${total.toFixed(2)}</p>
-            <p><strong>Rate:</strong> 1 USD = {conversionRate} {method}</p>
+            <p><strong>Rate:</strong> 1 {method} = ${conversionRate.toLocaleString()}</p>
             <p><strong>You will send:</strong> {cryptoAmount} {method}</p>
             <p>🔄 Redirecting to secure checkout...</p>
 
