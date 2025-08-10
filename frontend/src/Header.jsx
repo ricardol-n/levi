@@ -45,7 +45,7 @@ function Header(){
                     <div className='header-username'>
                     <PiUserCircleDashedThin className='piuser'/>
                      <h1 ref={iconRef}
-                        onClick={()=>setOpen(!open)} >
+                        onClick={()=>setOpen(!open)}>
                         
                          Welcome, {username}! 
                         </h1>
@@ -64,7 +64,7 @@ function Header(){
 
                         
                         </div>
-                        )}
+                      )}
                         
                     </div>
                 </div>
