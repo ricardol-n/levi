@@ -1,8 +1,7 @@
 import React, { useContext } from 'react';
 import './App.css';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import Register from './Register.jsx';
-import Login from './Login.jsx';
+import { Routes, Route, Navigate } from 'react-router-dom';
+import ScrollToTop from './ScrollToTop.jsx';
 import Dashboard from './Dashboard.jsx';
 import Header from './Header.jsx';
 import { Sidebar } from './Sidebar.jsx';
@@ -17,31 +16,44 @@ import { RefferalLog } from './pages/Refferal.jsx';
 import { TwoFactor } from './pages/TwoFactor.jsx';
 import { DepositConfirmationPage } from "./pages/DepoistConfrim.jsx";
 import { Charts } from './pages/Charts.jsx';
-import { AuthContext } from './context/Authcontext.jsx'; // ✅ Add this line
-import CompanyInfo from "./CompanyInfo.jsx"
+import { AuthContext } from './context/Authcontext.jsx';
+import CompanyInfo from "./CompanyInfo.jsx";
+import AboutUs from "./AboutUs.jsx";
+import Contact from './Contact.jsx';
+import LoginPage from './Login.jsx';
+import RegisterPage from './Register.jsx';
+
 
 function App() {
-  const { token } = useContext(AuthContext); // ✅ Track token from context
+  const { token,loading } = useContext(AuthContext);
   const isLoggedIn = !!token;
 
+   if (loading) {
+    return <div className="loading-screen">Loading...</div>; 
+  }
+
+
   return (
-    <Router>
+    <>
+      <ScrollToTop />
       <Routes>
+           <Route path="/" element={<CompanyInfo />} />
+            <Route path="/about" element={<AboutUs />} />
+            <Route path="/contact" element={<Contact />} />
 
         {/* Public Routes */}
-        {!isLoggedIn && (
-          <>
-          <Route path="/" element={<CompanyInfo/>}  />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register onRegister={() => console.log("Registered")} />} />
-          </>
-        )}
+
+        <Route path="/login" element={isLoggedIn ? <Navigate to="/dashboard" /> : <LoginPage />}/>
+        <Route path="/register" element={isLoggedIn ? <Navigate to="/dashboard" /> : <RegisterPage />}/>
+
 
         {/* Protected Routes */}
         {isLoggedIn && (
           <>
-            <Route path="/" element={<Navigate to="/dashboard" replace />} />
-            <Route path="/dashboard" element={ <ProtectedRoute> <Header /> <Sidebar /> <Dashboard /> </ProtectedRoute> }/>
+            <Route
+              path="/dashboard"
+              element={<ProtectedRoute> <Dashboard /></ProtectedRoute>}
+            />
             <Route path="/investmentplans" element={<ProtectedRoute><InvestmentPlans /></ProtectedRoute>} />
             <Route path="/InvestLog" element={<ProtectedRoute><InvestLog /></ProtectedRoute>} />
             <Route path="/deposit" element={<ProtectedRoute><Deposit /></ProtectedRoute>} />
@@ -57,17 +69,17 @@ function App() {
             <Route path="/setting/profile" element={<ProtectedRoute><Setting /></ProtectedRoute>} />
             <Route path="/setting/logout" element={<ProtectedRoute><Logout /></ProtectedRoute>} />
             <Route path="/depositconfirmationpage" element={<ProtectedRoute><DepositConfirmationPage /></ProtectedRoute>} />
-            <Route path="/charts" element={<ProtectedRoute><Charts/></ProtectedRoute>} />
+            <Route path="/charts" element={<ProtectedRoute><Charts /></ProtectedRoute>} />
           </>
         )}
 
-        {/* Admin Panel (optional auth) */}
+        {/* Admin */}
         <Route path="/admin/*" element={<AdminPanel />} />
 
-        {/* Default Redirects */}
+        {/* Fallback */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
-    </Router>
+    </>
   );
 }
 

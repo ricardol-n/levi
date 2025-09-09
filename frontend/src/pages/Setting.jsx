@@ -1,12 +1,14 @@
-import React from 'react'
+import React,{useState} from 'react'
 import Header from '../Header';
 import Sidebar from '../Sidebar';
 export const Setting = () =>{
+    const [sidebarOpen, setSidebarOpen] = useState(false);
+        const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
     return (
         <div className="dashboard-container">
-        <Header />
+        <Header toggleSidebar={toggleSidebar} />
         <div className="dashboard-content">
-          <Sidebar />
+          <Sidebar sidebarOpen={sidebarOpen} toggleSidebar={toggleSidebar}/>
           <main className="main-content">
         <div className='setting'>
             <h1>Profile</h1>

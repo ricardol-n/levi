@@ -3,15 +3,23 @@ import React, { createContext, useState, useEffect } from 'react';
 export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  const [token, setToken] = useState(() => localStorage.getItem("userToken"));
-  const [user, setUser] = useState(() => {
+  const [token, setToken] = useState(null);
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true); // ✅ Added
+
+  useEffect(() => {
     try {
-      const stored = localStorage.getItem("user");
-      return stored ? JSON.parse(stored) : null;
+      const storedToken = localStorage.getItem("userToken");
+      const storedUser = localStorage.getItem("user");
+
+      if (storedToken) setToken(storedToken);
+      if (storedUser) setUser(JSON.parse(storedUser));
     } catch (err) {
-      return null;
+      console.error("Error loading auth from storage", err);
+    } finally {
+      setLoading(false); // ✅ Only render children after loading
     }
-  });
+  }, []);
 
   // Login method
   const login = (newToken, userData) => {
@@ -30,7 +38,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ token, user, login, logout }}>
+    <AuthContext.Provider value={{ token, user, login, logout, loading }}>
       {children}
     </AuthContext.Provider>
   );

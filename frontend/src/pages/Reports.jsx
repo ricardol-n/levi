@@ -16,6 +16,8 @@ export const InvestmentPlans = () => {
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [amount, setAmount] = useState("");
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
 
   const handleInvest = (plan) => {
     setSelectedPlan(plan);
@@ -57,12 +59,17 @@ export const InvestmentPlans = () => {
     setSelectedPlan(null);
     setShowConfirmModal(false);
   };
+  const isAmountValid =
+    amount &&
+    !isNaN(parseFloat(amount)) &&
+    parseFloat(amount) >= (selectedPlan?.min || 0) &&
+    parseFloat(amount) <= (selectedPlan?.max || Infinity);
 
   return (
     <div className="dashboard-container">
-    <Header />
-    <div className="dashboard-content">
-      <Sidebar />
+    <Header toggleSidebar={toggleSidebar} />
+    <div className="dashboard-contents">
+      <Sidebar sidebarOpen={sidebarOpen} toggleSidebar={toggleSidebar}/>
       <main className="main-content">
         <div className="investment-container">
       <h1>Choose an Investment Plan</h1>
@@ -79,19 +86,33 @@ export const InvestmentPlans = () => {
       </div>
 
       {showConfirmModal && selectedPlan && (
-        <div className="modal-overlay">
-          <div className="modal">
-            <h2>Confirm Investment</h2>
-            <p><strong>Plan:</strong> {selectedPlan.name}</p>
-            <p><strong>ROI:</strong> {selectedPlan.roi}%</p>
-            <p><strong>Investment Amount:</strong> ${amount}</p>
-            <p><strong>Expected Return:</strong> ${(amount * (1 + selectedPlan.roi / 100)).toFixed(2)}</p>
-            <input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} />
-            <button className="confirm-btn" onClick={confirmInvestment}>Confirm</button>
-            <button className="cancel-btn" onClick={() => setShowConfirmModal(false)}>Cancel</button>
+         <div className="modal-overlay">
+         <div className="modal">
+             <h2>Confirm Investment</h2>
+             <p><strong>Plan:</strong> {selectedPlan.name}</p>
+             <p><strong>ROI:</strong> {selectedPlan.roi}%</p>
+             <p><strong>Range:</strong> ${selectedPlan.min} - ${selectedPlan.max}</p>
+             
+                  <input
+                    type="number"
+                    placeholder={`Enter amount ($${selectedPlan.min} - $${selectedPlan.max})`}
+                    value={amount}
+                    onChange={(e) => setAmount(e.target.value)}
+                  />
+
+              {/* Only calculate return if amount is valid */}
+              {isAmountValid && (
+                    <p>
+                      <strong>Expected Return:</strong> $
+                      {(parseFloat(amount) * (1 + selectedPlan.roi / 100)).toFixed(2)}
+                    </p>
+              )}
+
+               <button className="confirm-btn" onClick={confirmInvestment} disabled={!isAmountValid}>Confirm</button>
+               <button className="cancel-btn" onClick={() => setShowConfirmModal(false)}>Cancel</button>
           </div>
-        </div>
-      )}
+          </div>)}
+
         </div>
      </main>
      </div>
@@ -105,53 +126,80 @@ export const InvestLog = () => {
 
   const { investments , setInvestments  } = useContext(BalanceContext);
   const [currentTime, setCurrentTime] = useState(new Date());
-  
+    const [sortBy, setSortBy] = useState("date"); 
+  const [filter, setFilter] = useState("all");
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
 
-  
   useEffect(() => {
     const timer = setInterval(() => {
-      
       setCurrentTime(new Date());
 
-      setInvestments(prevInvestments =>
-        prevInvestments.map(inv =>
-          new Date(inv.endDate) <= new Date() ? { ...inv, completed: true } : inv
+      setInvestments((prev) =>
+        prev.map((inv) =>
+          new Date(inv.endDate) <= new Date()
+            ? { ...inv, completed: true }
+            : inv
         )
       );
-    }, 1000); // Updates every second
+    }, 1000);
 
     return () => clearInterval(timer);
   }, [setInvestments]);
 
   const calculateTimeLeft = (endDate) => {
-    if (!endDate) return "Matured"; // ✅ Prevent undefined error
-
+    if (!endDate) return "Matured";
     const end = new Date(endDate);
-    if (isNaN(end.getTime())) return "Matured";
+    if (isNaN(end.getTime()) || end <= new Date()) return "Matured";
 
-    const now = new Date();
-    if (end <= now) return "Matured";
-
-    const difference = end - new Date();;
-    
-    const days = Math.floor(difference / (1000 * 60 * 60 * 24));
-    const hours = Math.floor((difference / (1000 * 60 * 60)) % 24);
-    const minutes = Math.floor((difference / (1000 * 60)) % 60);
-    const seconds = Math.floor((difference / 1000) % 60);
-
-    return `${days}d ${hours}h ${minutes}m ${seconds}s`;
+    const diff = end - new Date();
+    const d = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const h = Math.floor((diff / (1000 * 60 * 60)) % 24);
+    const m = Math.floor((diff / (1000 * 60)) % 60);
+    const s = Math.floor((diff / 1000) % 60);
+    return `${d}d ${h}h ${m}m ${s}s`;
   };
+
+  // 🔥 Sorting Logic
+  const sortedInvestments = [...investments].sort((a, b) => {
+    if (sortBy === "amount") return b.amount - a.amount;
+    if (sortBy === "roi") return b.expectedReturn - a.expectedReturn;
+    if (sortBy === "status") return (a.completed === b.completed) ? 0 : a.completed ? 1 : -1;
+    return 0;
+  });
+
+  // 🔥 Filtering Logic
+  const filteredInvestments = sortedInvestments.filter((inv) => {
+    if (filter === "active") return !inv.completed;
+    if (filter === "matured") return inv.completed;
+    return true; // all
+  });
 
     return (
 
       <div className="dashboard-container">
-      <Header />
+      <Header toggleSidebar={toggleSidebar}/>
       <div className="dashboard-content">
-        <Sidebar />
+        <Sidebar sidebarOpen={sidebarOpen} toggleSidebar={toggleSidebar} />
         <main className="main-content">
        <div className="investlog">
       <h2>Investment History</h2>
-      {investments.length === 0 ? (
+      {/* Controls */}
+            <div className="log-controls">
+              <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
+                <option value="date">Sort by Date</option>
+                <option value="amount">Sort by Amount</option>
+                <option value="roi">Sort by ROI</option>
+                <option value="status">Sort by Status</option>
+              </select>
+
+              <select value={filter} onChange={(e) => setFilter(e.target.value)}>
+                <option value="all">Show All</option>
+                <option value="active">Active Only</option>
+                <option value="matured">Matured Only</option>
+              </select>
+            </div>
+      {filteredInvestments.length === 0 ? (
         <p>No investments found.</p>
       ) : (
         <table className="investment-table">
@@ -168,12 +216,12 @@ export const InvestLog = () => {
           <tbody>
             {investments.map((inv, index) => (
               <tr key={index}>
-                <td>{index + 1}</td>
-                <td>{inv.name}</td>
-                <td>${inv.amount.toFixed(2)}</td>
-                <td>{inv.expectedReturn}%</td>
-                <td>${(inv.amount * (1 + inv.expectedReturn / 100)).toFixed(2)}</td>
-                <td>{calculateTimeLeft(inv.endDate)}</td>
+                <td data-label="#">{index + 1}</td>
+                <td data-label="Plan">{inv.name}</td>
+                <td data-label="Amount">${inv.amount.toFixed(2)}</td>
+                <td data-label="ROI">{inv.expectedReturn}%</td>
+                <td data-label="Expected Return">${(inv.amount * (1 + inv.expectedReturn / 100)).toFixed(2)}</td>
+                <td data-label="Time Left">{calculateTimeLeft(inv.endDate)}</td>
               </tr>
             ))}
           </tbody>

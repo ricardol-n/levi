@@ -1,15 +1,16 @@
-import React,{useContext}  from 'react'
+import React,{useContext,useState}  from 'react'
 import { BalanceContext } from "../BalanceContext";
 import Header from '../Header';
 import Sidebar from '../Sidebar';
  
 export const Transfer = () => {
-
+    const [sidebarOpen, setSidebarOpen] = useState(false);
+    const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
     return ( 
         <div className="dashboard-container">
-        <Header />
+        <Header toggleSidebar={toggleSidebar}/>
         <div className="dashboard-content">
-          <Sidebar />
+          <Sidebar sidebarOpen={sidebarOpen} toggleSidebar={toggleSidebar}/>
           <main className="main-content">
         
           <div className="messages">

@@ -1,154 +1,207 @@
-import React, { useContext, useState } from 'react';
-import { BalanceContext } from '../BalanceContext';
-import Header from '../Header';
-import Sidebar from '../Sidebar';
+import React, { useContext, useState } from "react";
+import { BalanceContext } from "../BalanceContext";
+import Header from "../Header";
+import Sidebar from "../Sidebar";
+
 export const Withdraw = () => {
-    const [selectedMethod, setSelectedMethod] = useState('');
-    const [amount, setAmount] = useState('');
-    const [error, setError] = useState('');
-    const [success, setSuccess] = useState(false);
-    const { balance, setBalance, addTransaction } = useContext(BalanceContext);
+  const {
+    balance,
+    requestWithdrawal,
+    loading,
+    syncError,
+  } = useContext(BalanceContext);
 
-    const handleMethodChange = (e) => {
-        setSelectedMethod(e.target.value);
-        setAmount('');
-        setError('');
-        setSuccess(false);
-    };
+  const [selectedMethod, setSelectedMethod] = useState("");
+  const [amount, setAmount] = useState("");
+  const [address, setAddress] = useState("");
+  const [message, setMessage] = useState({ type: "", text: "" });
 
-    const handleAmountChange = (e) => {
-        const value = e.target.value;
-        setAmount(value);
-        setError('');
-        setSuccess(false);
-    };
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
 
-    const handleWithdraw = () => {
-        const withdrawalAmount = parseFloat(amount);
+  const onSubmit = async () => {
+    setMessage({ type: "", text: "" });
+    try {
+      await requestWithdrawal({
+        method: selectedMethod,
+        amount,
+        address,
+      });
+      setMessage({
+        type: "success",
+        text:
+          "✅ Withdrawal submitted and is now pending. Please allow up to 24 hours for processing.",
+      });
+      setAmount("");
+      setAddress("");
+      setSelectedMethod("");
+    } catch (err) {
+      setMessage({
+        type: "error",
+        text:
+          err?.response?.data?.message ||
+          err?.message ||
+          "Failed to submit withdrawal.",
+      });
+    }
+  };
 
-        if (isNaN(balance) || balance <= 0) {
-            setError('Insufficient balance. Please add funds before withdrawing.');
-            return;
-        }
-        if (!selectedMethod) {
-            setError('Please select a withdrawal method.');
-            return;
-        }
-        if (withdrawalAmount < 100) {
-            setError('The withdrawal amount must be at least $100');
-            return;
-        }
-         if (withdrawalAmount > balance) {
-            setError('Insufficient balance for this withdrawal');
-            return;
-        }
-
-        setBalance(prevBalance => prevBalance - withdrawalAmount);
-
-        addTransaction("Withdrawal",selectedMethod, withdrawalAmount);
-
-        setSuccess(`Withdrawal of $${withdrawalAmount} via ${selectedMethod} was successful!`);
-        setError('');
-        setAmount('');
-        setSelectedMethod('');
-    };
-
-    
-        
-
-
-    return (
-        <div className="dashboard-container">
-      <Header />
+  return (
+    <div className="dashboard-container">
+      <Header toggleSidebar={toggleSidebar} />
       <div className="dashboard-content">
-        <Sidebar />
+        <Sidebar sidebarOpen={sidebarOpen} toggleSidebar={toggleSidebar} />
         <main className="main-content">
+          <div className="withdraw-page">
+            {/* Form Card */}
+            <div className="withdraw-card">
+              <h2 className="withdraw-title">💸 Withdrawal</h2>
+              <p className="balance-info">
+                Current Balance:{" "}
+                <span className="balance-amount">${balance.toFixed(2)}</span>
+              </p>
 
-        <div className="team-container">
-            <div className="withdraw-details">
-                <h2>Withdrawal Application</h2>
-                <p><strong>Current Balance:</strong> ${balance.toFixed(2)}</p>
-                <div className='withdraw-section'>
-                    <h2>Select Withdrawal Method</h2>
-                    <select className='withdraw-select' value={selectedMethod} onChange={handleMethodChange}>
-                        <option value=''>--Select a Method--</option>
-                        <option value='BTC'>Bitcoin</option>
-                        <option value='DOGE'>Dogecoin</option>
-                        <option value='ETH'>Ethereum</option>
-                        <option value='USDT_ERC20'>USDT ERC20</option>
-                        <option value='USDT_TRC20'>USDT TRC20</option>
-                        <option value='XRP'>XRP Ripple</option>
-                    </select>
-                    {selectedMethod && (
-                        <div>
-                            <label htmlFor='amount'>Enter the amount (Minimum $100):</label>
-                            <input type='number' id='amount' value={amount} onChange={handleAmountChange} placeholder='Enter amount' />
-                            {error && <p className='error-message'>{error}</p>}
-                            <button onClick={handleWithdraw} className='withdraw-button' disabled={balance < 100}>Confirm Withdrawal</button>
-                        </div>
-                    )}
-                   {success && (
-                   <div className="success-message1">
-                     {success}
-                      <button onClick={() => setSuccess('')}>✖</button>
-            </div>
-    )}
+              <div className="form-group">
+                <label htmlFor="method">Select Method</label>
+                <select
+                  id="method"
+                  className="withdraw-select"
+                  value={selectedMethod}
+                  onChange={(e) => setSelectedMethod(e.target.value)}
+                >
+                  <option value="">--Choose Method--</option>
+                  <option value="BTC">Bitcoin</option>
+                  <option value="ETH">Ethereum</option>
+                  <option value="USDT_ERC20">USDT ERC20</option>
+                  <option value="USDT_TRC20">USDT TRC20</option>
+                  <option value="XRP">XRP Ripple</option>
+                  <option value="DOGE">Dogecoin</option>
+                </select>
+              </div>
+
+              {selectedMethod && (
+                <>
+                  <div className="form-group">
+                    <label htmlFor="address">{selectedMethod} Address</label>
+                    <input
+                      id="address"
+                      type="text"
+                      className="withdraw-input"
+                      value={address}
+                      onChange={(e) => setAddress(e.target.value)}
+                      placeholder={`Enter your ${selectedMethod} wallet address`}
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label htmlFor="amount">Amount ($) — Min $100</label>
+                    <input
+                      id="amount"
+                      type="number"
+                      className="withdraw-input"
+                      value={amount}
+                      onChange={(e) => setAmount(e.target.value)}
+                      placeholder="e.g. 250"
+                      min="100"
+                    />
+                  </div>
+
+                  <button
+                    onClick={onSubmit}
+                    className="withdraw-button"
+                    disabled={loading || Number(balance) < 100}
+                  >
+                    {loading ? "Submitting..." : "Confirm Withdrawal"}
+                  </button>
+                </>
+              )}
+
+              {(message.text || syncError) && (
+                <div
+                  className={`alert ${
+                    (message.type || (syncError && "error")) === "success"
+                      ? "alert-success"
+                      : "alert-error"
+                  }`}
+                >
+                  {message.text || syncError}
+                  <button
+                    className="close-alert"
+                    onClick={() => setMessage({ type: "", text: "" })}
+                  >
+                    ✖
+                  </button>
                 </div>
+              )}
             </div>
-            <div className="withdraw-instructions">
-                <h1>Withdraw Instruction</h1>
-                <p>Ensure to use the correct {selectedMethod} address. Using any other coin's address will result in permanent loss.</p>
+
+            {/* Info Card */}
+            <div className="withdraw-info">
+              <h3>📌 Important</h3>
+              <ul>
+                <li>Minimum withdrawal: <strong>$100</strong>.</li>
+                <li>Use the correct <strong>{selectedMethod || "coin"}</strong> address; wrong networks lead to permanent loss.</li>
+                <li>Processing time: usually within <strong>24 hours</strong>.</li>
+                <li>Network fees may apply depending on the coin/network congestion.</li>
+              </ul>
             </div>
-        </div>
-        
-
-
+          </div>
         </main>
       </div>
     </div>
-      
-
-)};
+  );
+};
 
 export const WithdrawLog = () => {
-    const { withdrawals } = useContext(BalanceContext); 
+  const { withdrawals, loading } = useContext(BalanceContext);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
 
-    return (
-        <div className="dashboard-container">
-        <Header />
-        <div className="dashboard-content">
-          <Sidebar />
-          <main className="main-content">
+  return (
+    <div className="dashboard-container">
+      <Header toggleSidebar={toggleSidebar} />
+      <div className="dashboard-content">
+        <Sidebar sidebarOpen={sidebarOpen} toggleSidebar={toggleSidebar} />
+        <main className="main-content">
           <div className="team">
-            {withdrawals.length === 0 ? (
-                <p>No withdrawals yet.</p>
+            <h2>Withdrawal History</h2>
+            {loading ? (
+              <p>Loading...</p>
+            ) : withdrawals.length === 0 ? (
+              <p>No withdrawals yet.</p>
             ) : (
+              <div className="table-wrapper">
                 <table className="transaction-table">
-                    <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>Method</th>
-                            <th>Amount ($)</th>
-                            <th>Date</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {withdrawals.map((tx, index) => (
-                            <tr key={index}>
-                                <td>{index + 1}</td>
-                                <td>{tx.method}</td>
-                                <td>${tx.amount.toFixed(2)}</td>
-                                <td>{tx.date}</td>
-                            </tr>
-                        ))}
-                    </tbody>
+                  <thead>
+                    <tr>
+                      <th>#</th>
+                      <th>Method</th>
+                      <th>Amount ($)</th>
+                      <th>Status</th>
+                      <th>Date</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {withdrawals.map((w, i) => (
+                      <tr key={w._id || i}>
+                        <td>{i + 1}</td>
+                        <td>{w.method}</td>
+                        <td>${Number(w.amount || 0).toFixed(2)}</td>
+                        <td>
+                          <span className={`badge badge-${(w.status || "pending").toLowerCase()}`}>
+                            {w.status || "pending"}
+                          </span>
+                        </td>
+                        <td>{new Date(w.createdAt || w.date || Date.now()).toLocaleString()}</td>
+                      </tr>
+                    ))}
+                  </tbody>
                 </table>
+              </div>
             )}
-        </div>
-    
-          </main>
-        </div>
+          </div>
+        </main>
       </div>
-
-        
-)};
+    </div>
+  );
+};

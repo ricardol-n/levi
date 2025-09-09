@@ -1,15 +1,18 @@
-const express = require('express');
-const router = express.Router();
-const bcrypt = require('bcryptjs');
-const User = require('../models/user');
-const Deposit = require('../models/Deposit');
+const express = require("express");
+const bcrypt = require("bcryptjs");
+const mongoose = require("mongoose");
+const User = require("../models/user");
+const Deposit = require("../models/Deposit");
+const Withdrawal = require("../models/Withdrawal");
 
-// ✅ Create a new user (admin or user)
-router.post('/', async (req, res) => {
+const router = express.Router();
+
+// ✅ Create a new user (admin or signup)
+router.post("/", async (req, res) => {
   try {
     const { username, email, password, role } = req.body;
 
-    if (!username || !email || !password || !role) {
+    if (!username || !email || !password) {
       return res.status(400).json({ success: false, message: "All fields are required" });
     }
 
@@ -24,120 +27,92 @@ router.post('/', async (req, res) => {
       username,
       email,
       password: hashedPassword,
-      role: role || "User",
+      role: role || "user",
       depositAddresses: {
-        BTC: '',
-        DOGE: '',
-        ETH: '',
-        TRON: '',
-        XRP: ''
-      }
+        BTC: "",
+        DOGE: "",
+        ETH: "",
+        TRON: "",
+        XRP: "",
+      },
     });
 
     await newUser.save();
     res.status(201).json({ success: true, message: "User created", data: newUser });
-
   } catch (error) {
     console.error("❌ Create User Error:", error);
     res.status(500).json({ success: false, message: "Server error", error: error.message });
   }
 });
 
-
-// ✅ Webhook handler for deposit confirmation
-router.post('/webhook/deposit', async (req, res) => {
+// ✅ Get user balance
+router.get("/:id/balance", async (req, res) => {
   try {
-    const secret = req.headers['x-webhook-secret'];
-    const expectedSecret = process.env.TATUM_WEBHOOK_SECRET;
+    const { id } = req.params;
 
-    if (!secret || secret !== expectedSecret) {
-      console.warn("🚨 Unauthorized webhook attempt");
-      return res.status(403).json({ success: false, message: 'Forbidden: Invalid webhook secret' });
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ success: false, message: "Invalid userId" });
     }
 
-    const { address, amount, blockchain: chain, txId, type } = req.body;
-
-    if (!address || !amount || !chain || !txId || type !== 'incoming') {
-      console.log("❌ Invalid webhook payload:", req.body);
-      return res.status(400).json({ success: false, message: 'Invalid webhook payload' });
-    }
-
-    const existing = await Deposit.findOne({ txId });
-    if (existing) {
-      console.log(`🔁 Duplicate txId ignored: ${txId}`);
-      return res.status(200).json({ success: true, message: 'Already processed' });
-    }
-
-    const user = await User.findOne({ [`depositAddresses.${chain.toUpperCase()}`]: address });
+    const user = await User.findById(id).select("balance");
     if (!user) {
-      console.log(`❌ No user found for ${chain.toUpperCase()} address: ${address}`);
-      return res.status(404).json({ success: false, message: 'Address not linked to any user' });
+      return res.status(404).json({ success: false, message: "User not found" });
     }
 
-    const newDeposit = new Deposit({
-      userId: user._id,
-      address,
-      amount: parseFloat(amount),
-      currency: chain.toUpperCase(),
-      txId,
-      status: 'confirmed',
-      source: 'webhook',
-    });
-    await newDeposit.save();
-
-    await User.findByIdAndUpdate(
-      user._id,
-      { $inc: { balance: parseFloat(amount) } },
-      { new: true }
-    );
-
-    console.log(`✅ Deposit credited: ${amount} ${chain.toUpperCase()} to ${user.email}`);
-    return res.json({ success: true, message: 'Deposit recorded and user credited' });
-
+    res.json({ success: true, balance: user.balance });
   } catch (err) {
-    console.error("❌ Webhook error:", err);
-    return res.status(500).json({ success: false, message: 'Internal server error' });
+    console.error("❌ Fetch balance error:", err);
+    res.status(500).json({ success: false, message: "Server error" });
   }
 });
 
-
-// ✅ GET user's wallet addresses
-// Get deposit wallets for a user
-router.get('/:userId/wallets', async (req, res) => {
+// ✅ Get user's wallet addresses
+router.get("/:id/wallets", async (req, res) => {
   try {
-    const { userId } = req.params;
-    const user = await User.findById(userId).select('depositAddresses');
+    const { id } = req.params;
+    const user = await User.findById(id).select("depositAddresses");
 
-        if (!user) {
-      return res.status(404).json({ success: false, message: 'User not found' });
-    }
-
+    if (!user) return res.status(404).json({ message: "User not found" });
     if (!user.depositAddresses || Object.keys(user.depositAddresses).length === 0) {
-      return res.status(404).json({ success: false, message: 'Wallets missing for user' });
+      return res.status(404).json({ message: "No deposit wallets found" });
     }
 
-    console.log("🎯 User deposit addresses:", user.depositAddresses);
-
-
-    return res.json({ success: true, depositAddresses: user.depositAddresses });
+    res.json({ success: true, depositAddresses: user.depositAddresses });
   } catch (error) {
-    console.error("Wallet fetch error:", error);
-    res.status(500).json({ success: false, message: 'Internal error' });
+    console.error("❌ Wallet fetch error:", error);
+    res.status(500).json({ success: false, message: "Internal error" });
   }
 });
 
-
-
-// ✅ GET user's deposit logs
-router.get('/:id/deposits', async (req, res) => {
-  const userId = req.params.id;
-
+// ✅ Get user's deposit logs
+router.get("/:id/deposits", async (req, res) => {
   try {
-    const deposits = await Deposit.find({ userId }).sort({ date: -1 });
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "Invalid user ID" });
+    }
+
+    const deposits = await Deposit.find({ userId: id }).sort({ createdAt: -1 });
     res.json({ success: true, data: deposits });
   } catch (err) {
     console.error("❌ Fetch deposits error:", err);
-    res.status(500).json({ success: false, message: 'Server error' });
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
+// ✅ Get user's withdrawal logs
+router.get("/:id/withdrawals", async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "Invalid user ID" });
+    }
+
+    const withdrawals = await Withdrawal.find({ userId: id }).sort({ createdAt: -1 });
+    res.json({ success: true, data: withdrawals });
+  } catch (err) {
+    console.error("❌ Fetch withdrawals error:", err);
+    res.status(500).json({ success: false, message: "Server error" });
   }
 });
 

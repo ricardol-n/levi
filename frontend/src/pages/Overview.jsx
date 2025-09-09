@@ -4,7 +4,7 @@ import { GiTimeTrap } from "react-icons/gi";
 import { FaHandHoldingDollar,FaArrowTurnDown,FaRegFaceSadCry } from "react-icons/fa6";
 import { MdOutlineMoneyOffCsred,MdFolderCopy } from "react-icons/md";
 import {useCopyToClipboard} from 'usehooks-ts' 
-import { BalanceContext } from '../BalanceContext';
+import {BalanceContext}  from '../BalanceContext';
 import { motion } from "framer-motion";
 import ChartDataLabels from "chartjs-plugin-datalabels";
 import { Pie } from "react-chartjs-2";
@@ -99,9 +99,9 @@ export const Overview = () => {
             setNotification("Investment canceled successfully!");
         };
 
-        const deposits = transactions.filter(tx => tx.type === "Deposit").length;
-        const withdrawalsCount = transactions.filter(tx => tx.type === "Withdrawal").length;
-        const investmentsCount = transactions.filter(tx => tx.type === "Investment").length;
+        const deposits = transactions ? transactions.filter(tx => tx.type === "Deposit").length : [];
+        const withdrawalsCount = transactions ? transactions.filter(tx => tx.type === "Withdrawal").length : [];
+        const investmentsCount = transactions ? transactions.filter(tx => tx.type === "Investment").length : [];
 
         
     // ✅ Pie Chart Data

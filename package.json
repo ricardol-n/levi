@@ -11,9 +11,13 @@
   },
   "dependencies": {
     "@tatumio/tatum": "^4.2.53",
-    "axios": "^1.10.0",
+    "axios": "^1.11.0",
     "axios-retry": "^4.5.0",
     "coinbase-commerce-node": "^1.0.4",
-    "mongodb": "^6.18.0"
+    "mongodb": "^6.18.0",
+    "react-countup": "^6.5.3",
+    "react-intersection-observer": "^9.16.0",
+    "react-router-hash-link": "^2.4.3",
+    "ws": "^8.18.3"
   }
 }

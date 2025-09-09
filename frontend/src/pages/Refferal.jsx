@@ -8,7 +8,8 @@ export const RefferalLog = () => {
     const { balance, setBalance } = useContext(BalanceContext);
     const [referrals, setReferrals] = useState(0);
     const [referralBonus, setReferralBonus] = useState(0);
-
+    const [sidebarOpen, setSidebarOpen] = useState(false);
+    const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
     const handleReferral = () => {
         setReferrals(referrals + 1);
         setReferralBonus(referralBonus + 10); // ✅ Earn $10 per referral
@@ -17,9 +18,9 @@ export const RefferalLog = () => {
     return (
 
         <div className="dashboard-container">
-              <Header />
+              <Header toggleSidebar={toggleSidebar} />
               <div className="dashboard-content">
-                <Sidebar />
+                <Sidebar sidebarOpen={sidebarOpen} toggleSidebar={toggleSidebar} />
                 <main className="main-content">
                 <div className="messages">
                 <div className="referral">

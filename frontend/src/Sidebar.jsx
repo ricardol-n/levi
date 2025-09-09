@@ -1,83 +1,66 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
-import {Link} from 'react-router-dom';
-import { FaBars, FaTimes } from "react-icons/fa";
-import {SidebarData} from './SidebarData';
+import { Link } from 'react-router-dom';
+import { FaTimes } from "react-icons/fa";
+import { SidebarData } from './SidebarData';
 import SubMenu from './SubMenu';
 import { IconContext } from 'react-icons/lib';
-import { color } from 'framer-motion';
-
+import "./App.css";
 
 const SidebarNav = styled.nav`
- background:#15171c;
- width:160px;
- height:100vh;
- display:flex;
- transition:350ms;
- position:fixed;
- overflow:hidden;
+  background: #15171c;
+  height: 100vh;
+  position: fixed;
   top: 63px;
   left: 0;
-  transition: 0.3s ease-in-out;
+  width: 200px;
   z-index: 2000;
+  transition: left 0.3s ease;
+  overflow-y: auto;
+  transition: transform 0.3s ease-in-out;
+  transform: translateX(0);
   
-  
 
+  @media screen and (max-width: 1023px) {
+  top: 57px;
+  height: calc(100vh - 0px);
+  transform: ${({ $open }) => ($open ? "translateX(0)" : "translateX(-100%)")};
+  background: #0f0c12ec;
+  }
 
-
-  @media screen and (max-width: 768px) {
-    width:160px;
+  @media screen and (min-width: 1024px) {
+    left: 0;
+  }
+  @media screen and (min-width: 767px) {
+  top:55px; 
   }
 `;
 
-
 const SidebarWrap = styled.div`
- width: 100%;
-`
-const NavIcon = styled(Link)`
-  position: absolute;
-  top: 10px;
-  left: 15px;
-  font-size: 1.5rem;
-  background: none;
-  cursor: pointer;
-  color: #fff;
-`;
-const CloseIcon = styled(FaTimes)`
-  position: absolute;
-  top: 20px;
-  right: 15px;
-  font-size: 1.8rem;
-  color: #fff;
-  cursor: pointer;
+  width: 100%;
+  padding:10px;
 `;
 
-export function Sidebar() {
-  const [sidebar,setSidebar] = useState(false);
 
-  const showSidebar = () => setSidebar(!sidebar);
+export function Sidebar({sidebarOpen,toggleSidebar}) {
+  
   return (
-    <>
-    <IconContext.Provider value={{color:'gold'}}>
-            <div className="menu-bar">
-                
-            </div>
-            <NavIcon to="#">
-             <FaBars onClick={showSidebar} />
-           </NavIcon>
-      
-      <SidebarNav  className={sidebar ? "active" : ""}> 
-          <SidebarWrap>
-          {SidebarData.map((item,index) => {
-            return <SubMenu item={item} key={index}/>;
+    <IconContext.Provider value={{ color: 'red' }}>
+      {/* Mobile Menu Toggle */}
+      <div 
+        className={`sidebar-overlay ${sidebarOpen ? "show" : ""}`} 
+        onClick={toggleSidebar}
+      ></div>
 
-          })}
-              
-          </SidebarWrap>
-
+      <SidebarNav $open={sidebarOpen}>
+    
+        <SidebarWrap>
+          {SidebarData.map((item, index) => (
+            <SubMenu item={item} key={index} />
+          ))}
+        </SidebarWrap>
       </SidebarNav>
-    </IconContext.Provider> 
-    </>
+    </IconContext.Provider>
   );
 }
 

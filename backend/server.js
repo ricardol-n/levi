@@ -1,74 +1,122 @@
-const express = require('express');
-const cors = require('cors');
-const mongoose = require('mongoose');
-require('dotenv').config();
-const bodyParser = require('body-parser');
+const express = require("express");
+const cors = require("cors");
+const mongoose = require("mongoose");
+require("dotenv").config();
+const verifyToken = require("./middleware/auth");
+const axios = require("axios");
 
 
-const verifyToken = require('./middleware/auth');
-
+// ✅ Import routes
+const authRouter = require("./routes/auth");
+const rateRoutes = require("./routes/rates");
+const userRoutes = require("./routes/users");
+const investmentRoutes = require("./routes/investments");
+const transactionRoutes = require("./routes/transactions");
+const withdrawalRoutes = require("./routes/withdrawals");
+const depositRoutes = require("./routes/deposit");
+const webhookRoutes = require("./routes/btcpayWebhook");
+const candlesRoute = require("./routes/stocks");
 const app = express();
-const port = process.env.PORT || 4000;
 
-// ✅ Add all allowed frontend origins here
-const allowedOrigins = [
-  'http://localhost:5175',
-  'http://localhost:5185',
-  'https://levi-6m1v-pjrz6a4rv-levis-projects-e13e0406.vercel.app',
-  'https://levi-6m1v-git-main-levis-projects-e13e0406.vercel.app'
-];
 
-// ✅ Custom CORS middleware
+
+// ✅ CORS
+const allowedOrigins = process.env.FRONTEND_URLS
+  ? process.env.FRONTEND_URLS.split(",").map((url) => url.trim())
+  : [];
+
 app.use((req, res, next) => {
   const origin = req.headers.origin;
   if (allowedOrigins.includes(origin)) {
-    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader("Access-Control-Allow-Origin", origin);
   }
-
-  res.setHeader('Access-Control-Allow-Credentials', 'true');
-  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization');
-
-  if (req.method === 'OPTIONS') {
-    return res.sendStatus(200);
-  }
-
+  res.setHeader("Access-Control-Allow-Credentials", "true");
+  res.setHeader("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type,Authorization");
+  if (req.method === "OPTIONS") return res.sendStatus(200);
   next();
 });
 
-// ✅ Parse incoming JSON
 app.use(express.json());
 
-// ✅ Connect to MongoDB
-mongoose.connect(process.env.MONGO_URI)
-  .then(() => console.log('MongoDB Connected ✅'))
-  .catch(err => console.error(err));
+// ✅ MongoDB connect
+mongoose
+  .connect(process.env.MONGO_URI,{
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
+  .then(() => console.log("MongoDB Connected ✅"))
+  .catch((err) => console.error("❌ MongoDB error:",err));
 
-// ✅ Import routes
 
-const authRouter  = require('./routes/auth');
-const rateRoutes = require('./routes/rates');
-const userRoutes = require('./routes/users');
-const investmentRoutes = require('./routes/investments');
-const transactionRoutes = require('./routes/transactions');
-const withdrawalRoutes = require('./routes/withdrawals');
-const depositRoutes = require('./routes/deposit');
-const webhookRoutes = require('./routes/webhook');
+// ✅ Stock list
+const stockSymbols = [
+  { id: "netflix", symbol: "NFLX", name: "Netflix" },
+  { id: "spotify", symbol: "SPOT", name: "Spotify" },
+  { id: "tesla", symbol: "TSLA", name: "Tesla" },
+  { id: "meta", symbol: "META", name: "Facebook" },
+  { id: "amazon", symbol: "AMZN", name: "Amazon" },
+  { id: "google", symbol: "GOOGL", name: "Google" },
+];
 
-// ✅ Register routes
 
-app.use('/api/auth', authRouter);
-app.use('/api/rates', rateRoutes);
-app.use('/api', userRoutes);
-app.use('/api', depositRoutes);
-app.use('/api/webhook', webhookRoutes);
-app.use('/investments', verifyToken, investmentRoutes);
-app.use('/transactions', verifyToken, transactionRoutes);
-app.use('/withdrawals', verifyToken, withdrawalRoutes);
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+// ✅ API to return stock list with prices
+app.get("/api/stocks", async (req, res) => {
+  try {
+    const apiKey = process.env.FINNHUB_API_KEY;
+    const results = {};
+
+    // fetch price for each stock
+    for (const stock of stockSymbols) {
+      const url = `https://finnhub.io/api/v1/quote?symbol=${stock.symbol}&token=${apiKey}`;
+      const { data } = await axios.get(url);
+      results[stock.symbol] = {
+        ...stock,
+        price: data.c || null, // "c" is current price
+      };
+    }
+
+    res.json(results);
+  } catch (error) {
+    console.error("Error fetching stock prices:", error.message);
+    res.status(500).json({ error: "Failed to fetch stock prices" });
+  }
+});
+app.get("/api/candles/:symbol", async (req, res) => {
+  try {
+    const { symbol } = req.params;
+    const apiKey = process.env.FINNHUB_API_KEY;
+
+    const now = Math.floor(Date.now() / 1000);
+    const from = now - 60 * 60 * 24 * 30; // last 30 days
+
+    const url = `https://finnhub.io/api/v1/stock/candle?symbol=${symbol}&resolution=D&from=${from}&to=${now}&token=${apiKey}`;
+    const { data } = await axios.get(url);
+
+    if (data.s !== "ok") {
+      return res.status(400).json({ error: "No candle data" });
+    }
+
+    res.json(data); // send back OHLCV
+  } catch (error) {
+    console.error("❌ Error fetching candle data:", error.message);
+    res.status(500).json({ error: "Failed to fetch candles" });
+  }
+});
+app.use("/api/auth", authRouter);
+app.use("/api/rates", rateRoutes);
+app.use("/api/users", userRoutes);
+app.use("/api", depositRoutes);
+app.use("/api/webhook", webhookRoutes);
+app.use("/api/investments", verifyToken, investmentRoutes);
+app.use("/api/transactions", verifyToken, transactionRoutes);
+app.use("/api/withdrawals", verifyToken, withdrawalRoutes);
+app.use("/api", candlesRoute);
+
+
 
 // ✅ Start server
+const port = process.env.PORT || 4000;
 app.listen(port, () => {
-  console.log(`Server running on http://localhost:${port}`);
+  console.log(`🚀 Server running on http://localhost:${port}`);
 });
