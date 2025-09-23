@@ -1,8 +1,9 @@
 import {  React,useEffect,useState, useContext } from "react";
-import * as RiIcons from "react-icons/ri";
 import { BalanceContext } from "../BalanceContext";
 import Header from "../Header";
 import Sidebar from "../Sidebar";
+import axios from "axios";
+
 
 const investmentPlans = [
   { id: 1, name: "TESLA STARTER", roi: 10, min: 500, max: 5000, duration: 5 },
@@ -12,7 +13,7 @@ const investmentPlans = [
 ];
 
 export const InvestmentPlans = () => {
-  const { balance, setBalance, addTransaction,addInvestment } = useContext(BalanceContext);
+  const { balance, syncFromBackend} = useContext(BalanceContext);
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [amount, setAmount] = useState("");
   const [showConfirmModal, setShowConfirmModal] = useState(false);
@@ -24,41 +25,56 @@ export const InvestmentPlans = () => {
     setAmount("");
     setShowConfirmModal(true); 
   };
-  const confirmInvestment = () => {
-    if (!addInvestment) {
-      console.error("Error: addInvestment is not available in BalanceContext");
-      return;
-    }
+  const confirmInvestment = async () => {
   const investmentAmount = parseFloat(amount);
-    if (isNaN(investmentAmount) || investmentAmount < selectedPlan.min || investmentAmount > selectedPlan.max) {
-      alert(`Amount must be between $${selectedPlan.min} - $${selectedPlan.max}`);
-      return;
+  if (
+    isNaN(investmentAmount) ||
+    investmentAmount < selectedPlan.min ||
+    investmentAmount > selectedPlan.max
+  ) {
+    alert(`Amount must be between $${selectedPlan.min} - $${selectedPlan.max}`);
+    return;
+  }
+
+  if (investmentAmount > balance) {
+    alert("Insufficient balance. Please deposit funds.");
+    return;
+  }
+
+  try {
+ const res = await axios.post(
+  "/api/investments",
+  {
+    name: selectedPlan.name,
+    amount: investmentAmount,
+    roi: selectedPlan.roi,
+    duration: selectedPlan.duration,
+  },
+  {
+    headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+  }
+);
+
+const inv = res.data.investment;
+
+// ✅ Deduct balance instantly in context
+  balance.setBalance((prev) => prev - investmentAmount);
+
+alert(
+        `✅ Investment Successful! You invested $${inv.amount}. Expected return will be calculated automatically.`
+      );
+setShowConfirmModal(false);
+
+    // re-sync context
+    if (typeof syncFromBackend === "function") {
+      syncFromBackend();
     }
+  } catch (err) {
+    console.error("❌ Investment failed:", err.response?.data || err.message);
+    alert("Investment failed. Try again.");
+  }
+};
 
-
-    if (investmentAmount > balance) {
-      alert("Insufficient balance. Please deposit funds.");
-      return;
-    }
-
-    const profit = (investmentAmount * selectedPlan.roi) / 100;
-    const totalReturn = investmentAmount + profit;
-
-    setBalance(balance - investmentAmount);
-    addTransaction("Investment", selectedPlan.name, investmentAmount, totalReturn);
-
-    if (!selectedPlan.duration) {
-      console.error("Error: selectedPlan.duration is undefined", selectedPlan);
-      return;
-   }
-  
-    addInvestment(selectedPlan.name, investmentAmount, totalReturn,selectedPlan.duration);
-
-
-    alert(`Investment Successful! Expected return: $${totalReturn}`);
-    setSelectedPlan(null);
-    setShowConfirmModal(false);
-  };
   const isAmountValid =
     amount &&
     !isNaN(parseFloat(amount)) &&
@@ -103,10 +119,11 @@ export const InvestmentPlans = () => {
               {/* Only calculate return if amount is valid */}
               {isAmountValid && (
                     <p>
-                      <strong>Expected Return:</strong> $
+                      <strong>Preview:</strong> $
                       {(parseFloat(amount) * (1 + selectedPlan.roi / 100)).toFixed(2)}
+                      {" "} (calculated only for display, actual saved return is backend-driven)
                     </p>
-              )}
+                  )}
 
                <button className="confirm-btn" onClick={confirmInvestment} disabled={!isAmountValid}>Confirm</button>
                <button className="cancel-btn" onClick={() => setShowConfirmModal(false)}>Cancel</button>
@@ -125,15 +142,13 @@ export const InvestmentPlans = () => {
 export const InvestLog = () => {
 
   const { investments , setInvestments  } = useContext(BalanceContext);
-  const [currentTime, setCurrentTime] = useState(new Date());
-    const [sortBy, setSortBy] = useState("date"); 
+  const [sortBy, setSortBy] = useState("date"); 
   const [filter, setFilter] = useState("all");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
 
   useEffect(() => {
     const timer = setInterval(() => {
-      setCurrentTime(new Date());
 
       setInvestments((prev) =>
         prev.map((inv) =>
@@ -160,20 +175,23 @@ export const InvestLog = () => {
     return `${d}d ${h}h ${m}m ${s}s`;
   };
 
-  // 🔥 Sorting Logic
-  const sortedInvestments = [...investments].sort((a, b) => {
-    if (sortBy === "amount") return b.amount - a.amount;
-    if (sortBy === "roi") return b.expectedReturn - a.expectedReturn;
-    if (sortBy === "status") return (a.completed === b.completed) ? 0 : a.completed ? 1 : -1;
-    return 0;
+// 🔥 Sorting Logic
+const sortedInvestments = [...investments].sort((a, b) => {
+  if (sortBy === "amount") return b.amount - a.amount;
+  if (sortBy === "roi") return b.roi - a.roi;
+  if (sortBy === "return") return b.expectedReturn - a.expectedReturn;
+  if (sortBy === "status") return a.completed === b.completed ? 0 : a.completed ? 1 : -1;
+  return new Date(b.startDate) - new Date(a.startDate); // default: newest first
+});
+
+// 🔥 Filtering Logic
+const filteredInvestments = sortedInvestments.filter((inv) => {
+    if (filter === "active") return !inv.completed && inv.status !== "cancelled";
+    if (filter === "matured") return inv.completed;
+    if (filter === "cancelled") return inv.status === "cancelled";
+    return true;
   });
 
-  // 🔥 Filtering Logic
-  const filteredInvestments = sortedInvestments.filter((inv) => {
-    if (filter === "active") return !inv.completed;
-    if (filter === "matured") return inv.completed;
-    return true; // all
-  });
 
     return (
 
@@ -183,26 +201,34 @@ export const InvestLog = () => {
         <Sidebar sidebarOpen={sidebarOpen} toggleSidebar={toggleSidebar} />
         <main className="main-content">
        <div className="investlog">
-      <h2>Investment History</h2>
       {/* Controls */}
             <div className="log-controls">
-              <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
-                <option value="date">Sort by Date</option>
-                <option value="amount">Sort by Amount</option>
-                <option value="roi">Sort by ROI</option>
-                <option value="status">Sort by Status</option>
-              </select>
+    <div className="control-group">
+      <label>Sort</label>
+      <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
+        <option value="date">Sort by Date</option>
+        <option value="amount">Sort by Amount</option>
+        <option value="roi">Sort by ROI</option>
+        <option value="return">Sort by Return</option>
+        <option value="status">Sort by Status</option>
+      </select>
+    </div>
 
-              <select value={filter} onChange={(e) => setFilter(e.target.value)}>
-                <option value="all">Show All</option>
-                <option value="active">Active Only</option>
-                <option value="matured">Matured Only</option>
-              </select>
-            </div>
+    <div className="control-group">
+      <label>Filter</label>
+      <select value={filter} onChange={(e) => setFilter(e.target.value)}>
+        <option value="all">Show All</option>
+        <option value="active">Active Only</option>
+        <option value="matured">Matured Only</option>
+        <option value="cancelled">Cancelled Only</option>
+      </select>
+    </div>
+  </div>
       {filteredInvestments.length === 0 ? (
         <p>No investments found.</p>
       ) : (
-        <table className="investment-table">
+        <div className="table-responsive">
+          <table className="investment-table">
           <thead>
             <tr>
               <th>#</th>
@@ -210,22 +236,25 @@ export const InvestLog = () => {
               <th>Amount ($)</th>
               <th>ROI (%)</th>
               <th>Expected Return ($)</th>
+              <th>Status</th>
               <th>Time Left</th>
             </tr>
           </thead>
           <tbody>
-            {investments.map((inv, index) => (
-              <tr key={index}>
-                <td data-label="#">{index + 1}</td>
-                <td data-label="Plan">{inv.name}</td>
-                <td data-label="Amount">${inv.amount.toFixed(2)}</td>
-                <td data-label="ROI">{inv.expectedReturn}%</td>
-                <td data-label="Expected Return">${(inv.amount * (1 + inv.expectedReturn / 100)).toFixed(2)}</td>
-                <td data-label="Time Left">{calculateTimeLeft(inv.endDate)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                  {filteredInvestments.map((inv, index) => (
+                    <tr key={inv._id || index}>
+                      <td>{index + 1}</td>
+                      <td>{inv.name}</td>
+                      <td>${inv.amount.toFixed(2)}</td>
+                      <td>{inv.roi}%</td>
+                      <td>${inv.expectedReturn.toFixed(2)}</td>
+                      <td>{inv.status === "active" && !inv.completed ? "Active" : inv.status === "cancelled" ? "Cancelled": "Matured"}</td>
+                      <td>{calculateTimeLeft(inv.endDate)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+          </table>
+        </div>
       )}
        </div>
 

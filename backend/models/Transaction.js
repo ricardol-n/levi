@@ -1,14 +1,10 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
 const transactionSchema = new mongoose.Schema({
-  user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-  txType: { type: String, default: 'deposit' },
-  currency: String,
-  method: String,
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+  type: String,
   amount: Number,
-  address: String,
-  blockNumber: Number,
-  date: { type: Date, default: Date.now }
- });
+  date: { type: Date, default: Date.now },
+}, { timestamps: true });
 
-module.exports = mongoose.model('Transaction', transactionSchema);
+module.exports = mongoose.models.Transaction || mongoose.model("Transaction", transactionSchema);

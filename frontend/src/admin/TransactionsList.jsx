@@ -3,14 +3,12 @@ import { List, Datagrid, TextField, DateField, NumberField } from "react-admin";
 
 export const TransactionList = () => (
   <List>
-    <Datagrid>
+    <Datagrid rowClick="show">
       <TextField source="id" />
-      <TextField source="userId" />
+      <TextField source="userId.email" label="User Email" />
       <TextField source="type" />
       <NumberField source="amount" />
-      <DateField source="date" />
+      <DateField source="createdAt" />
     </Datagrid>
   </List>
 );
-
-

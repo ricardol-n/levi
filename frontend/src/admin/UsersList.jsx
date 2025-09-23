@@ -1,6 +1,5 @@
-// UsersList.jsx
-import React from 'react';
-import { List, Datagrid, TextField, EmailField } from 'react-admin';
+import React from "react";
+import { List, Datagrid, TextField, EmailField } from "react-admin";
 
 export const UserList = () => (
   <List>
@@ -12,4 +11,3 @@ export const UserList = () => (
     </Datagrid>
   </List>
 );
-

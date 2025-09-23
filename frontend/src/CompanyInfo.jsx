@@ -25,6 +25,10 @@ import data from './assets/data.png';
 import createDatafeed from './utils/datafeed';
 import { Link } from "react-router-dom";
 import { sliderClasses } from '@mui/material';
+import Counter from './Counter';
+import { FaFacebookF, FaTwitter, FaLinkedinIn, FaInstagram } from "react-icons/fa";
+
+
 
 
 
@@ -48,14 +52,6 @@ const Wrapper = styled.div`
   overflow:hidden;
 `;
 
-/* Overlay for mobile menu */
-const Overlay = styled.div`
-  display: ${({ menuOpen }) => (menuOpen ? "block" : "none")};
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.5);
-  z-index: 1001;
-`;
 
 const LoginButton = styled.button`
   padding: 10px 20px;
@@ -101,6 +97,19 @@ const CompanyInfo = () => {
 
     return () => clearInterval(interval);
   }, []);
+  useEffect(() => {
+    // lock body scroll when menu open
+    document.body.style.overflow = menuOpen ? "hidden" : "";
+    return () => { document.body.style.overflow = ""; };
+    }, [menuOpen]);
+
+  useEffect(() => {
+    const onKey = (e) => { if (e.key === "Escape") setMenuOpen(false); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
+  
 
   // TradingView chart
 //  useEffect(() => {
@@ -156,23 +165,31 @@ const CompanyInfo = () => {
             size={28}
             onClick={() => navigate('/login')}
           />
-          {/* Mobile Menu Toggle */}
-        <div className="mobile-menu-icon" onClick={() => setMenuOpen(!menuOpen)}>
-          {menuOpen ? <FiX size={28} /> : <FiMenu size={28} />}
+            {/* Mobile Menu Toggle */}
+          <div className="mobile-menu-icon" onClick={() => setMenuOpen(prev => !prev)} aria-label="Toggle menu" role="button" tabIndex={0}>
+            {menuOpen ? <FiX size={28} /> : <FiMenu size={28} />}
+          </div>
         </div>
 
-        {/* Mobile Menu */}
-        {menuOpen && (
-          <nav className="nav-links mobile">
+        {/* overlay (click outside to close) */}
+        <div
+          className={`mobile-overlay ${menuOpen ? "active" : ""}`}
+          onClick={() => setMenuOpen(false)}
+          aria-hidden={!menuOpen}/>
+
+          {/* <nav className={`mobile-sidebar ${menuOpen ? "active" : ""}`} aria-hidden={!menuOpen}>
             <Link to="/" onClick={() => setMenuOpen(false)}>Home</Link>
             <Link to="/about" onClick={() => setMenuOpen(false)}>About</Link>
-            <Link   to="#FAQ" onClick={(e) => {e.preventDefault();
-            document.getElementById("FAQ")?.scrollIntoView({ behavior: "smooth" });
-            setMenuOpen(false);}}> FAQ</Link>
+            <Link
+              to="#FAQ"
+              onClick={(e) => {
+                e.preventDefault();
+                document.getElementById("FAQ")?.scrollIntoView({ behavior: "smooth" });
+                setMenuOpen(false);
+              }}>FAQ</Link>
             <Link to="/contact" onClick={() => setMenuOpen(false)}>Contact</Link>
-          </nav>
-        )}
-        </div>
+          </nav> */}
+        
       </header>
 
       <section className="tesla">
@@ -302,8 +319,10 @@ const CompanyInfo = () => {
                 <p>No hidden charges — keep more of your profits.</p>
               </div>
             </div>
-        </section>
-        <section className='security fixed-sec' >
+      </section>
+
+
+      <section className='security fixed-sec' >
           <div className="sec-info">
             <div className="security-img"> <img src={female} alt="Security Illustration" /> </div>
               <div>
@@ -356,6 +375,27 @@ const CompanyInfo = () => {
                   </div>
             </div>
         </section>
+        <section className="stats-section">
+      <div className="stat-card" >
+        <h2>
+          <Counter end={5000} duration={3000} />+</h2>
+        <p>Active Users</p>
+      </div>
+
+      <div className="stat-card" >
+        <h2>
+          <Counter end={1200000} duration={4000} prefix="$" />
+        </h2>
+        <p>Total Investments</p>
+      </div>
+
+      <div className="stat-card" >
+        <h2>
+          <Counter end={98} duration={2000} suffix="%" />
+        </h2>
+        <p>Customer Satisfaction</p>
+      </div>
+    </section>
        <section className='tesla1 edu-res1' id='edu' >
 
         <div className="edu-res">
@@ -399,7 +439,7 @@ const CompanyInfo = () => {
           What Are Stocks
         </button>
                     {openFAQ === 0 && (
-                        <ul className="dropdown">
+                        <ul className="dropdown open">
                             <li >
                                 <p>Stocks, also commonly referred to as equities or shares, are issued by a public corporation and put up for sale. Companies originally used stocks as a way of raising additional capital, and as a way to boost their business growth. When the company first puts these stocks up for sale, this is called the Initial Public Offering. Once this stage is complete, the shares themselves are then sold on the stock market, which is where any stock trading will occur.
 
@@ -431,7 +471,7 @@ const CompanyInfo = () => {
           How Do I Trade Stocks
         </button>
                     {openFAQ === 1 && (
-                        <ul className="dropdown">
+                        <ul className="dropdown open">
                             <li>
                                 <p>A stock market is where stocks are traded: where sellers and buyers come to agree on a price. Historically, stock exchanges existed in a physical location, and all transactions took place on the trading floor. One of the world’s most famous stock markets is the London Stock Exchange (LSE).
                                 Yet as technology progresses, so does the stock market. Now we are seeing the rise of virtual stock exchanges that are made up of large computer networks will all trades performed electronically.
@@ -462,7 +502,7 @@ const CompanyInfo = () => {
           Stock Trading Risk Assessment
         </button>
                     {openFAQ === 2 && (
-                        <ul className="dropdown">
+                        <ul className="dropdown open">
                             <li >
                                 <p>All forms of financial investment carry a level of risk, and stock trading is no different. Even traders with decades of experience cannot predict the correct price movements every single time. 
                                 "People use various strategies, but it is important to note that there is no such thing as a failsafe strategy. It is also advisable to limit the amount of money you invest in a single trade, as part of your own risk management".</p>
@@ -519,6 +559,21 @@ const CompanyInfo = () => {
             </ul>
           </div>
         </div>
+      </div>
+
+      <div className="footer-social">
+        <a href="https://facebook.com" target="_blank" rel="noopener noreferrer">
+          <FaFacebookF />
+        </a>
+        <a href="https://twitter.com" target="_blank" rel="noopener noreferrer">
+          <FaTwitter />
+        </a>
+        <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer">
+          <FaLinkedinIn />
+        </a>
+        <a href="https://instagram.com" target="_blank" rel="noopener noreferrer">
+          <FaInstagram />
+        </a>
       </div>
 
       {/* Bottom bar */}

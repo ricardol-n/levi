@@ -1,4 +1,4 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useState,useMemo } from "react";
 import { BalanceContext } from "../BalanceContext";
 import Header from "../Header";
 import Sidebar from "../Sidebar";
@@ -6,31 +6,45 @@ import Sidebar from "../Sidebar";
 export const Withdraw = () => {
   const {
     balance,
+    investments,
     requestWithdrawal,
     loading,
     syncError,
+    user, // ✅ ensure BalanceContext provides current user info
   } = useContext(BalanceContext);
 
   const [selectedMethod, setSelectedMethod] = useState("");
   const [amount, setAmount] = useState("");
   const [address, setAddress] = useState("");
   const [message, setMessage] = useState({ type: "", text: "" });
-
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
+
+  // ✅ Calculate withdrawable profit (only matured investments)
+  const withdrawableProfit = useMemo(() => {
+    return (investments || [])
+      .filter((inv) => inv.status === "matured")
+      .reduce((sum, inv) => sum + (inv.expectedReturn || 0), 0);
+  }, [investments]);
 
   const onSubmit = async () => {
     setMessage({ type: "", text: "" });
     try {
+      if (!user?._id) throw new Error("User not logged in");
+      if (Number(amount) > withdrawableProfit) {
+        throw new Error(
+          `You can only withdraw up to $${withdrawableProfit.toFixed(2)} in profits.`
+        );
+      }
       await requestWithdrawal({
+        userId: user._id,         // ✅ send correct user
         method: selectedMethod,
-        amount,
-        address,
+        amount: Number(amount),
+        address,   // ✅ backend expects 
       });
       setMessage({
         type: "success",
-        text:
-          "✅ Withdrawal submitted and is now pending. Please allow up to 24 hours for processing.",
+        text: "✅ Withdrawal submitted and is now pending. Please allow up to 24 hours for admin approval.",
       });
       setAmount("");
       setAddress("");
@@ -57,8 +71,10 @@ export const Withdraw = () => {
             <div className="withdraw-card">
               <h2 className="withdraw-title">💸 Withdrawal</h2>
               <p className="balance-info">
-                Current Balance:{" "}
-                <span className="balance-amount">${balance.toFixed(2)}</span>
+                Withdrawable Profit:{" "}
+                <span className="balance-amount">
+                  ${withdrawableProfit.toFixed(2)}
+                </span>
               </p>
 
               <div className="form-group">
@@ -109,7 +125,9 @@ export const Withdraw = () => {
                   <button
                     onClick={onSubmit}
                     className="withdraw-button"
-                    disabled={loading || Number(balance) < 100}
+                    disabled={
+                      loading || withdrawableProfit < 100
+                    }
                   >
                     {loading ? "Submitting..." : "Confirm Withdrawal"}
                   </button>

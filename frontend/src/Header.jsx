@@ -2,13 +2,15 @@ import React, { useRef, useEffect, useState, useContext } from "react";
 import { PiUserCircleDashedThin } from "react-icons/pi";
 import tesla from "./assets/tesla.png";
 import {RiMenu4Fill} from "react-icons/ri";
-import { AuthContext } from "./context/Authcontext";
+import { AuthContext } from "./context/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 function Header({toggleSidebar}) {
   const [open, setOpen] = useState(false);
   const menuRef = useRef();
   const iconRef = useRef();
   const { user, logout } = useContext(AuthContext);
+
   const username = user?.username || "Guest";
 
   useEffect(() => {
@@ -24,6 +26,7 @@ function Header({toggleSidebar}) {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
 
   return (
     <header className="header">

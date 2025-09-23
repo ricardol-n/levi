@@ -220,6 +220,75 @@
   color: white;
   font-weight: 500;
 }
+
+.mobile-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0);
+  z-index: 1001;
+  opacity: 0;
+  transition: background 0.25s ease, opacity 0.25s ease;
+}
+
+.mobile-overlay.active {
+  display: block;
+  background: rgba(0,0,0,0.45);
+  opacity: 1;
+}
+/* ---------- Mobile sidebar ---------- */
+.mobile-sidebar {
+  position: fixed;
+  top: 0;
+  right: -110%;                 /* start off-screen */
+  width: 78%;
+  max-width: 360px;
+  height: 100%;
+  padding: 3.2rem 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  align-items: flex-start;
+  justify-content: center;
+  z-index: 1002;
+  transition: right 0.36s cubic-bezier(.2,.9,.25,1), box-shadow 0.36s;
+  box-shadow: -20px 0 40px rgba(0,0,0,0.35);
+
+  /* pick your color look (change if you like) */
+  background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460);
+  backdrop-filter: blur(8px);
+}
+
+/* visible */
+.mobile-sidebar.active {
+  right: 0;
+}
+
+/* links inside */
+.mobile-sidebar a {
+  color: #fff;
+  font-size: 1.1rem;
+  text-decoration: none;
+  width: 100%;
+  padding: 0.6rem 0;
+  transition: color 0.18s ease, transform 0.18s ease;
+  opacity: 0.98;
+}
+
+.mobile-sidebar a:hover,
+.mobile-sidebar a:focus {
+  color: #ffd54a;
+  transform: translateX(6px);
+}
+
+/* Hamburger icon visibility (override earlier display:none) */
+.mobile-menu-icon {
+  display: none; /* default hidden on large screens */
+  cursor: pointer;
+  z-index: 1200;
+}
+
+
 /* Hamburger menu */
 .hamburger {
   display: none;
@@ -237,17 +306,18 @@
   display: flex;
 }
 
-.mobile-menu-icon {
+/* .mobile-menu-icon {
   display: none;
   cursor: pointer;
   z-index: 1000;
+  
 }
 
 .mobile {
   position: absolute;
   top: 70px;
   right: 20px;
-  background: #243b55;
+  background: #0a76f1;
   border-radius: 10px;
   padding: 1rem;
   display: flex;
@@ -256,7 +326,7 @@
 
 .mobile a {
   margin: 0.5rem 0;
-}
+} */
 
 
 
@@ -321,6 +391,15 @@ nav ul li {
   padding: 50px;
   line-height: 1.6;
   max-width: 700px;
+  opacity: 0;
+  transform: translateY(30px);
+  animation: fadeUp 1s ease forwards;
+}
+  @keyframes fadeUp {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }    
 }
 .tesla-text h1 {
   font-size: 2.5rem;
@@ -497,8 +576,11 @@ nav ul li {
   box-shadow: 0 10px 20px rgba(0,0,0,0.3);
 }
 
-.tesla-text1 ,.security-text{
+.tesla-text1{
   max-width: 600px;
+}
+.security-text {
+  margin-right:60px;
 }
 .security-text h1{
   font-size: 2.5rem;
@@ -517,7 +599,14 @@ nav ul li {
   
 }
 
-.tesla-text1 p, .security-text p{
+.tesla-text1 p{
+  font-size: 1.1rem;
+  line-height: 1.7;
+  margin-bottom: 1.5rem;
+  color: #d1d1d1;
+  flex: 1 1 33%;
+}
+.security-text p{
   font-size: 1.1rem;
   line-height: 1.7;
   margin-bottom: 1.5rem;
@@ -554,6 +643,39 @@ nav ul li {
   grid-template-columns: repeat(3, 1fr); /* 2 columns */
   gap: 0.7rem 2rem; /* vertical + horizontal spacing */
 }
+.tesla-ul li {
+  position: relative;
+  padding-left: 28px;
+  margin-bottom: 10px;
+  font-size: 1.1rem;
+  color: #e0e0e0;
+  opacity: 0;
+  transform: translateX(-20px);
+  animation: fadeInLeft 0.5s ease forwards;
+}
+
+.tesla-ul li::before {
+  content: "✔";
+  position: absolute;
+  left: 0;
+  color: #ffd700;
+  font-weight: bold;
+}
+
+@keyframes fadeInLeft {
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.tesla-ul li:nth-child(1) { animation-delay: 0.2s; }
+.tesla-ul li:nth-child(2) { animation-delay: 0.4s; }
+.tesla-ul li:nth-child(3) { animation-delay: 0.6s; }
+.tesla-ul li:nth-child(4) { animation-delay: 0.8s; }
+.tesla-ul li:nth-child(5) { animation-delay: 1s; }
+.tesla-ul li:nth-child(6) { animation-delay: 1.2s; }
+
 .tesla2 {
   padding: 60px 20px;
   background: linear-gradient(135deg, #141e30, #243b55);
@@ -587,11 +709,11 @@ nav ul li {
   padding: 20px;
   text-align: center;
   backdrop-filter: blur(10px);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
 } 
 
 .invest-card:hover {
-  transform: translateY(-6px);
+  transform: translateY(-8px)scale(1.03);
   box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.3);
 }
 
@@ -791,21 +913,20 @@ html {
 
 .equ-cap {
   width: 60%;
-  background: wheat;
+  background: rgba(35, 1, 5, 0.616);
   padding: 1.5rem 2rem;
   border-radius: 12px;
-  box-shadow: 0 px 10px rgba(0,0,0,0.05);
+  box-shadow: 0 px 10px rgba(254, 3, 3, 0.991);
   /* min-width: 200px; */
 }
 
 .equ-cap h1 {
   font-size: 2rem;
-  color: #007bff;
+  color: #ff0000;
 }
 
 .equ-cap p {
   font-size: 0.6rem;
-  color: #666;
 }
 
 .fca {
@@ -1021,6 +1142,20 @@ html {
   font-size: 0.85rem;
   color: #94a3b8;
 }
+
+.dropdown {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.4s ease, opacity 0.3s ease;
+  opacity: 0;
+}
+
+.dropdown.open {
+  max-height: 500px; /* enough for content */
+  opacity: 1;
+}
+
+
 .dropdown p{
   line-height: 1.2cm;
   margin-bottom: 1.5rem;
@@ -1183,7 +1318,7 @@ html {
   background-color: rgba(255, 255, 255, 0.25);
   border-radius: 6px;
 }
-.mobile-toggle {
+/* .mobile-toggle {
   display: none;
   position: fixed;
   top: 70px;
@@ -1192,7 +1327,7 @@ html {
   color: white;
   cursor: pointer;
   z-index: 2100;
-}
+} */
 
 .close-btn {
   display: none;
@@ -1586,6 +1721,8 @@ html {
   margin-left: 10px;
   cursor: pointer;
 }
+
+
 /* Investment Log Styling */
 .investlog {
   margin-top: 20px;
@@ -1596,33 +1733,36 @@ html {
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
   backdrop-filter: blur(10px);
 }
-
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch; /* smooth scrolling on iOS */
+  margin-top: 12px;
+  border-radius: 8px;
+  border: 1px solid #eee;
+}
 /* Table Base */
 .investment-table {
   width: 100%;
   border-collapse: collapse;
   border-radius: 10px;
   overflow: hidden;
+  margin-top: 20px;
+  
 }
-
-/* Table Headers */
-.investment-table th {
-  background: linear-gradient(135deg, #1f1f2e, #2c2c40);
-  color: gold;
-  font-weight: 600;
-  padding: 14px;
-  text-align: left;
-  font-size: 15px;
-  border-bottom: 2px solid rgba(255, 215, 0, 0.3);
-}
-
-/* Table Cells */
+.investment-table th,
 .investment-table td {
-  padding: 12px;
+  padding: 10px 14px;
+  border-bottom: 1px solid #eee;
+  text-align: left;
   font-size: 14px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
+.investment-table th {
+  background: #f9f9f9;
+  font-weight: bold;
+  color: #444;
+}
 /* Zebra Stripes */
 .investment-table tr:nth-child(even) {
   background: rgba(255, 255, 255, 0.03);
@@ -1753,27 +1893,47 @@ html {
 .investment-popup button:hover {
   background: #218838;
 }
-.ticker-wrapper {
-  width: 100%;
-  overflow: hidden;
-  background: #222;
-  padding: 10px 0;
-}
-
 .ticker-container {
-  display: flex;
+  display: inline-block;
   white-space: nowrap;
-  width: max-content;
-  gap: 50px;
+  animation: tickerScroll 25s linear infinite;
 }
 
 .ticker-item {
-  font-size: 16px;
-  font-weight: bold;
-  color: #fff;
   display: inline-block;
-  white-space: nowrap;
-  padding-right: 30px;
+  margin: 0 2rem;
+  font-size: 0.9rem;
+  color: #f9f9f9;
+}
+
+.ticker-item strong {
+  color: #ffc107;
+}
+
+.ticker-item button {
+  margin-left: 0.75rem;
+  padding: 0.3rem 0.7rem;
+  font-size: 0.8rem;
+  border: none;
+  border-radius: 6px;
+  background: #ff5252;
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.3s ease, transform 0.2s ease;
+}
+
+.ticker-item button:hover {
+  background: #d32f2f;
+  transform: scale(1.05);
+}
+
+@keyframes tickerScroll {
+  0% {
+    transform: translateX(100%);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
 }
 
 .countdown-timer {
@@ -2536,13 +2696,10 @@ button:hover {
   width: 50%;
 }
 .chart-section, .crypto-section {
-  width: 70vw;
-  display: flex;
-  justify-content: center;
-  height: 400px;
-  padding: 15px;
-  border-radius: 8px;
-  color: black;
+  width: 100%;
+  max-width: 400px;   /* keep it from stretching too wide */
+  height: 400px;      /* required for visibility */
+  margin: auto
   
 }
 .crypto-market iframe {
@@ -2610,14 +2767,6 @@ button:hover {
   flex-shrink: 0;
 }
 
-.dashboard-contents {
-  display: flex;
-  flex: 1;
-  margin-top: 63px;
-  height: calc(100vh - 63px);
-  overflow: hidden;
-}
-
 /* Main content takes remaining space */
 .main-content {
   flex: 1;
@@ -2669,21 +2818,34 @@ button:hover {
 
 /* Content */
 .dashboard-contents {
-  margin-top: 53px;
   height: calc(100vh - 63px);
   overflow-y: auto; 
   background: #1f1f1f;
-  color: white;
+  color: rgb(246, 16, 16);
   min-height: 100vh;
   flex: 1;
   transition: margin-left 0.3s ease;
-  margin-left: 12rem;
+  margin-left: 0.5rem;
 }
 .log-controls {
   display: flex;
-  justify-content: flex-end;
-  gap: 15px;
-  margin-bottom: 15px;
+  justify-content: flex-start;
+  gap: 20px;
+  margin: 16px 0;
+  flex-wrap: wrap;
+  
+}
+.log-controls .control-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  
+}
+
+.log-controls label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #444;
 }
 
 .log-controls select {
@@ -2708,6 +2870,164 @@ button:hover {
   padding: 20px;
   
 }
+
+.stats-section {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  margin: 3rem auto;
+  flex-wrap: wrap;
+}
+
+.stat-card {
+  background: rgba(255,255,255,0.08);
+  padding: 2rem;
+  border-radius: 16px;
+  text-align: center;
+  width: 220px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+  transition: transform 0.3s ease;
+}
+
+.stat-card h2 {
+  font-size: 2rem;
+  color: #ffd700;
+  margin-bottom: 0.5rem;
+  text-shadow: 0 0 8px rgba(255,215,0,0.6);
+}
+
+.stat-card p {
+  color: #ddd;
+  font-size: 1rem;
+}
+
+.stat-card:hover {
+  transform: translateY(-6px);
+}
+
+.footer-social {
+  display: flex;
+  gap: 15px;
+  margin-top: 20px;
+}
+
+.footer-social a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #243b55; /* matches your footer theme */
+  color: white;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  font-size: 18px;
+  transition: all 0.3s ease;
+}
+
+.footer-social a:hover {
+  background: #ffd700; /* gold hover */
+  color: #141e30;      /* dark text on hover */
+}
+.legal-page {
+  max-width: 900px;
+  margin: 50px  auto;
+  padding: 2rem;
+  margin-bottom: 1px;
+  color: #e0e0e0;
+  line-height: 1.7;
+  background: rgba(20, 30, 48, 0.9); /* dark glass effect */
+  backdrop-filter: blur(8px);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+}
+
+.legal-page h1 {
+  font-size: 2rem;
+  margin-bottom: 1rem;
+  text-align: center;
+  color: #ff3c00dc;
+}
+
+.legal-page h2 {
+  margin-top: 1.5rem;
+  margin-bottom: 0.5rem;
+  /* color: #ffd700; */
+}
+
+.legal-page p, .legal-page li {
+  font-size: 1rem;
+}
+
+.legal-page ul {
+  margin: 0.5rem 0 1rem 1.2rem;
+  list-style: disc;
+}
+
+.tesla-text1 {
+  opacity: 0;
+  transform: translateY(30px);
+  animation: fadeUp 1s ease forwards;
+  animation-delay: 0.2s;
+}
+
+@keyframes fadeUp {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.tesla-text1 h1 {
+  font-size: 2rem;
+  color: #ffd700;
+  margin-bottom: 1rem;
+  text-shadow: 0 0 8px rgba(255, 215, 0, 0.5);
+}
+
+.tesla-text1 p {
+  color: #ddd;
+  font-size: 1.1rem;
+  margin-bottom: 1.5rem;
+}
+
+/* Animated list */
+.tesla-ul ul {
+  list-style: none;
+  padding-left: 0;
+}
+
+.tesla-ul li {
+  position: relative;
+  padding-left: 28px;
+  margin-bottom: 10px;
+  font-size: 1.05rem;
+  color: #e0e0e0;
+  opacity: 0;
+  transform: translateX(-20px);
+  animation: fadeInLeft 0.6s ease forwards;
+}
+
+.tesla-ul li::before {
+  content: "✔";
+  position: absolute;
+  left: 0;
+  color: #ffd700;
+  font-weight: bold;
+}
+
+@keyframes fadeInLeft {
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Staggered effect */
+.tesla-ul li:nth-child(1) { animation-delay: 0.3s; }
+.tesla-ul li:nth-child(2) { animation-delay: 0.5s; }
+.tesla-ul li:nth-child(3) { animation-delay: 0.7s; }
+.tesla-ul li:nth-child(4) { animation-delay: 0.9s; }
+.tesla-ul li:nth-child(5) { animation-delay: 1.1s; }
+.tesla-ul li:nth-child(6) { animation-delay: 1.3s; }
 
 
 
@@ -2769,6 +3089,18 @@ button:hover {
   .main-content{
     margin-left: 0;
     padding: 16px;
+  }
+  .legal-page {
+    padding: 1.5rem;
+  }
+  .legal-page h1 {
+    font-size: 1.8rem;
+  }
+  .legal-page h2 {
+    font-size: 1.3rem;
+  }
+  .legal-page p, .legal-page ul li {
+    font-size: 0.95rem;
   }
   
 }
@@ -2873,6 +3205,7 @@ button:hover {
 }
 /* RESPONSIVE MENU *//* Mobile Responsive */
 @media screen and (max-width: 768px) {
+
   .twofactor {
     max-width: 90%;
     padding: 16px;
@@ -2935,7 +3268,11 @@ button:hover {
     right: 0;
     height: 100%;
     width: 250px;
-    background: #243b55;
+    /* background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460); */
+    background: rgba(25, 25, 35, 0.8);
+    backdrop-filter: blur(12px);
+    border-left: 1px solid rgba(255,255,255,0.1);
+    backdrop-filter: blur(10px);
     padding-top: 4rem;
     transform: translateX(100%);
     transition: transform 0.3s ease-in-out;
@@ -2985,6 +3322,16 @@ button:hover {
 
   nav.open .header-title {
     display: flex;
+    color: wheat;
+  }
+  .modal {
+    width: 95%;
+    padding: 1.5rem;
+  }
+
+  .ticker-item {
+    margin: 0 1rem;
+    font-size: 0.8rem;
   }
 
   .tesla1 {
@@ -2993,14 +3340,12 @@ button:hover {
     display: block;
     margin-bottom: 2rem;
   }
-  .tesla-text1{
-    margin: 20px;
-    position: relative;
-    left: 0.6rem;
-  }
   .security-img{
     display: flex;
     justify-content: center;
+  }
+  .tesla-ul li {
+    text-align: left;
   }
   .security-text{
     position: relative;
@@ -3015,10 +3360,14 @@ button:hover {
   }
   .tesla-text1 {
     max-width: 100%;
+    text-align: center;
   }
   .tesla-text {
     padding: 40px;
     text-align: center;
+  }
+  .tesla-ul li {
+    text-align: left; 
   }
 
   .tesla-text h1 {
@@ -3143,6 +3492,55 @@ button:hover {
     font-size: 0.9rem;
     padding: 8px;
   }
+  .log-controls {
+    flex-direction: column;  /* stack vertically */
+    gap: 10px;
+    align-items: flex-end;
+  }
+
+  .log-controls .control-group {
+    width: 100%;
+  }
+
+  .log-controls select {
+    width: 100%;  /* full width for mobile */
+    font-size: 16px;
+  }
+  .investment-table,
+  .investment-table thead,
+  .investment-table tbody,
+  .investment-table th,
+  .investment-table td,
+  .investment-table tr {
+    display: block;
+  }
+
+  .investment-table thead {
+    display: none;
+  }
+
+  .investment-table tr {
+    margin-bottom: 15px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 12px;
+    
+  }
+
+  .investment-table th,
+  .investment-table td {
+    border: none;
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    font-size: 14px;
+  }
+
+  .investment-table td::before {
+    content: attr(data-label);
+    font-weight: bold;
+    color: #333;
+  }
 }
 
 @media screen and (max-width: 767px) {
@@ -3163,43 +3561,7 @@ button:hover {
   .dashboard-body, .dashboard-contents,.main-content{
     min-height: auto;
   }
-  .investment-table,
-  .investment-table thead,
-  .investment-table tbody,
-  .investment-table th,
-  .investment-table td,
-  .investment-table tr {
-    display: block;
-    width: 100%;
-  }
 
-  .investment-table thead {
-    display: none; /* Hide headers on mobile */
-  }
-
-  .investment-table tr {
-    margin-bottom: 15px;
-    background: rgba(30, 30, 47, 0.95);
-    border-radius: 10px;
-    padding: 12px;
-    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.25);
-  }
-
-  .investment-table td {
-    padding: 8px 10px;
-    text-align: right;
-    position: relative;
-    border: none;
-  }
-
-  .investment-table td::before {
-    content: attr(data-label);
-    position: absolute;
-    left: 10px;
-    font-weight: bold;
-    color: gold;
-    text-align: left;
-  }
   .investment-grid {
     grid-template-columns: 1fr;
   }
@@ -3377,6 +3739,8 @@ button:hover {
   nav ul li {
     font-size: 0.9rem;
     justify-content: center;
+    border-top: 0.5px solid rgba(243, 8, 51, 0.523);
+    color: rgba(5, 154, 247, 0.852);
     
   }
 
@@ -3439,6 +3803,7 @@ button:hover {
 
   .security-text p {
     font-size: 0.85rem;
+    margin-left:-20px;
   }
 
   .equ-cap h1 {
@@ -3495,5 +3860,16 @@ button:hover {
   .transaction-table td {
     padding: 8px;
   }
-
+  .fca-auth img{
+    width: 60px;
+  }
+  .legal-page h1 {
+    font-size: 1.4rem;
+  }
+  .legal-page h2 {
+    font-size: 1.1rem;
+  }
+  .legal-page p, .legal-page ul li {
+    font-size: 0.85rem;
+  }
 }

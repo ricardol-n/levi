@@ -2,10 +2,17 @@ const express = require('express');
 const router = express.Router();
 const Transaction = require('../models/Transaction');
 
-router.get('/', async (req, res) => {
-  const data = await Transaction.find();
-  res.json(data);
+// routes/transactions.js
+router.get("/", async (req, res) => {
+  try {
+    const transactions = await Transaction.find()
+      .populate("userId", "email");
+    res.json(transactions.map(t => ({ ...t.toObject(), id: t._id })));
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
 });
+
 
 router.post('/', async (req, res) => {
   const newItem = new Transaction(req.body);

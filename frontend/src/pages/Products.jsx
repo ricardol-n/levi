@@ -4,7 +4,7 @@ import { BalanceContext } from '../BalanceContext';
 import { useNavigate } from 'react-router-dom';
 import Header from '../Header';
 import Sidebar from '../Sidebar';
-import { AuthContext } from "../context/Authcontext";
+import { AuthContext } from "../context/AuthContext";
 import axios from 'axios';
 
 export const Deposit = () => {
@@ -18,6 +18,7 @@ export const Deposit = () => {
   const { user } = useContext(AuthContext);
   const { balance } = useContext(BalanceContext);
   const name = 'Bitcoin';
+  const [btcPrice, setBtcPrice] = useState(0);
   const [conversionRates, setConversionRates] = useState({});
   const MIN_DEPOSIT = 1;
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
@@ -28,11 +29,7 @@ export const Deposit = () => {
       try {
         const response = await axios.get('/api/rates');
         const coingecko = response?.data?.data;
-
-        setConversionRates( {
-          Bitcoin: coingecko?.bitcoin?.usd || 1,
-        });
-
+        setBtcPrice(coingecko?.bitcoin?.usd || 0);
       } catch (error) {
         console.error('❌ Failed to fetch conversion rates:', error.message || error);
       }
@@ -154,6 +151,11 @@ export const Deposit = () => {
                   placeholder="Enter amount"
           
                 />
+                {btcPrice > 0 && amount && (
+                    <p>
+                      ≈ {(parseFloat(amount) / btcPrice).toFixed(8)} BTC
+                    </p>
+                  )}
                 <button
                   onClick={handleDeposit} className='pay-btn'>Confirm Deposit</button>
               </div>

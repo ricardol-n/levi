@@ -3,10 +3,10 @@ import './App.css';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import ScrollToTop from './ScrollToTop.jsx';
 import Dashboard from './Dashboard.jsx';
-import Header from './Header.jsx';
-import { Sidebar } from './Sidebar.jsx';
 import ProtectedRoute from './ProtectedRoute.jsx';
 import AdminPanel from './admin/AdminPanel.jsx';
+
+
 import { InvestmentPlans, InvestLog } from './pages/Reports.jsx';
 import { Deposit, DepositLog } from './pages/Products.jsx';
 import { Withdraw, WithdrawLog } from './pages/Team.jsx';
@@ -16,12 +16,14 @@ import { RefferalLog } from './pages/Refferal.jsx';
 import { TwoFactor } from './pages/TwoFactor.jsx';
 import { DepositConfirmationPage } from "./pages/DepoistConfrim.jsx";
 import { Charts } from './pages/Charts.jsx';
-import { AuthContext } from './context/Authcontext.jsx';
+import { AuthContext } from './context/AuthContext.jsx';
 import CompanyInfo from "./CompanyInfo.jsx";
 import AboutUs from "./AboutUs.jsx";
 import Contact from './Contact.jsx';
 import LoginPage from './Login.jsx';
 import RegisterPage from './Register.jsx';
+import TermsOfService from "./TermsOfService";
+import PrivacyPolicy from "./PrivacyPolicy";
 
 
 function App() {
@@ -40,6 +42,8 @@ function App() {
            <Route path="/" element={<CompanyInfo />} />
             <Route path="/about" element={<AboutUs />} />
             <Route path="/contact" element={<Contact />} />
+            <Route path="/terms" element={<TermsOfService />} />
+            <Route path="/privacy" element={<PrivacyPolicy />} />
 
         {/* Public Routes */}
 
@@ -48,12 +52,8 @@ function App() {
 
 
         {/* Protected Routes */}
-        {isLoggedIn && (
-          <>
-            <Route
-              path="/dashboard"
-              element={<ProtectedRoute> <Dashboard /></ProtectedRoute>}
-            />
+       
+            <Route path="/dashboard" element={<ProtectedRoute> <Dashboard /> </ProtectedRoute>} />
             <Route path="/investmentplans" element={<ProtectedRoute><InvestmentPlans /></ProtectedRoute>} />
             <Route path="/InvestLog" element={<ProtectedRoute><InvestLog /></ProtectedRoute>} />
             <Route path="/deposit" element={<ProtectedRoute><Deposit /></ProtectedRoute>} />
@@ -70,11 +70,10 @@ function App() {
             <Route path="/setting/logout" element={<ProtectedRoute><Logout /></ProtectedRoute>} />
             <Route path="/depositconfirmationpage" element={<ProtectedRoute><DepositConfirmationPage /></ProtectedRoute>} />
             <Route path="/charts" element={<ProtectedRoute><Charts /></ProtectedRoute>} />
-          </>
-        )}
+        
 
         {/* Admin */}
-        <Route path="/admin/*" element={<AdminPanel />} />
+        <Route path="/admin/*" element={ <ProtectedRoute adminOnly> <AdminPanel/> </ProtectedRoute> } />
 
         {/* Fallback */}
         <Route path="*" element={<Navigate to="/" replace />} />

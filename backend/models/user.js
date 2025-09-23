@@ -1,26 +1,12 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
-const UserSchema = new mongoose.Schema({
+const userSchema = new mongoose.Schema({
   username: String,
   email: String,
   password: String,
-  role: { type: String, default: "User" },
+  role: { type: String, default: "user" },
   balance: { type: Number, default: 0 },
-  depositAddresses: {
-    type: Map,
-    of: String,
-    default: () => ({
-     BTC: '',
-     ETH: '',
-     DOGE: '',
-     TRON: '',
-     XRP: ''
-    })
-  }
-
+  depositAddressBTC: { BTC: String },
 }, { timestamps: true });
 
-// ✅ Don't redefine if already exists
-const User = mongoose.models.User || mongoose.model('User', UserSchema);
-
-module.exports = User;
+module.exports = mongoose.models.User || mongoose.model("User", userSchema);

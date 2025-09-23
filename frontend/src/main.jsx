@@ -1,9 +1,9 @@
-import React , { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
+import React , { StrictMode } from 'react';
+import { createRoot } from 'react-dom/client';
 import { HashRouter } from "react-router-dom";
-import App from './App.jsx'
-import { AuthProvider } from './context/Authcontext.jsx'
-import { BalanceProvider } from './BalanceContext.jsx'
+import App from './App.jsx';
+import { AuthProvider } from './context/AuthContext.jsx';
+import { BalanceProvider } from './BalanceContext.jsx';
 
 
 createRoot(document.getElementById('root')).render(

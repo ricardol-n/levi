@@ -4,11 +4,11 @@ const mongoose = require("mongoose");
 require("dotenv").config();
 const verifyToken = require("./middleware/auth");
 const axios = require("axios");
-
+const app = express();
 
 // ✅ Import routes
 const authRouter = require("./routes/auth");
-const rateRoutes = require("./routes/rates");
+const ratesRoutes = require("./routes/rates");
 const userRoutes = require("./routes/users");
 const investmentRoutes = require("./routes/investments");
 const transactionRoutes = require("./routes/transactions");
@@ -16,7 +16,9 @@ const withdrawalRoutes = require("./routes/withdrawals");
 const depositRoutes = require("./routes/deposit");
 const webhookRoutes = require("./routes/btcpayWebhook");
 const candlesRoute = require("./routes/stocks");
-const app = express();
+
+require("./cron/investmentCron");
+
 
 
 
@@ -58,6 +60,17 @@ const stockSymbols = [
   { id: "amazon", symbol: "AMZN", name: "Amazon" },
   { id: "google", symbol: "GOOGL", name: "Google" },
 ];
+
+const path = require("path");
+
+if (process.env.NODE_ENV === "production") {
+  const frontendPath = path.join(__dirname, "../frontend/dist");
+  app.use(express.static(frontendPath));
+
+  app.get("*", (req, res) => {
+    res.sendFile(path.join(frontendPath, "index.html"));
+  });
+}
 
 
 // ✅ API to return stock list with prices
@@ -104,7 +117,7 @@ app.get("/api/candles/:symbol", async (req, res) => {
   }
 });
 app.use("/api/auth", authRouter);
-app.use("/api/rates", rateRoutes);
+app.use("/api/rates", ratesRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api", depositRoutes);
 app.use("/api/webhook", webhookRoutes);
