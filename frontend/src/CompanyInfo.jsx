@@ -63,6 +63,7 @@ const LoginButton = styled.button`
     background-color: #ff3d33ff;
   }
 `;
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 const CompanyInfo = () => {
   const navigate = useNavigate();
@@ -84,7 +85,7 @@ const CompanyInfo = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const { data } = await axios.get("http://localhost:4000/api/stocks");
+        const { data } = await axios.get(`${API_BASE_URL}/api/stocks`);
         setStocks(data);
         setLoading(false);
       } catch (error) {

@@ -1,6 +1,8 @@
 // frontend/src/utils/tradingviewDatafeed.js
 import axios from "axios";
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL; // ✅ Load from .env
+
 export default function createDatafeed(symbol) {
   return {
     onReady: (callback) => {
@@ -33,7 +35,7 @@ export default function createDatafeed(symbol) {
 
     getBars: async (symbolInfo, resolution, from, to, onHistoryCallback, onErrorCallback) => {
       try {
-        const { data } = await axios.get(`http://localhost:4000/api/candles/${symbolInfo.ticker}`);
+        const { data } = await axios.get(`${API_BASE_URL}/api/candles/${symbolInfo.ticker}`);
         
         const bars = data.t.map((time, i) => ({
           time: time * 1000,
