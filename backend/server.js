@@ -4,7 +4,7 @@ const mongoose = require("mongoose");
 require("dotenv").config();
 const verifyToken = require("./middleware/auth");
 const axios = require("axios");
-const app = express();
+
 
 // ✅ Import routes
 const authRouter = require("./routes/auth");
@@ -74,48 +74,6 @@ if (process.env.NODE_ENV === "production") {
 
 
 // ✅ API to return stock list with prices
-app.get("/api/stocks", async (req, res) => {
-  try {
-    const apiKey = process.env.FINNHUB_API_KEY;
-    const results = {};
-
-    // fetch price for each stock
-    for (const stock of stockSymbols) {
-      const url = `https://finnhub.io/api/v1/quote?symbol=${stock.symbol}&token=${apiKey}`;
-      const { data } = await axios.get(url);
-      results[stock.symbol] = {
-        ...stock,
-        price: data.c || null, // "c" is current price
-      };
-    }
-
-    res.json(results);
-  } catch (error) {
-    console.error("Error fetching stock prices:", error.message);
-    res.status(500).json({ error: "Failed to fetch stock prices" });
-  }
-});
-app.get("/api/candles/:symbol", async (req, res) => {
-  try {
-    const { symbol } = req.params;
-    const apiKey = process.env.FINNHUB_API_KEY;
-
-    const now = Math.floor(Date.now() / 1000);
-    const from = now - 60 * 60 * 24 * 30; // last 30 days
-
-    const url = `https://finnhub.io/api/v1/stock/candle?symbol=${symbol}&resolution=D&from=${from}&to=${now}&token=${apiKey}`;
-    const { data } = await axios.get(url);
-
-    if (data.s !== "ok") {
-      return res.status(400).json({ error: "No candle data" });
-    }
-
-    res.json(data); // send back OHLCV
-  } catch (error) {
-    console.error("❌ Error fetching candle data:", error.message);
-    res.status(500).json({ error: "Failed to fetch candles" });
-  }
-});
 app.use("/api/auth", authRouter);
 app.use("/api/rates", ratesRoutes);
 app.use("/api/users", userRoutes);

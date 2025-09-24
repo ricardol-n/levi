@@ -1,5 +1,12 @@
 const axios = require("axios");
-const TEST_MODE = process.env.TEST_MODE === "true"; 
+
+// Load env vars
+const TEST_MODE = process.env.TEST_MODE === "true";
+const BTCPAY_HOST = process.env.BTCPAY_HOST;
+const BTCPAY_STORE_ID = process.env.BTCPAY_STORE_ID;
+const BTCPAY_API_KEY = process.env.BTCPAY_API_KEY;
+const FRONTEND_URLS = process.env.FRONTEND_URLS;
+
 /**
  * Create a BTC-only invoice in BTCPay Server
  * @param {Object} params
@@ -8,44 +15,39 @@ const TEST_MODE = process.env.TEST_MODE === "true";
  * @param {string} [params.redirectUrl] - Optional redirect after payment
  */
 const createBTCPayInvoice = async ({ amount, userId, redirectUrl }) => {
-
   if (TEST_MODE) {
     console.log("⚡ TEST_MODE enabled: Returning fake invoice");
 
     return {
       id: "mock-invoice-" + Date.now(),
-      checkoutLink: redirectUrl || "http://localhost:5175/depositconfirmationpage",
+      checkoutLink: redirectUrl || `${FRONTEND_URLS}/depositconfirmationpage`,
       status: "New",
     };
   }
 
-  const host = process.env.BTCPAY_HOST;
-  const storeId = process.env.BTCPAY_STORE_ID;
-  const apiKey = process.env.BTCPAY_API_KEY;
-
-  if (!host || !storeId || !apiKey) {
+  if (!BTCPAY_HOST || !BTCPAY_STORE_ID || !BTCPAY_API_KEY) {
     throw new Error("⚠️ Missing BTCPAY environment variables.");
   }
 
   const headers = {
     "Content-Type": "application/json",
-    Authorization: `token ${apiKey}`,
+    Authorization: `token ${BTCPAY_API_KEY}`,
   };
 
   const data = {
     amount,
-    currency: "USD", 
+    currency: "USD",
     metadata: { userId },
     checkout: {
-      redirectURL: redirectUrl || `${process.env.APP_BASE_URL}/dashboard`,
+      redirectURL: redirectUrl || `${FRONTEND_URLS}/dashboard`,
       defaultPaymentMethod: "BTC",
     },
-    notificationURL: `${process.env.APP_BASE_URL}/api/webhook/btcpay`, // webhook.js
+    notificationURL: `${FRONTEND_URLS}/api/webhook/btcpay`,
   };
 
   try {
     const response = await axios.post(
-      `${host}/api/v1/stores/${storeId}/invoices`,
+      `${BTCPAY_HOST}/api/v1/stores/${BTCPAY_STORE_ID}/invoices`,
       data,
       { headers }
     );
@@ -56,30 +58,26 @@ const createBTCPayInvoice = async ({ amount, userId, redirectUrl }) => {
   }
 };
 
-// ✅ New: fetch invoice status from BTCPay
+// ✅ Fetch invoice status from BTCPay
 const getBTCPayInvoice = async (invoiceId) => {
-  
-    if (TEST_MODE) {
+  if (TEST_MODE) {
     console.log("⚡ TEST_MODE enabled: Auto-confirming invoice", invoiceId);
 
     return {
       id: invoiceId,
-      status: "Settled", // ✅ Pretend payment was successful
+      status: "Settled", // Pretend payment was successful
     };
   }
-  const host = process.env.BTCPAY_HOST;
-  const storeId = process.env.BTCPAY_STORE_ID;
-  const apiKey = process.env.BTCPAY_API_KEY;
 
-  if (!host || !storeId || !apiKey) {
-    throw new Error("Missing BTCPAY environment variables");
+  if (!BTCPAY_HOST || !BTCPAY_STORE_ID || !BTCPAY_API_KEY) {
+    throw new Error("⚠️ Missing BTCPAY environment variables.");
   }
 
-  const headers = { Authorization: `token ${apiKey}` };
+  const headers = { Authorization: `token ${BTCPAY_API_KEY}` };
 
   try {
     const response = await axios.get(
-      `${host}/api/v1/stores/${storeId}/invoices/${invoiceId}`,
+      `${BTCPAY_HOST}/api/v1/stores/${BTCPAY_STORE_ID}/invoices/${invoiceId}`,
       { headers }
     );
     return response.data;
@@ -88,4 +86,5 @@ const getBTCPayInvoice = async (invoiceId) => {
     throw new Error("Failed to fetch BTCPay invoice");
   }
 };
-module.exports = { createBTCPayInvoice , getBTCPayInvoice };
+
+module.exports = { createBTCPayInvoice, getBTCPayInvoice };
