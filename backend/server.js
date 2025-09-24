@@ -4,6 +4,10 @@ const mongoose = require("mongoose");
 require("dotenv").config();
 const verifyToken = require("./middleware/auth");
 const axios = require("axios");
+const path = require("path");
+
+
+const app = express();
 
 
 // ✅ Import routes
@@ -51,17 +55,6 @@ mongoose
   .catch((err) => console.error("❌ MongoDB error:",err));
 
 
-// ✅ Stock list
-const stockSymbols = [
-  { id: "netflix", symbol: "NFLX", name: "Netflix" },
-  { id: "spotify", symbol: "SPOT", name: "Spotify" },
-  { id: "tesla", symbol: "TSLA", name: "Tesla" },
-  { id: "meta", symbol: "META", name: "Facebook" },
-  { id: "amazon", symbol: "AMZN", name: "Amazon" },
-  { id: "google", symbol: "GOOGL", name: "Google" },
-];
-
-const path = require("path");
 
 if (process.env.NODE_ENV === "production") {
   const frontendPath = path.join(__dirname, "../frontend/dist");
