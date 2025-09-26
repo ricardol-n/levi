@@ -1,4 +1,4 @@
-import React, { createContext, useState, useEffect, useCallback, useContext } from "react";
+import React, { createContext, useState, useEffect, useCallback, useContext,useMemo } from "react";
 import axios from "axios";
 import { AuthContext } from "./context/AuthContext";
 
@@ -80,53 +80,29 @@ export const BalanceProvider = ({ children }) => {
   }, [userId, syncFromBackend]);
 
   // ---- Investments ----------------------------------------------------------
-  const addInvestment = (name, amount, roi, duration) => {
-    if (!duration || isNaN(duration) || duration <= 0) return;
-
-    const startDate = new Date();
-    const endDate = new Date(
-      startDate.getTime() + duration * 24 * 60 * 60 * 1000
+ const addInvestment = async (name, amount, roi, duration) => {
+  try {
+    const headers = token ? { Authorization: `Bearer ${token}` } : {};
+    const res = await axios.post(
+      "/api/investments",
+      { name, amount, roi, duration },
+      { headers }
     );
 
-    if (isNaN(startDate) || isNaN(endDate)) return;
+    // backend responds with updated balance + investment
+    if (res.data?.investment) {
+      setInvestments((prev) => [res.data.investment, ...prev]);
+      setBalance(res.data.balance || 0);
+    }
 
-    const profitOnly = (Number(amount) * Number(roi)) / 100;
+    // ✅ full refresh from backend to stay in sync
+    syncFromBackend();
+  } catch (err) {
+    console.error("❌ Error adding investment:", err.response?.data || err.message);
+    throw err.response?.data || { message: "Failed to add investment" };
+  }
+};
 
-    setInvestments((prev) => [
-      ...prev,
-      {
-        name,
-        amount: Number(amount),
-        roi:Number(roi),
-        expectedReturn: profitOnly,
-        completed: false,
-        status:"active",
-        startDate: startDate.toISOString(),
-        endDate: endDate.toISOString(),
-      },
-    ]);
-      // ✅ Deduct balance immediately
-      setBalance((prevBal) => prevBal - Number(amount));
-  };
-
-  // Check matured investments every 5s
- useEffect(() => {
-  const tick = () => {
-    setInvestments((prev) =>
-      prev.map((inv) => {
-        const matured = inv.status === "active" && !inv.completed && new Date(inv.endDate) <= new Date();
-        if (matured) {
-          const payout = Number(inv.amount) + Number(inv.expectedReturn); // principal + profit
-          setBalance((prevBal) => prevBal + payout);
-          return { ...inv, completed: true, status: "matured" };
-        }
-        return inv;
-      })
-    );
-  };
-  const id = setInterval(tick, 5000);
-  return () => clearInterval(id);
-}, []);
 
 const cancelInvestment = async (investmentId) => {
   try {
@@ -149,6 +125,7 @@ const cancelInvestment = async (investmentId) => {
           inv._id === investmentId ? { ...inv, status: "cancelled" } : inv
         )
       );
+      syncFromBackend();
     } else {
       throw new Error(res.data.message || "Cancel failed");
     }
@@ -159,44 +136,48 @@ const cancelInvestment = async (investmentId) => {
 };
 
   // ---- Withdrawals (BTC only) -----------------------------------------------
-const requestWithdrawal = async ({ amount, address }) => {
-  if (!userId) throw new Error("User not logged in.");
-  const amt = Number(amount);
+const requestWithdrawal = async ({ amount, method, address }) => {
+    if (!userId) throw new Error("User not logged in.");
+    const amt = Number(amount);
 
-  if (!address || !amt || amt < 1) {
-    throw new Error("Invalid withdrawal data. Minimum is $1.");
-  }
+    if (!address || !amt || amt < 1) {
+      throw new Error("Invalid withdrawal data. Minimum is $1.");
+    }
 
-  // ✅ Only allow profit withdrawals
-  const totalProfits = investments
-    .filter(inv => inv.status === "matured")
-    .reduce((sum, inv) => sum + Number(inv.expectedReturn || 0), 0);
+    if (amt > withdrawableProfit) {
+      throw new Error("You can only withdraw matured profits.");
+    }
 
-  if (amt > totalProfits) {
-    throw new Error("You can only withdraw matured profits.");
-  }
+    const headers = token ? { Authorization: `Bearer ${token}` } : {};
+    const res = await axios.post(
+      `/api/withdrawals`,
+      { userId, method, amount: amt, address },
+      { headers }
+    );
 
-  const headers = token ? { Authorization: `Bearer ${token}` } : {};
+    const created = res.data?.withdrawal || res.data;
+    setWithdrawals((prev) => [created, ...prev]);
+    syncFromBackend();
+    return created;
+  };
 
-  const res = await axios.post(
-    `/api/withdrawals`,
-    {
-      userId,
-      method: "BTC",
-      amount: amt,
-      address,
-    },
-    { headers }
-  );
+  // ✅ Precompute withdrawableProfit (profit only from completed investments)
+  const withdrawableProfit = useMemo(() => {
+    return (investments || [])
+      .filter((inv) => inv.status === "completed")
+      .reduce((sum, inv) => sum + (Number(inv.expectedReturn || 0) - Number(inv.amount || 0)), 0);
+  }, [investments]);
 
-  const created = res.data?.withdrawal || res.data;
-  setWithdrawals((prev) => [created, ...prev]);
 
-  // 🔄 sync after withdrawal
-  syncFromBackend();
-  return created;
-};
+useEffect(() => {
+    if (!Array.isArray(investments)) return;
 
+    const matured = investments.some((inv) => inv.status === "completed");
+    if (matured) {
+      // ✅ If cron matured an investment, refresh balance
+      syncFromBackend();
+    }
+  }, [investments, syncFromBackend]);
 
 
   // ---- Public API -----------------------------------------------------------
@@ -208,6 +189,7 @@ const requestWithdrawal = async ({ amount, address }) => {
         deposits,
         withdrawals,
         investments,
+        withdrawableProfit,
         loading,
         syncError,
         syncFromBackend,

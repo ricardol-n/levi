@@ -10,6 +10,7 @@ import ChartDataLabels from "chartjs-plugin-datalabels";
 import { Pie } from "react-chartjs-2";
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
 import { AuthContext } from '../context/AuthContext';
+import { duration } from '@mui/material';
 
 ChartJS.register(ArcElement, Tooltip, Legend,ChartDataLabels);
 
@@ -21,6 +22,7 @@ export const Overview = () => {
     const balanceCtx = useContext(BalanceContext);
     const {
     balance = 0,
+    deposits = [],
     investments = [],
     withdrawals = [],
     referralEarnings = 0,
@@ -28,66 +30,57 @@ export const Overview = () => {
     transactions: ctxTransactions = [],
   } = balanceCtx || {};
     const [totalInvested, setTotalInvested] = useState(0);
-    const [currentInvestments, setCurrentInvestments] = useState(0);
     const [expectedReturns, setExpectedReturns] = useState(0);
     const [pendingInvestments, setPendingInvestments] = useState(0);
     const [pendingWithdrawals, setPendingWithdrawals] = useState(0);
-    const [currentTime, setCurrentTime] = useState(new Date());
+    const [currentInvestments, setCurrentInvestments] = useState(0);
     const [currentPlan, setCurrentPlan] = useState("N/A");
-    const [value,copy] = useCopyToClipboard();
     const [showCancelModal, setShowCancelModal] = useState(false);
     const [investmentToCancel, setInvestmentToCancel] = useState(null);
     const [notification, setNotification] = useState("");
     const [canceling, setCanceling] = useState(false);
     const transactions = Array.isArray(ctxTransactions) ? ctxTransactions : [];
 
-   
 
-        useEffect(() => {
-            const timer = setInterval(() => {
-                     setCurrentTime(new Date());
+    // compute sums when investments/withdrawals change
+useEffect(() => {
+  if (!Array.isArray(investments)) return;
 
-                     investments.forEach(inv => {
-                        if (inv.status === "active" && new Date(inv.endDate) <= new Date()) {
-          setNotification(`Your investment in ${inv.name} has matured!`);
-        }
-      });
-    }, 5000);
-             
-                 return () => clearInterval(timer);
-             }, [investments]);
+  // 💰 Total invested = sum of all amounts (active + completed + cancelled)
+  const totalInvested = investments.reduce(
+    (sum, inv) => sum + Number(inv.amount || 0),
+    0
+  );
 
-        // compute sums when investments/withdrawals change
-  useEffect(() => {
-    if (Array.isArray(investments) && investments.length > 0) {
-      const invested = investments.reduce((sum, inv) => sum + Number(inv.amount || 0), 0);
-      const returns = investments.reduce((sum, inv) => sum + Number(inv.roi || inv.expectedReturn || 0), 0);
-      const pending = investments.filter((inv) => inv.status === "active" && !inv.completed).reduce((sum, inv) => sum + Number(inv.amount || 0), 0);
-      const latestInvestment = investments[0] || investments[investments.length - 1];
+  // 📌 Current active investments (still running)
+  const activeInvestments = investments
+    .filter((inv) => inv.status === "active")
+    .reduce((sum, inv) => sum + Number(inv.amount || 0), 0);
 
-      setTotalInvested(invested);
-      setExpectedReturns(returns);
-      setPendingInvestments(pending);
-      setCurrentInvestments(invested - pending);
-      setCurrentPlan(latestInvestment?.name || "N/A");
-    } else {
-      setTotalInvested(0);
-      setExpectedReturns(0);
-      setPendingInvestments(0);
-      setCurrentInvestments(0);
-      setCurrentPlan("N/A");
-    }
+  // 🎯 Expected profits (sum of profit parts for all investments)
+  const expectedProfits = investments.reduce(
+  (sum, inv) => sum + Number(inv.expectedReturn || 0),0);
 
-    if (Array.isArray(investments) && investments.length > 0) {
-      const pendingWithdraw = investments
-        .filter((inv) => inv.status === "active" || inv.status === "matured")
-        .reduce((sum, inv) => sum + Number(inv.expectedReturn || 0), 0);
+  // 🏆 Matured profits (only completed investments, withdrawable)
+  const maturedProfits = investments
+    .filter((inv) => inv.status === "completed")
+    .reduce(
+      (sum, inv) => sum + (Number(inv.expectedReturn || 0) - Number(inv.amount || 0)),
+      0
+    );
 
-      setPendingWithdrawals(pendingWithdraw);
-    } else {
-      setPendingWithdrawals(0);
-    }
-  }, [investments]);
+  // 📌 Latest active plan
+  const latestActive = investments.find((inv) => inv.status === "active") || null;
+
+  // ✅ Set state
+  setTotalInvested(totalInvested);
+  setCurrentInvestments(activeInvestments);
+  setPendingInvestments(activeInvestments); // synonym for clarity
+  setExpectedReturns(expectedProfits);
+  setPendingWithdrawals(maturedProfits);
+  setCurrentPlan(latestActive?.name || "N/A");
+}, [investments]);
+
 
     
         const calculateTimeLeft = (endDate) => {
@@ -127,43 +120,52 @@ export const Overview = () => {
       setInvestmentToCancel(null);
     }
   };
-    // ✅ Auto-detect transactions by type (case-insensitive)
-const deposits = transactions && transactions.length > 0
-  ? transactions.filter(tx => tx.type?.toLowerCase() === "deposit").length
-  : 0;
+// 💰 Sum up deposits
+const depositSum = deposits.reduce(
+  (sum, dep) => sum + Number(dep.amount || 0),
+  0
+);
 
-const withdrawalsCount = transactions && transactions.length > 0
-  ? transactions.filter(tx => tx.type?.toLowerCase() === "withdrawal").length
-  : 0;
+// 💸 Sum up withdrawals
+const withdrawalSum = withdrawals.reduce(
+  (sum, wd) => sum + Number(wd.amount || 0),
+  0
+);
 
-const investmentsCount = transactions && transactions.length > 0
-  ? transactions.filter(tx => tx.type?.toLowerCase() === "investment").length
-  : 0;
+// 📈 Sum up investments (principal + profit expected)
+const investmentSum = investments.reduce(
+  (sum, inv) => sum + Number(inv.expectedReturn || 0), 
+  0
+);
 
-// ✅ Fallback so chart is never empty
-const total = deposits + withdrawalsCount + investmentsCount;
+// ✅ Fallback to avoid empty chart
+const total = depositSum + withdrawalSum + investmentSum;
 
 const pieData = {
   labels: ["Deposits", "Withdrawals", "Investments"],
   datasets: [
     {
-      data: total > 0 ? [deposits, withdrawalsCount, investmentsCount] : [1, 1, 1], // fallback
-      backgroundColor: ["#F44336", "#4CAF50", "#FFC107"],
-      hoverOffset: 10,
-      borderWidth: 2,
+      data: total > 0 ? [depositSum, withdrawalSum, investmentSum] : [1, 1, 1],
+      backgroundColor: ["#2196F3",  "#FFC107","#F44336"], // blue, red, yellow
+      borderColor: [
+        "rgba(0, 100, 200, 0.9)",    // darker edges for 3D feel
+        "rgba(200, 30, 30, 0.9)",
+        "rgba(200, 150, 0, 0.9)",
+      ],
+      hoverOffset: 20,
+      borderWidth: 3,
     },
   ],
 };
 
 const pieOptions = {
   plugins: {
-    legend: {
-      display: true,
-      position: "bottom",
-    },
+    legend: { display: true, position: "bottom" },
     datalabels: {
       color: "#fff",
-      font: { weight: "bold" },
+      font: { size: 14, weight: "bold" },
+      shadowBlur: 10,
+      shadowColor: "rgba(0,0,0,0.7)", // glowing labels
       formatter: (value, context) => {
         const dataset = context.chart.data.datasets[0].data;
         const sum = dataset.reduce((a, b) => a + b, 0);
@@ -171,10 +173,7 @@ const pieOptions = {
       },
     },
   },
-  animation: {
-    animateRotate: true,
-    animateScale: true,
-  },
+  animation: { animateRotate: true, animateScale: true, duration: 2000,easing:"easeOutBounce", }, layout:{padding:20,},
 };
 
 // ✅ TradingView script injection
@@ -221,15 +220,15 @@ const pieOptions = {
                     animate={{ x: "-100%" }}
                     transition={{ repeat: Infinity, duration: 20, ease: "linear" }}
                 >
-                    {investments.filter(inv => inv.status === "active").length === 0 ? (
-  <p>No active investments</p>
-) : (
-  investments
-    .filter(inv => inv.status === "active") // 👈 only active
-    .map((inv, index) => (
+                        {investments
+  .filter(inv => inv.status === "active") // 👈 only active
+  .map((inv, index) => {
+    const profitOnly = Number(inv.expectedReturn || 0) - Number(inv.amount || 0); // ✅ profit only
+    return (
       <span key={index} className="ticker-item">
-        <strong>{inv.name}</strong> | Amount: ${Number(inv.amount || 0).toFixed(2)} | 
-        ROI: {inv.expectedReturn}% | 
+        <strong>{inv.name}</strong> | 
+        Amount: ${Number(inv.amount || 0).toFixed(2)} |  
+        ROI: {Number(inv.roi || 0).toFixed(2)}% | 
         <GiTimeTrap /> {calculateTimeLeft(inv.endDate)}
         {calculateTimeLeft(inv.endDate) !== "Matured" && (
           <button
@@ -240,8 +239,9 @@ const pieOptions = {
           </button>
         )}
       </span>
-    ))
-)}
+    );
+  })}
+
 
                 </motion.div>
             </div>
@@ -274,10 +274,10 @@ const pieOptions = {
                        <div className="piggy-content"><p>Total Invested</p> <p>${Number(totalInvested || 0).toFixed(2)} USD</p></div>
                      </div>
 
-                     <div className="container-card1">
+                      <div className="container-card1">
                        <div className="piggy"><MdFolderCopy /></div>
                        <div className="piggy-content"><p>Current invest</p> <p>${Number(currentInvestments || 0).toFixed(2)} USD</p></div>
-                     </div>
+                     </div> 
 
                      <div className="container-card1">
                        <div className="piggy"><GiTimeTrap /></div>
@@ -286,7 +286,7 @@ const pieOptions = {
 
                      <div className="container-card1">
                        <div className="piggy"><FaHandHoldingDollar /></div>
-                       <div className="piggy-content"><p>Expected Returns</p> <p>${Number(expectedReturns || 0).toFixed(2)} USD</p></div>
+                       <div className="piggy-content"><p>Expected Profits</p> <p>${Number(expectedReturns || 0).toFixed(2)} USD</p></div>
                      </div>
                 </div>
 
@@ -300,24 +300,28 @@ const pieOptions = {
         <div className="details-card2">
           <div className="details-content"><FaDigitalTachograph /></div>
           <p className="con-tails">Pending invest</p>
-          <div className="details-content1"><h1>${Number(pendingInvestments || 0).toFixed(2)} USD</h1> <a href="#"><FaArrowTurnDown /></a></div>
+          <div className="details-content1"><h1>${Number(pendingInvestments || 0).toFixed(2)} USD</h1> {""}<a href="#"><FaArrowTurnDown /></a></div>
         </div>
 
         <div className="details-card3">
           <div className="details-content"><GiTimeTrap /></div>
-          <p className="con-tails">Pending withdraw</p>
-          <div className="details-content1"><h1>${Number(pendingWithdrawals || 0).toFixed(2)} USD</h1> <a href="#"><FaArrowTurnDown /></a></div>
+          <p className="con-tails">Matured Profits</p>
+          <div className="details-content1"><h1>${Number(pendingWithdrawals || 0).toFixed(2)} USD</h1>{" "} <a href="#"><FaArrowTurnDown /></a></div>
         </div>
 
         <div className="details-card4">
           <div className="details-content"><FaHandHoldingDollar /></div>
           <p className="con-tails">Referral earn</p>
-          <div className="details-content1"><h1>${Number(referralEarnings || 0).toFixed(2)} USD</h1> <a href="#"><FaArrowTurnDown /></a></div>
+          <div className="details-content1"><h1>${Number(referralEarnings || 0).toFixed(2)} USD</h1>{" "} <a href="#"><FaArrowTurnDown /></a></div>
         </div>
 
         <div className="details-card5">
           <div className="chart-section">
-            {total === 0 ? <p>No data available</p> : <Pie data={pieData} options={pieOptions} />}
+            {total === 0 ? (
+              <p>No data available</p>
+            ) : (
+              <Pie data={pieData} options={pieOptions} />
+            )}
           </div>
 
           <div className="details-card6">

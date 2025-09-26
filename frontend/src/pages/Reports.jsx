@@ -57,8 +57,6 @@ export const InvestmentPlans = () => {
 
 const inv = res.data.investment;
 
-// ✅ Deduct balance instantly in context
-  balance.setBalance((prev) => prev - investmentAmount);
 
 alert(
         `✅ Investment Successful! You invested $${inv.amount}. Expected return will be calculated automatically.`
@@ -147,20 +145,12 @@ export const InvestLog = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
 
+ // ✅ Always refresh from backend on mount
   useEffect(() => {
-    const timer = setInterval(() => {
-
-      setInvestments((prev) =>
-        prev.map((inv) =>
-          new Date(inv.endDate) <= new Date()
-            ? { ...inv, completed: true }
-            : inv
-        )
-      );
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, [setInvestments]);
+    if (typeof syncFromBackend === "function") {
+      syncFromBackend();
+    }
+  }, [syncFromBackend]);
 
   const calculateTimeLeft = (endDate) => {
     if (!endDate) return "Matured";
@@ -176,18 +166,18 @@ export const InvestLog = () => {
   };
 
 // 🔥 Sorting Logic
-const sortedInvestments = [...investments].sort((a, b) => {
-  if (sortBy === "amount") return b.amount - a.amount;
-  if (sortBy === "roi") return b.roi - a.roi;
-  if (sortBy === "return") return b.expectedReturn - a.expectedReturn;
-  if (sortBy === "status") return a.completed === b.completed ? 0 : a.completed ? 1 : -1;
-  return new Date(b.startDate) - new Date(a.startDate); // default: newest first
-});
+ const sortedInvestments = [...(investments || [])].sort((a, b) => {
+    if (sortBy === "amount") return b.amount - a.amount;
+    if (sortBy === "roi") return b.roi - a.roi;
+    if (sortBy === "return") return b.expectedReturn - a.expectedReturn;
+    if (sortBy === "status") return a.status.localeCompare(b.status);
+    return new Date(b.startDate) - new Date(a.startDate); // newest first
+  });
 
 // 🔥 Filtering Logic
 const filteredInvestments = sortedInvestments.filter((inv) => {
-    if (filter === "active") return !inv.completed && inv.status !== "cancelled";
-    if (filter === "matured") return inv.completed;
+    if (filter === "active") return inv.status === "active";
+    if (filter === "matured" || filter === "completed") return inv.status === "completed";
     if (filter === "cancelled") return inv.status === "cancelled";
     return true;
   });
@@ -245,10 +235,10 @@ const filteredInvestments = sortedInvestments.filter((inv) => {
                     <tr key={inv._id || index}>
                       <td>{index + 1}</td>
                       <td>{inv.name}</td>
-                      <td>${inv.amount.toFixed(2)}</td>
+                      <td>${Number(inv.amount).toFixed(2)}</td>
                       <td>{inv.roi}%</td>
-                      <td>${inv.expectedReturn.toFixed(2)}</td>
-                      <td>{inv.status === "active" && !inv.completed ? "Active" : inv.status === "cancelled" ? "Cancelled": "Matured"}</td>
+                      <td>${Number(inv.expectedReturn).toFixed(2)}</td>
+                      <td>{inv.status}</td>
                       <td>{calculateTimeLeft(inv.endDate)}</td>
                     </tr>
                   ))}

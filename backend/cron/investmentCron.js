@@ -4,17 +4,17 @@ const Investment = require("../models/Investment");
 const User = require("../models/user");
 const sendEmail = require("../utils/sendEmail");
 
-// Run every 5 minutes (instead of once per hour)
+// Run every 5 minutes
 cron.schedule("*/5 * * * *", async () => {
   console.log("⏳ Checking matured investments...");
 
   const now = new Date();
 
- try {
+  try {
     // 1️⃣ Find all active investments that have matured
     const maturedInvestments = await Investment.find({
       status: "active",
-      endDate: { $lte: now }
+      endDate: { $lte: now },
     });
 
     if (maturedInvestments.length === 0) {
@@ -29,30 +29,40 @@ cron.schedule("*/5 * * * *", async () => {
         continue;
       }
 
-         user.balance += inv.expectedReturn;
-         await user.save();
+      // ✅ Credit principal + profit
+      const profit = Number(inv.expectedReturn); // profit only
+      const payout = Number(inv.amount) + profit;
 
-        // ✅ Update investment status safely
-        inv.status = "completed";
-        await inv.save();
+      user.balance += payout;
+      await user.save();
 
-        // ✅ Send Email Notification (safe try/catch)
-        try {
-          await sendEmail(
-            user.email,
-            "Your Investment Has Matured 🎉",
-            `
-              <h2>Hi ${user.username || user.email},</h2>
-              <p>Your investment of <b>$${inv.amount}</b> in plan <b>${inv.name}</b> has matured.</p>
-              <p>We have credited your balance with <b>$${inv.expectedReturn.toFixed(2)}</b>.</p>
-              <p>Thank you for trusting TXLA Finance 🚀</p>
-            `
-          );
+      // ✅ Update investment status
+      inv.status = "completed";
+      await inv.save();
+
+      // ✅ Send Email Notification
+      try {
+        await sendEmail(
+          user.email,
+          "Your Investment Has Matured 🎉",
+          `
+            <h2>Hi ${user.username || user.email},</h2>
+            <p>Your investment of <b>$${inv.amount}</b> in plan <b>${inv.name}</b> has matured.</p>
+            <p>You earned a profit of <b>$${profit.toFixed(2)}</b>.</p>
+            <p>Total credited to your balance: <b>$${payout.toFixed(2)}</b>.</p>
+            <p>Thank you for trusting TXLA Finance 🚀</p>
+          `
+        );
         console.log(
-          `✅ Investment ${inv._id} matured → Credited & email sent to ${user.email}`
+          `✅ Investment ${inv._id} matured → Credited $${payout.toFixed(
+            2
+          )} & email sent to ${user.email}`
         );
       } catch (emailErr) {
-        console.error(`❌ Failed to send email for ${inv._id}:`, emailErr.message);
+        console.error(
+          `❌ Failed to send email for ${inv._id}:`,
+          emailErr.message
+        );
       }
     }
   } catch (err) {

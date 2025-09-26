@@ -23,9 +23,9 @@ export const Withdraw = () => {
   // ✅ Calculate withdrawable profit (only matured investments)
   const withdrawableProfit = useMemo(() => {
     return (investments || [])
-      .filter((inv) => inv.status === "matured")
-      .reduce((sum, inv) => sum + (inv.expectedReturn || 0), 0);
-  }, [investments]);
+      .filter((inv) => inv.status === "completed")
+      .reduce((sum, inv) => sum + ((inv.expectedReturn || 0) - (inv.amount || 0)), 0);
+}, [investments]);
 
   const onSubmit = async () => {
     setMessage({ type: "", text: "" });

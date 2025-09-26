@@ -26,11 +26,14 @@ router.post("/", verifyToken, async (req, res) => {
     user.balance -= amount;
     await user.save();
 
+    const profitOnly = amount * (roi / 100);
+
     const investment = new Investment({
       userId: req.user._id, // from auth middleware
       name,
       amount,
       roi,                 // save ROI separately too
+      expectedReturn: profitOnly,
       startDate,
       endDate,
       status:"active",

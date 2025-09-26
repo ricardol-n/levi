@@ -6,7 +6,7 @@ const router = express.Router();
 require("dotenv").config();
 
 const FINNHUB_API_KEY = process.env.FINNHUB_API_KEY;
-const FINNHUB_API = process.env.FINNHUB_API;
+const FINNHUB_API = "https://finnhub.io/api/v1";
 
 const stockSymbols = [
   { id: "netflix", symbol: "NFLX", name: "Netflix" },
@@ -20,7 +20,6 @@ const stockSymbols = [
 // ✅ GET stock list with prices
 router.get("/stocks", async (req, res) => {
   try {
-    const apiKey = process.env.FINNHUB_API_KEY;
     const results = {};
 
     for (const stock of stockSymbols) {
@@ -51,9 +50,9 @@ router.get("/candles/:symbol", async (req, res) => {
 
     // ✅ Use .env-based API
     const url = `${FINNHUB_API}/stock/candle?symbol=${symbol}&resolution=D&from=${from}&to=${now}&token=${FINNHUB_API_KEY}`;
-
+    console.log("Fetching:", url);
     const { data } = await axios.get(url);
-
+    console.log("Response for", stock.symbol, "=>", data);
     if (data.s !== "ok") {
       return res.status(400).json({ error: "Failed to fetch candles", details: data });
     }

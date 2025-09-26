@@ -60,7 +60,7 @@ router.get("/", async (req, res) => {
 });
 
 
-// ✅ Get user balance
+// ✅ Get user balance (always from DB)
 router.get("/:id/balance", async (req, res) => {
   try {
     const { id } = req.params;
@@ -69,29 +69,19 @@ router.get("/:id/balance", async (req, res) => {
       return res.status(400).json({ success: false, message: "Invalid user ID" });
     }
 
-    const user = await User.findById(id);
+    const user = await User.findById(id).select("balance");
     if (!user) {
       console.log("❌ User not found for ID:", id);
       return res.status(404).json({ success: false, message: "User not found" });
     }
 
-    // ✅ only confirmed BTC deposits
-    const deposits = await Deposit.find({ userId: id, status: "confirmed", currency: "BTC" });
-    const withdrawals = await Withdrawal.find({ userId: id, status: "approved", method: "BTC" });
-
-    const depositSum = deposits.reduce((sum, d) => sum + Number(d.amount || 0), 0);
-    const withdrawalSum = withdrawals.reduce((sum, w) => sum + Number(w.amount || 0), 0);
-  
-
-    // ✅ prefer stored balance, fallback to computed
-   const balance = Math.max(0, depositSum - withdrawalSum);
-
-    res.json({ success: true, balance });
+    res.json({ success: true, balance: user.balance });
   } catch (err) {
     console.error("❌ Balance fetch error:", err);
     res.status(500).json({ success: false, message: "Server error" });
   }
 });
+
 
 
 /**

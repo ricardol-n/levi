@@ -19,12 +19,12 @@ const investmentSchema = new mongoose.Schema(
       min: [1, "Investment amount must be at least $1"],
     },
     roi: {
-      type: Number,
-      required: true, // % ROI
+      type: Number, // ROI %
+      required: true,
       min: 1,
     },
     expectedReturn: {
-      type: Number,
+      type: Number, // ✅ profit only (not principal)
       required: true,
     },
     startDate: {
@@ -37,17 +37,17 @@ const investmentSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["active", "completed" ,"pending", "cancelled"],
-      default: "active", // ✅ New investments always start as active
+      enum: ["active", "completed", "pending", "cancelled"],
+      default: "active",
     },
   },
   { timestamps: true }
 );
 
-// ✅ Automatically calculate expectedReturn if missing
+// ✅ Automatically calculate expectedReturn (profit only)
 investmentSchema.pre("validate", function (next) {
   if (!this.expectedReturn && this.amount && this.roi) {
-    this.expectedReturn = this.amount * (1 + this.roi / 100);
+    this.expectedReturn = this.amount * (this.roi / 100); // only profit
   }
   next();
 });
