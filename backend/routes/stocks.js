@@ -52,7 +52,7 @@ router.get("/candles/:symbol", async (req, res) => {
     const url = `${FINNHUB_API}/stock/candle?symbol=${symbol}&resolution=D&from=${from}&to=${now}&token=${FINNHUB_API_KEY}`;
     console.log("Fetching:", url);
     const { data } = await axios.get(url);
-    console.log("Response for", stock.symbol, "=>", data);
+    console.log("Response for",symbol, "=>", data);
     if (data.s !== "ok") {
       return res.status(400).json({ error: "Failed to fetch candles", details: data });
     }
