@@ -5,7 +5,7 @@ import { FaHandHoldingDollar,FaArrowTurnDown,FaRegFaceSadCry } from "react-icons
 import { MdOutlineMoneyOffCsred,MdFolderCopy } from "react-icons/md";
 import {useCopyToClipboard} from 'usehooks-ts' 
 import {BalanceContext}  from '../BalanceContext';
-import { motion } from "framer-motion";
+import { motion ,useAnimation} from "framer-motion";
 import ChartDataLabels from "chartjs-plugin-datalabels";
 import { Pie } from "react-chartjs-2";
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
@@ -40,8 +40,8 @@ export const Overview = () => {
     const [notification, setNotification] = useState("");
     const [canceling, setCanceling] = useState(false);
     const transactions = Array.isArray(ctxTransactions) ? ctxTransactions : [];
-
-
+    const controls = useAnimation();
+    const tickerTransition = { repeat: Infinity, duration: 20, ease: "linear" };
     // compute sums when investments/withdrawals change
 useEffect(() => {
   if (!Array.isArray(investments)) return;
@@ -108,6 +108,7 @@ useEffect(() => {
 
     const confirmCancelInvestment = async () => {
     if (!investmentToCancel) return;
+    setCanceling(true);
     // call cancelInvestment from context (which hits backend)
     try {
       await cancelInvestment(investmentToCancel);
@@ -118,6 +119,7 @@ useEffect(() => {
     } finally {
       setShowCancelModal(false);
       setInvestmentToCancel(null);
+      setCanceling(false);
     }
   };
 // 💰 Sum up deposits
@@ -149,7 +151,7 @@ const pieData = {
       backgroundColor: ["#2196F3",  "#FFC107","#F44336"], // blue, red, yellow
       borderColor: [
         "rgba(0, 100, 200, 0.9)",    // darker edges for 3D feel
-        "rgba(200, 30, 30, 0.9)",
+        "rgba(200, 121, 30, 0.9)",
         "rgba(200, 150, 0, 0.9)",
       ],
       hoverOffset: 20,
@@ -194,7 +196,15 @@ const pieOptions = {
       container.appendChild(script);
     }
   }, []);
-
+// Start ticker animation on mount
+useEffect(() => {
+const startTicker = () => {
+controls.start({ x: "-100%" }, { transition: tickerTransition });
+};
+startTicker();
+// cleanup stops animation
+return () => controls.stop();
+}, []); // eslint-disable-line react-hooks/exhaustive-deps
     
     return (
         
@@ -211,40 +221,48 @@ const pieOptions = {
                     <button onClick={() => setNotification("")}>✖</button>
                 </motion.div>
             )}
+            <div className="ticker-wrapper overflow-hidden">
+  <motion.div
+    className="ticker-container whitespace-nowrap inline-flex items-center"
+    initial={{ x: "100%" }}
+    animate={{ x: "-100%" }}
+    transition={{ repeat: Infinity, duration: 20, ease: "linear" }}
+  >
+    {Array.isArray(investments) &&
+      investments
+        .filter(inv => inv.status === "active")
+        .map((inv) => {
+          const timeLeft = calculateTimeLeft(inv.endDate);
 
-            
-            <div className="ticker-wrapper">
-                <motion.div
-                    className="ticker-container"
-                    initial={{ x: "100%" }}
-                    animate={{ x: "-100%" }}
-                    transition={{ repeat: Infinity, duration: 20, ease: "linear" }}
+          return (
+            <span
+              key={inv._id || `${inv.name}-${inv.amount}`}
+              className="ticker-item inline-flex items-center mx-6 gap-3"
+            >
+              {/* 👷 Miner inline */}
+              
+
+              {/* Investment details */}
+              <strong>{inv.name}</strong> | 
+              Amount: ${Number(inv.amount || 0).toFixed(2)} |  
+              ROI: {Number(inv.roi || 0).toFixed(2)}% |  
+              <GiTimeTrap /> {timeLeft}
+              
+
+              {timeLeft !== "Matured" && (
+                <button
+                  className="cancel-btn ml-2 bg-red-500 text-white px-2 py-1 rounded"
+                  onClick={() => handleCancelClick(inv._id)}
                 >
-                        {investments
-  .filter(inv => inv.status === "active") // 👈 only active
-  .map((inv, index) => {
-    const profitOnly = Number(inv.expectedReturn || 0) - Number(inv.amount || 0); // ✅ profit only
-    return (
-      <span key={index} className="ticker-item">
-        <strong>{inv.name}</strong> | 
-        Amount: ${Number(inv.amount || 0).toFixed(2)} |  
-        ROI: {Number(inv.roi || 0).toFixed(2)}% | 
-        <GiTimeTrap /> {calculateTimeLeft(inv.endDate)}
-        {calculateTimeLeft(inv.endDate) !== "Matured" && (
-          <button
-            className="cancel-btn"
-            onClick={() => handleCancelClick(inv._id)}
-          >
-            Cancel
-          </button>
-        )}
-      </span>
-    );
-  })}
+                  Cancel
+                </button>
+              )}
+            </span>
+          );
+        })}
+  </motion.div>
+</div>
 
-
-                </motion.div>
-            </div>
 
             {showCancelModal && (
                 <div className="modal-overlay">

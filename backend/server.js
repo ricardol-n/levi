@@ -3,7 +3,6 @@ const cors = require("cors");
 const mongoose = require("mongoose");
 require("dotenv").config();
 const verifyToken = require("./middleware/auth");
-const axios = require("axios");
 const path = require("path");
 
 
@@ -43,7 +42,13 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use(express.json());
+app.use((req, res, next) => {
+  if (req.originalUrl === "/api/webhook/btcpay") {
+    next(); // raw body handled inside webhook route
+  } else {
+    express.json()(req, res, next);
+  }
+});
 
 // ✅ MongoDB connect
 mongoose
