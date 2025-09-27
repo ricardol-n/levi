@@ -72,16 +72,33 @@ if (process.env.NODE_ENV === "production") {
 
 
 // ✅ API to return stock list with prices
+// ✅ Debug logs before mounting each route
+console.log("Mounting /api/auth");
 app.use("/api/auth", authRouter);
-app.use("/api/rates", ratesRoutes);
-app.use("/api/users", userRoutes);
-app.use("/api", depositRoutes);
-app.use("/api/webhook", webhookRoutes);
-app.use("/api/investments", verifyToken, investmentRoutes);
-app.use("/api/transactions", verifyToken, transactionRoutes);
-app.use("/api/withdrawals", verifyToken, withdrawalRoutes);
-app.use("/api", candlesRoute);
 
+console.log("Mounting /api/rates");
+app.use("/api/rates", ratesRoutes);
+
+console.log("Mounting /api/users");
+app.use("/api/users", userRoutes);
+
+console.log("Mounting /api (deposit)");
+app.use("/api", depositRoutes);
+
+console.log("Mounting /api/webhook");
+app.use("/api/webhook", webhookRoutes);
+
+console.log("Mounting /api/investments");
+app.use("/api/investments", verifyToken, investmentRoutes);
+
+console.log("Mounting /api/transactions");
+app.use("/api/transactions", verifyToken, transactionRoutes);
+
+console.log("Mounting /api/withdrawals");
+app.use("/api/withdrawals", verifyToken, withdrawalRoutes);
+
+console.log("Mounting /api (candles)");
+app.use("/api", candlesRoute);
 
 
 // ✅ Start server
