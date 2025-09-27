@@ -22,13 +22,18 @@ const candlesRoute = require("./routes/stocks");
 
 require("./cron/investmentCron");
 
-
+// ✅ Log env vars
+console.log("ENV FRONTEND_URL:", process.env.FRONTEND_URL);
+console.log("ENV FRONTEND_URLS:", process.env.FRONTEND_URLS);
 
 
 // ✅ CORS
 const allowedOrigins = process.env.FRONTEND_URLS
   ? process.env.FRONTEND_URLS.split(",").map((url) => url.trim())
   : [];
+
+
+console.log("Allowed Origins:", allowedOrigins);
 
 app.use((req, res, next) => {
   const origin = req.headers.origin;
