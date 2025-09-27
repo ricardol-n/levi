@@ -19,9 +19,9 @@ router.post("/btcpay", async (req, res) =>  {
     const computed =
       "sha256=" +
       crypto.createHmac("sha256", secret).update(rawBody).digest("hex");
-      
+
       // 🐛 DEBUG LOGGING
-    console.log("📩 Raw BTCPay body:", rawBody);
+    console.log("📩 BTCPay webhook received");
     console.log("🔑 Received signature:", signature);
     console.log("🔑 Computed signature:", computed);
 
@@ -40,18 +40,12 @@ router.post("/btcpay", async (req, res) =>  {
 
     if (event.type === "InvoiceSettled" || event.type === "InvoiceCompleted") {
       const txId = invoice.id;
-      const amount = parseFloat(invoice.amountPaid || invoice.amount || 0);
+      const usdAmount = parseFloat(invoice.metadata?.amount || 0);
       const userIdRaw = invoice?.metadata?.userId;
 
-      if (!userIdRaw || !amount || !txId) {
+      if (!userIdRaw || !usdAmount || !txId) {
         console.error("❌ Missing invoice data:", invoice);
         return res.status(400).json({ success: false, message: "Missing invoice data" });
-      }
-
-      // 🚨 BTC only
-      if (invoice.currency?.toUpperCase() !== "BTC") {
-        console.warn(`❌ Rejected non-BTC deposit: ${invoice.currency}`);
-        return res.status(400).json({ success: false, message: "Only BTC deposits are accepted" });
       }
 
       // ✅ Validate user
@@ -72,8 +66,8 @@ router.post("/btcpay", async (req, res) =>  {
       const newDeposit = new Deposit({
         userId,
         address: invoice.address,
-        amount,
-        currency: "BTC",
+        amount:usdAmount,
+        currency: "USD",
         txId,
         status: "confirmed",
         source: "btcpay",
@@ -81,9 +75,9 @@ router.post("/btcpay", async (req, res) =>  {
       await newDeposit.save();
 
       // ✅ Update balance
-      await User.findByIdAndUpdate(userId, { $inc: { balance: amount } });
+      await User.findByIdAndUpdate(userId, { $inc: { balance: usdAmount  } });
 
-      console.log(`✅ BTC deposit credited: ${amount} BTC → user ${userId}`);
+      console.log(`✅ Deposit credited: $${usdAmount} USD → user ${userId}`);
     }
 
     res.sendStatus(200);

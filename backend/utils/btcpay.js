@@ -5,8 +5,15 @@ const TEST_MODE = process.env.TEST_MODE === "true";
 const BTCPAY_HOST = process.env.BTCPAY_HOST;
 const BTCPAY_STORE_ID = process.env.BTCPAY_STORE_ID;
 const BTCPAY_API_KEY = process.env.BTCPAY_API_KEY;
-const FRONTEND_URLS = process.env.FRONTEND_URLS;
 
+// ⚡ Split frontend URLs into an array (take the first one for redirects)
+const FRONTEND_URLS = process.env.FRONTEND_URLS
+  ? process.env.FRONTEND_URLS.split(",")
+  : [];
+const FRONTEND_URL = process.env.FRONTEND_URL || FRONTEND_URLS[0];
+
+// ✅ Backend must be explicit (for webhooks!)
+const BACKEND_URL = process.env.BACKEND_URL;
 /**
  * Create a BTC-only invoice in BTCPay Server
  * @param {Object} params
@@ -20,12 +27,12 @@ const createBTCPayInvoice = async ({ amount, userId, redirectUrl }) => {
 
     return {
       id: "mock-invoice-" + Date.now(),
-      checkoutLink: redirectUrl || `${FRONTEND_URLS}/depositconfirmationpage`,
+      checkoutLink: redirectUrl || `${FRONTEND_URL}/depositconfirmationpage`,
       status: "New",
     };
   }
 
-  if (!BTCPAY_HOST || !BTCPAY_STORE_ID || !BTCPAY_API_KEY) {
+  if (!BTCPAY_HOST || !BTCPAY_STORE_ID || !BTCPAY_API_KEY || !BACKEND_URL) {
     throw new Error("⚠️ Missing BTCPAY environment variables.");
   }
 
@@ -37,12 +44,12 @@ const createBTCPayInvoice = async ({ amount, userId, redirectUrl }) => {
   const data = {
     amount,
     currency: "USD",
-    metadata: { userId },
+    metadata: { userId,amount },
     checkout: {
-      redirectURL: redirectUrl || `${FRONTEND_URLS}/dashboard`,
+      redirectURL: redirectUrl || `${FRONTEND_URL}/dashboard`,
       defaultPaymentMethod: "BTC",
     },
-    notificationURL: `${FRONTEND_URLS}/api/webhook/btcpay`,
+    notificationURL: `${BACKEND_URL}/api/webhook/btcpay`,
   };
 
   try {

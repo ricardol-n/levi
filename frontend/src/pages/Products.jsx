@@ -74,7 +74,6 @@ export const Deposit = () => {
       const res = await axios.post('/api/create-invoice', {
         userId,
         amount: depositAmount,
-        currency: "BTC",
       });
 
       const { success, checkoutUrl } = res.data;

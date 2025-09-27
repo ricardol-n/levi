@@ -40,7 +40,7 @@ router.post("/create-invoice", async (req, res) => {
         success: true,
         testMode: true,
         message: "✅ TEST_MODE deposit created (will auto-confirm in status check)",
-        checkoutUrl: `${process.env.APP_BASE_URL}/depositconfirmationpage`,
+        checkoutUrl: `${process.env.FRONTEND_URL}/depositconfirmationpage`,
         deposit: newDeposit,
       });
     }
@@ -50,14 +50,14 @@ router.post("/create-invoice", async (req, res) => {
       amount,
       currency: "USD",
       userId,
-      redirectUrl: `${process.env.APP_BASE_URL}/depositconfirmationpage`,
+      redirectUrl: `${process.env.FRONTEND_URL}/depositconfirmationpage`,
     });
 
     // Step 2: Save pending deposit
     const newDeposit = new Deposit({
       userId,
       amount,
-      currency: "BTC",
+      currency: "USD",
       txId: invoice.id,
       checkoutUrl: invoice.checkoutLink,
       status: "pending",
@@ -86,7 +86,7 @@ router.get("/deposits", async (req, res) => {
     if (!userId) return res.status(400).json({ message: "User ID missing" });
 
   try {
-    const deposits = await Deposit.find({ userId, currency: "BTC" }).sort({ createdAt: -1 });
+    const deposits = await Deposit.find({ userId }).sort({ createdAt: -1 });
     res.json(deposits);
   } catch (err) {
     console.error("❌ Fetch deposits error:", err);
