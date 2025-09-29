@@ -34,25 +34,20 @@ router.post("/btcpay", async (req, res) =>  {
     console.log("📩 BTCPay event:", event?.type);
 
     const invoice = event?.data;
-    if (!invoice || !invoice.id) {
+    if (!invoice?.id) {
       return res.status(400).json({ success: false, message: "Invalid payload" });
     }
 
     if (event.type === "InvoiceSettled" || event.type === "InvoiceCompleted") {
       const txId = invoice.id;
-      const usdAmount = parseFloat(invoice.metadata?.amount || 0);
+      const amountUsd = Number(invoice.metadata?.amount || 0);
       const userIdRaw = invoice?.metadata?.userId;
 
-      if (!userIdRaw || !usdAmount || !txId) {
-        console.error("❌ Missing invoice data:", invoice);
+      if (!userIdRaw || !mongoose.Types.ObjectId.isValid(userIdRaw)) {
+        console.error("❌ Missing invoice data:", userIdRaw);
         return res.status(400).json({ success: false, message: "Missing invoice data" });
       }
 
-      // ✅ Validate user
-      if (!mongoose.Types.ObjectId.isValid(userIdRaw)) {
-        console.error("❌ Invalid userId format:", userIdRaw);
-        return res.status(400).json({ success: false, message: "Invalid userId" });
-      }
       const userId = new mongoose.Types.ObjectId(userIdRaw);
 
       // ✅ Prevent duplicate
@@ -66,7 +61,7 @@ router.post("/btcpay", async (req, res) =>  {
       const newDeposit = new Deposit({
         userId,
         address: invoice.address,
-        amount:usdAmount,
+        amount:amountUsd,
         currency: "USD",
         txId,
         status: "confirmed",
@@ -75,9 +70,9 @@ router.post("/btcpay", async (req, res) =>  {
       await newDeposit.save();
 
       // ✅ Update balance
-      await User.findByIdAndUpdate(userId, { $inc: { balance: usdAmount  } });
+      await User.findByIdAndUpdate(userId, { $inc: { balance: amountUsd  } });
 
-      console.log(`✅ Deposit credited: $${usdAmount} USD → user ${userId}`);
+      console.log(`✅ Deposit credited: $${amountUsd} USD → user ${userId}`);
     }
 
     res.sendStatus(200);

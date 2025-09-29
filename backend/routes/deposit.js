@@ -28,7 +28,7 @@ router.post("/create-invoice", async (req, res) => {
       const newDeposit = new Deposit({
         userId,
         amount,
-        currency: "BTC",
+        currency: "USD",
         txId: "mock-invoice-" + Date.now(),
         status: "pending", // always pending until confirmed by status-checker
         source: "test-mode",
@@ -48,7 +48,6 @@ router.post("/create-invoice", async (req, res) => {
     // Step 1: Create invoice in BTCPay
     const invoice = await createBTCPayInvoice({
       amount,
-      currency: "USD",
       userId,
       redirectUrl: `${process.env.FRONTEND_URL}/depositconfirmationpage`,
     });
@@ -93,12 +92,21 @@ router.get("/deposits", async (req, res) => {
     res.status(500).json({ message: "Failed to fetch deposits" });
   }
 });
-// 📄 Check deposit status by ID
-// 📄 Check deposit status by ID
+// 📄 Admin: list all deposits
+router.get("/deposits/all", async (req, res) => {
+  try {
+    const deposits = await Deposit.find().populate("userId", "username email").sort({ createdAt: -1 });
+    res.json({ success: true, data: deposits });
+  } catch (err) {
+    console.error("❌ Fetch all deposits error:", err);
+    res.status(500).json({ message: "Failed to fetch deposits" });
+  }
+});
+
+// 📄 Check deposit status (READ-ONLY)
 router.get("/deposit-status/:id", async (req, res) => {
   try {
     const { id } = req.params;
-
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({ success: false, message: "Invalid deposit ID" });
     }
@@ -108,52 +116,30 @@ router.get("/deposit-status/:id", async (req, res) => {
       return res.status(404).json({ success: false, message: "Deposit not found" });
     }
 
-    // 🟢 TEST MODE
+    // 🟢 TEST MODE: auto-confirm
     if (TEST_MODE) {
-      if (deposit.status !== "confirmed") {
-        deposit.status = "confirmed";
-        await deposit.save();
-        await User.findByIdAndUpdate(deposit.userId, { $inc: { balance: deposit.amount } });
-      }
       return res.json({
         success: true,
-        status: "confirmed",
+        status: deposit.status === "confirmed" ? "confirmed" : "pending",
         testMode: true,
-        message: "✅ TEST_MODE deposit confirmed",
         deposit,
       });
     }
 
-    // 🔎 Fetch invoice from BTCPay
+    // 🔎 Fetch from BTCPay
     const invoice = await getBTCPayInvoice(deposit.txId);
-
-    if (!invoice) {
-      return res.status(400).json({ success: false, message: "Invoice not found in BTCPay" });
-    }
-
-    if (invoice.status === "Settled" && deposit.status !== "confirmed") {
-      deposit.status = "confirmed";
-      await deposit.save();
-
-      await User.findByIdAndUpdate(deposit.userId, {
-        $inc: { balance: deposit.amount },
-      });
-    } else if (["Expired", "Invalid"].includes(invoice.status) && deposit.status !== "failed") {
-      deposit.status = "failed";
-      await deposit.save();
-    }
-
     res.json({
       success: true,
-      status: deposit.status,
+      status: deposit.status,   // actual DB status
       deposit,
-      btcpayStatus: invoice.status, // extra info for debugging
+      btcpayStatus: invoice?.status || "unknown",
     });
   } catch (error) {
     console.error("❌ Deposit status error:", error);
     res.status(500).json({ success: false, message: "Server error checking deposit" });
   }
 });
+
 
 
 module.exports = router;

@@ -3,6 +3,7 @@ const router = express.Router();
 const User = require("../models/user");
 const Investment = require("../models/Investment");
 const verifyToken = require("../middleware/auth"); // ensure user is logged in
+const adminOnly = require("../middleware/adminOnly");
 
 // ✅ Create a new investment
 router.post("/", verifyToken, async (req, res) => {
@@ -13,10 +14,6 @@ router.post("/", verifyToken, async (req, res) => {
       return res.status(400).json({ message: "Missing required fields." });
     }
 
-    const startDate = new Date();
-    const endDate = new Date(startDate.getTime() + duration * 24 * 60 * 60 * 1000);
-
-
     // Deduct from user balance BEFORE saving investment
     const user = await User.findById(req.user._id);
     if (!user || user.balance < amount) {
@@ -26,6 +23,8 @@ router.post("/", verifyToken, async (req, res) => {
     user.balance -= amount;
     await user.save();
 
+    const startDate = new Date();
+    const endDate = new Date(startDate.getTime() + duration * 24 * 60 * 60 * 1000);
     const profitOnly = amount * (roi / 100);
 
     const investment = new Investment({
@@ -60,7 +59,7 @@ router.get("/", verifyToken, async (req, res) => {
 });
 
 // ✅ Admin route: get all investments (optional, for admin panel)
-router.get("/all", verifyToken, async (req, res) => {
+router.get("/all", verifyToken, adminOnly, async (req, res) => {
   try {
     // Optionally check if req.user.role === 'admin'
     const investments = await Investment.find().populate("userId", "username email").sort({ createdAt: -1 });

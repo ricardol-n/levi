@@ -2,12 +2,19 @@ const express = require("express");
 const mongoose = require("mongoose");
 const Withdrawal = require("../models/Withdrawal");
 const User = require("../models/user");
+const verifyToken = require("../middleware/auth");
+const isAdmin = require("../middleware/isAdmin");
 
 const router = express.Router();
-// 📄 Admin approves or rejects withdrawal
-router.post("/admin/update/:id", async (req, res) => {
+
+// 📌 Admin updates withdrawal (approve/reject)
+router.post("/admin/update/:id", verifyToken, isAdmin, async (req, res) => {
   try {
     const { status } = req.body; // "approved" or "rejected"
+
+    if (!["approved", "rejected"].includes(status)) {
+      return res.status(400).json({ success: false, message: "Invalid status" });
+    }
 
     const withdrawal = await Withdrawal.findById(req.params.id);
     if (!withdrawal) {
@@ -25,18 +32,16 @@ router.post("/admin/update/:id", async (req, res) => {
 
     if (status === "approved") {
       if (user.balance < withdrawal.amount) {
-        return res.status(400).json({ success: false, message: "User has insufficient balance at approval time" });
+        return res.status(400).json({ success: false, message: "Insufficient balance at approval time" });
       }
 
-      // ✅ Deduct balance on approval
+      // ✅ Deduct balance
       user.balance -= withdrawal.amount;
       await user.save();
 
       withdrawal.status = "approved";
     } else if (status === "rejected") {
       withdrawal.status = "rejected";
-    } else {
-      return res.status(400).json({ success: false, message: "Invalid status" });
     }
 
     await withdrawal.save();

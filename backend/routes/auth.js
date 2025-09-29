@@ -63,7 +63,7 @@ router.post('/register', async (req, res) => {
 
 // ✅ Login Route
 router.post('/login', async (req, res) => {
-  const { email, password } = req.body;
+  const { email, password, admin } = req.body;
 
    try {
     const user = await User.findOne({ email });
@@ -71,6 +71,11 @@ router.post('/login', async (req, res) => {
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return res.status(401).json({ success: false, message: 'Invalid credentials' });
+
+    // 🚨 Extra check: block non-admins if they try to log into the admin panel
+    if (admin && user.role !== "admin") {
+      return res.status(403).json({ success: false, message: "Access denied. Admins only." });
+    }
 
     const token = jwt.sign({ id: user._id, role: user.role }, JWT_SECRET, { expiresIn: '7d' });
 

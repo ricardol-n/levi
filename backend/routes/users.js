@@ -5,6 +5,9 @@ const User = require("../models/user");
 const Deposit = require("../models/Deposit");
 const Withdrawal = require("../models/Withdrawal");
 
+const verifyToken = require("../middleware/auth");
+const adminOnly = require("../middleware/adminOnly");
+
 const router = express.Router();
 
 // ✅ Create a new user (admin or signup)
@@ -49,10 +52,13 @@ router.post("/", async (req, res) => {
     res.status(500).json({ success: false, message: "Server error", error: error.message });
   }
 });
-// routes/users.js
-router.get("/", async (req, res) => {
+
+/**
+ * 📌 Get all users (Admin Panel)
+ */
+router.get("/",verifyToken, adminOnly, async (req, res) => {
   try {
-    const users = await User.find();
+    const users = await User.find().sort({ createdAt: -1 });
     res.json(users.map(u => ({ ...u.toObject(), id: u._id })));
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -61,9 +67,14 @@ router.get("/", async (req, res) => {
 
 
 // ✅ Get user balance (always from DB)
-router.get("/:id/balance", async (req, res) => {
+router.get("/:id/balance",verifyToken, async (req, res) => {
   try {
     const { id } = req.params;
+
+    // Allow self or admin
+    if (req.user.role !== "admin" && req.user._id.toString() !== id) {
+      return res.status(403).json({ success: false, message: "Forbidden" });
+    }
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({ success: false, message: "Invalid user ID" });
@@ -87,14 +98,18 @@ router.get("/:id/balance", async (req, res) => {
 /**
  * ✅ Get user's BTC deposit logs
  */
-router.get("/:id/deposits", async (req, res) => {
+router.get("/:id/deposits",verifyToken, async (req, res) => {
   try {
     const { id } = req.params;
+
+    if (req.user.role !== "admin" && req.user._id.toString() !== id) {
+      return res.status(403).json({ success: false, message: "Forbidden" });
+    }
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({ success: false, message: "Invalid user ID" });
     }
 
-    const deposits = await Deposit.find({ userId: id, currency: "BTC" }).sort({ createdAt: -1 });
+    const deposits = await Deposit.find({ userId: id }).sort({ createdAt: -1 });
     res.json({ success: true, data: deposits });
   } catch (err) {
     console.error("❌ Fetch deposits error:", err);
@@ -105,17 +120,53 @@ router.get("/:id/deposits", async (req, res) => {
 /**
  * ✅ Get user's BTC withdrawal logs
  */
-router.get("/:id/withdrawals", async (req, res) => {
+router.get("/:id/withdrawals",verifyToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+     if (req.user.role !== "admin" && req.user._id.toString() !== id) {
+      return res.status(403).json({ success: false, message: "Forbidden" });
+    }
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ success: false, message: "Invalid user ID" });
+    }
+    const withdrawals = await Withdrawal.find({ userId: id }).sort({ createdAt: -1 });
+    res.json(withdrawals.map(w => ({ ...w.toObject(), id: w._id })));
+  } catch (err) {
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
+/**
+ * 📌 Update user (Admin edit)
+ */
+router.put("/:id", async (req, res) => {
   try {
     const { id } = req.params;
     if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({  success: false, message: "Invalid user ID" });
+      return res.status(400).json({ success: false, message: "Invalid user ID" });
     }
-
-    const withdrawals = await Withdrawal.find({ userId: id, method: "BTC" }).sort({ createdAt: -1 });
-    res.json({ success: true, data: withdrawals });
+    const updated = await User.findByIdAndUpdate(id, req.body, { new: true });
+    if (!updated) return res.status(404).json({ success: false, message: "User not found" });
+    res.json({ ...updated.toObject(), id: updated._id });
   } catch (err) {
-    console.error("❌ Fetch withdrawals error:", err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
+/**
+ * 📌 Delete user (Admin remove)
+ */
+router.delete("/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ success: false, message: "Invalid user ID" });
+    }
+    const deleted = await User.findByIdAndDelete(id);
+    if (!deleted) return res.status(404).json({ success: false, message: "User not found" });
+    res.json({ success: true, message: "User deleted", id });
+  } catch (err) {
     res.status(500).json({ success: false, message: "Server error" });
   }
 });
