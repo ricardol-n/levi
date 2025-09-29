@@ -25,8 +25,11 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem("token", token);
         localStorage.setItem("user", JSON.stringify(user));
         localStorage.setItem("userId", user._id);
+        // 👇 Return redirect path depending on role
+      const redirectTo = user.role === "admin" ? "/admin" : "/dashboard";
 
-        return { success: true, user };
+
+        return { success: true, user, redirectTo };
       }
       return { success: false, message: res.data.message || "Login failed" };
     } catch (err) {

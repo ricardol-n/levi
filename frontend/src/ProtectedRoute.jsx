@@ -10,14 +10,19 @@ const ProtectedRoute = ({ children, adminOnly = false }) => {
     return <div className="loading-screen">Loading...</div>;
   }
 
- if (!token || !user) {
+  if (!token || !user) {
     // Not logged in → redirect to login
     return <Navigate to="/login" replace />;
   }
 
   if (adminOnly && user.role !== "admin") {
-    // Logged in but not admin → kick to dashboard
+    // Non-admin trying to access admin panel → send to dashboard
     return <Navigate to="/dashboard" replace />;
+  }
+
+  if (!adminOnly && user.role === "admin") {
+    // Admin trying to access user routes → send to admin panel
+    return <Navigate to="/admin" replace />;
   }
 
   return children;

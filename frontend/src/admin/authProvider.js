@@ -16,6 +16,14 @@ const authProvider = {
 
     localStorage.setItem("token", data.token);
     localStorage.setItem("role", data.user.role);
+
+    // ✅ Redirect based on role
+    if (data.user.role === "admin") {
+      window.location.href = "/admin"; // AdminPanel
+    } else {
+      window.location.href = "/dashboard"; // User dashboard
+    }
+
     return Promise.resolve();
   },
 
@@ -26,23 +34,21 @@ const authProvider = {
   },
 
   checkAuth: () =>
-    localStorage.getItem("token")
-      ? Promise.resolve()
-      : Promise.reject(),
+    localStorage.getItem("token") ? Promise.resolve() : Promise.reject(),
 
   checkError: (error) => {
     const status = error.status || error.response?.status;
     if (status === 401 || status === 403) {
       localStorage.removeItem("token");
-       localStorage.removeItem("role");
+      localStorage.removeItem("role");
       return Promise.reject();
     }
     return Promise.resolve();
   },
 
- getPermissions: () => {
+  getPermissions: () => {
     const role = localStorage.getItem("role");
-    return Promise.resolve(role || "user"); // ✅ return role, not remove it
+    return Promise.resolve(role || "user"); // ✅ provide role
   },
 };
 

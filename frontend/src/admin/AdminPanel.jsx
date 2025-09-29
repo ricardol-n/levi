@@ -1,5 +1,7 @@
-import React from "react";
-import { Admin, Resource, usePermissions } from "react-admin";
+// src/admin/AdminPanel.jsx
+import React, { useEffect } from "react";
+import { Admin, Resource } from "react-admin";
+import { useNavigate } from "react-router-dom"; // ✅ redirect
 import authProvider from "./authProvider";
 import dataProvider from "./dataProvider";
 import Dashboard from "./AdminDashboard";
@@ -8,31 +10,37 @@ import { TransactionList } from "./TransactionsList";
 import { WithdrawalList } from "./WithdrawalsList";
 import { InvestmentList } from "./InvestmentsList";
 
-const AdminPanel = () => {
-  const { permissions } = usePermissions();
+const AdminGuard = ({ children }) => {
+  const navigate = useNavigate();
+  const role = localStorage.getItem("role");
 
-  if (permissions !== "admin") {
-    // 🚫 Block non-admin users
-    return (
-      <div style={{ padding: "2rem", textAlign: "center" }}>
-        <h2>🚫 Access Denied</h2>
-        <p>You are not authorized to access the admin panel.</p>
-        <a href="/">Go back to Dashboard</a>
-      </div>
-    );
+  useEffect(() => {
+    if (role !== "admin") {
+      navigate("/dashboard"); // ✅ redirect user → dashboard
+    }
+  }, [role, navigate]);
+
+  if (role !== "admin") {
+    return null; // nothing while redirecting
   }
 
+  return children;
+};
+
+const AdminPanel = () => {
   return (
-    <Admin
-      dashboard={Dashboard}
-      authProvider={authProvider}
-      dataProvider={dataProvider}
-    >
-      <Resource name="users" list={UserList} />
-      <Resource name="transactions" list={TransactionList} />
-      <Resource name="withdrawals" list={WithdrawalList} />
-      <Resource name="investments" list={InvestmentList} />
-    </Admin>
+    <AdminGuard>
+      <Admin
+        dashboard={Dashboard}
+        authProvider={authProvider}
+        dataProvider={dataProvider}
+      >
+        <Resource name="users" list={UserList} />
+        <Resource name="transactions" list={TransactionList} />
+        <Resource name="withdrawals" list={WithdrawalList} />
+        <Resource name="investments" list={InvestmentList} />
+      </Admin>
+    </AdminGuard>
   );
 };
 
