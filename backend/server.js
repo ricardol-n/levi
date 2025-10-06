@@ -2,7 +2,9 @@ const express = require("express");
 const cors = require("cors");
 const mongoose = require("mongoose");
 require("dotenv").config();
-const verifyToken = require("./middleware/auth");
+const verifyToken = require("./middleware/verifyToken"); // normal users
+const verifyAdmin = require("./middleware/verifyAdmin"); // admins
+
 const path = require("path");
 
 
@@ -19,6 +21,11 @@ const withdrawalRoutes = require("./routes/withdrawals");
 const depositRoutes = require("./routes/deposit");
 const webhookRoutes = require("./routes/btcpayWebhook");
 const candlesRoute = require("./routes/stocks");
+const adminAuthRoutes = require("./routes/adminAuth");
+const adminWithdrawalsRoutes = require("./routes/admin");
+
+
+
 
 require("./cron/investmentCron");
 
@@ -60,10 +67,6 @@ mongoose
   .connect(process.env.MONGO_URI)
   .then(() => console.log("MongoDB Connected ✅"))
   .catch((err) => console.error("❌ MongoDB error:",err));
-
-
-
-
 // ✅ API to return stock list with prices
 // ✅ Debug logs before mounting each route
 console.log("Mounting /api/auth");
@@ -92,6 +95,10 @@ app.use("/api/withdrawals", verifyToken, withdrawalRoutes);
 
 console.log("Mounting /api (candles)");
 app.use("/api", candlesRoute);
+
+app.use("/api/admin/auth",adminAuthRoutes);
+
+app.use("/api/admin/action", verifyAdmin, adminWithdrawalsRoutes);
 
 
 // ✅ Start server

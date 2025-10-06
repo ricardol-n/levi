@@ -164,6 +164,7 @@ const CompanyInfo = () => {
             className="piuser"
             size={28}
             onClick={() => navigate('/login')}
+            title="User Login"
           />
             {/* Mobile Menu Toggle */}
           <div className="mobile-menu-icon" onClick={() => setMenuOpen(prev => !prev)} aria-label="Toggle menu" role="button" tabIndex={0}>
@@ -200,9 +201,16 @@ const CompanyInfo = () => {
             More investment options. More opportunities to grow.
             Trade stocks or make long-term investments on the same platform.
           </p>
-          <LoginButton onClick={() => navigate('/login')}>
+          <LoginButton onClick={() => navigate('/register')}>
             Create An Account
           </LoginButton>
+          <p style={{ marginTop: "10px", fontSize: "0.9rem" }}> Are you an admin? <span style={{ color: "#ff3d33", cursor: "pointer", textDecoration: "underline" }} 
+        onClick={() => navigate('/admin/login')}
+      >
+        Login here
+      </span>
+    </p>
+
         </div>
         <div className="tesla-img">
           <img src={bg4} alt="Tesla" />
@@ -562,6 +570,14 @@ const CompanyInfo = () => {
       </div>
 
       <div className="footer-social">
+        <p style={{ marginTop: "5px", fontSize: "0.8rem" }}>
+  Admin? <span 
+    style={{ color: "#ff3d33", cursor: "pointer", textDecoration: "underline" }} 
+    onClick={() => navigate('/admin/login')}
+  >
+    Login here
+  </span>
+</p>
         <a href="https://facebook.com" target="_blank" rel="noopener noreferrer">
           <FaFacebookF />
         </a>

@@ -6,69 +6,53 @@ import {
   TextField,
   NumberField,
   DateField,
-  FunctionField,
-  useUpdate,
+  Button,
+  useDataProvider,
+  useNotify,
   useRefresh,
 } from "react-admin";
-import { Button } from "@mui/material";
 
-export const WithdrawalList = () => {
-  const [update] = useUpdate();
+const WithdrawalsList = () => {
+  const dataProvider = useDataProvider();
+  const notify = useNotify();
   const refresh = useRefresh();
 
-  const handleAction = async (id, status) => {
+  const handleApprove = async (id) => {
     try {
-      await update(
-        "withdrawals",
-        { id, data: { status } },
-        { returnPromise: true }
-      );
-      refresh(); // reload table after update
-    } catch (error) {
-      console.error("Update failed:", error);
+      await dataProvider.customMethod(`admin/withdrawals/${id}/approve`, { method: "POST" });
+      notify("Withdrawal approved", { type: "success" });
+      refresh();
+    } catch (err) {
+      console.error(err);
+      notify("Error approving withdrawal", { type: "warning" });
+    }
+  };
+
+  const handleReject = async (id) => {
+    try {
+      await dataProvider.customMethod(`admin/withdrawals/${id}/reject`, { method: "POST" });
+      notify("Withdrawal rejected", { type: "info" });
+      refresh();
+    } catch (err) {
+      console.error(err);
+      notify("Error rejecting withdrawal", { type: "warning" });
     }
   };
 
   return (
-    <List>
-      <Datagrid rowClick="show">
-        {/* ✅ if your backend uses _id, react-admin expects "id" */}
-        <TextField source="id" label="ID" />
-        <TextField source="userId.email" label="User" />
-        <TextField source="method" />
-        <NumberField source="amount" />
-        <TextField source="status" />
-        <DateField source="createdAt" />
-
-        <FunctionField
-          label="Actions"
-          render={(record) =>
-            record.status === "pending" ? (
-              <>
-                <Button
-                  variant="contained"
-                  color="success"
-                  size="small"
-                  onClick={() => handleAction(record.id, "approved")}
-                  style={{ marginRight: "8px" }}
-                >
-                  Approve
-                </Button>
-                <Button
-                  variant="contained"
-                  color="error"
-                  size="small"
-                  onClick={() => handleAction(record.id, "rejected")}
-                >
-                  Reject
-                </Button>
-              </>
-            ) : (
-              <span>—</span>
-            )
-          }
-        />
+    <List resource="withdrawals" perPage={20}>
+      <Datagrid>
+        <TextField source="userId" label="User ID" />
+        <NumberField source="amount" label="Amount" />
+        <TextField source="method" label="Method" />
+        <TextField source="address" label="Wallet/Bank" />
+        <TextField source="status" label="Status" />
+        <DateField source="createdAt" label="Requested At" />
+        <Button label="Approve" onClick={(e) => handleApprove(e.record.id)} />
+        <Button label="Reject" onClick={(e) => handleReject(e.record.id)} />
       </Datagrid>
     </List>
   );
 };
+
+export default WithdrawalsList;

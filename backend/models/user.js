@@ -1,12 +1,17 @@
+// backend/models/user.js
 const mongoose = require("mongoose");
 
 const userSchema = new mongoose.Schema({
   username: String,
-  email: String,
+  email: { type: String, unique: true , required: true},
+  phone: String,
   password: String,
-  role: { type: String, default: "user" },
+  role: { type: String, enum: ["user", "admin"], default: "user" },
   balance: { type: Number, default: 0 },
-  depositAddressBTC: { BTC: String },
-}, { timestamps: true });
+  refreshToken: { type: String, default: null },
+},
+{
+  timestamps: true
+});
 
-module.exports = mongoose.models.User || mongoose.model("User", userSchema);
+module.exports = mongoose.model("User", userSchema);

@@ -118,7 +118,9 @@ const API_BASE = import.meta.env.VITE_API_URL || "/api";
 
 
 const AuthForm = ({ type }) => {
-  const isLogin = type === "login";
+  const isLogin = type === "login" || type === "adminLogin";
+  const isAdmin = type === "adminLogin" || type === "adminRegister";
+
   const [currentBg, setCurrentBg] = useState(images[0]);
   const [formData, setFormData] = useState({
     username: "",
@@ -181,30 +183,25 @@ const AuthForm = ({ type }) => {
     return true;
   };
 
-
-  const handleSubmit = async (e) => {
+const handleSubmit = async (e) => {
     e.preventDefault();
     setMessage(null);
     if (!validateForm()) return;
 
     setLoading(true);
     try {
+      let res;
       if (isLogin) {
-        const res = await login(formData.email, formData.password);
-        if (res.success) {
-          setMessage({ type: "success", text: res.message || "Login successful!" });
-          navigate(res.user.role === "admin" ? "/admin" : "/dashboard");
-        } else {
-          setMessage({ type: "error", text: res.message || "Login failed" });
-        }
+        res = await login(formData.email, formData.password, isAdmin);
       } else {
-        const res = await register(formData);
-        if (res.success) {
-          setMessage({ type: "success", text: res.message || "Registered successfully!" });
-          navigate("/dashboard");
-        } else {
-          setMessage({ type: "error", text: res.message || "Registration failed" });
-        }
+        res = await register(formData, isAdmin);
+      }
+
+      if (res.success) {
+        setMessage({ type: "success", text: res.message || (isLogin ? "Login successful!" : "Registered successfully!") });
+        navigate(res.user.role === "admin" ? "/admin" : "/dashboard");
+      } else {
+        setMessage({ type: "error", text: res.message || "Authentication failed" });
       }
     } catch (err) {
       console.error("❌ Auth error:", err);
@@ -231,7 +228,7 @@ const AuthForm = ({ type }) => {
         {message && <Message type={message.type}>{message.text}</Message>}
         <p>
           {isLogin ? "Don't have an account?" : "Already have an account?"}{" "}
-          <Link to={isLogin ? "/register" : "/login"}>
+          <Link to={isLogin ? (isAdmin ? "/admin/register" : "/register") : (isAdmin ? "/admin/login" : "/login")}>
             {isLogin ? "Register here" : "Login here"}
           </Link>
         </p>

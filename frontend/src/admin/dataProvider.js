@@ -1,71 +1,46 @@
 // src/admin/dataProvider.js
-import { fetchUtils } from "react-admin";
+import axios from "axios";
 
-const apiUrl = "/api"; // Vite proxy will forward /api → backend
-const httpClient = (url, options = {}) => {
-  if (!options.headers) {
-    options.headers = new Headers({ Accept: "application/json" });
-  }
-  const token = localStorage.getItem("adminToken");
-  if (token) {
-    options.headers.set("Authorization", `Bearer ${token}`);
-  }
-  return fetchUtils.fetchJson(url, options);
-};
+const apiUrl = "/api"; // base URL of your backend
 
 const dataProvider = {
-  // 📌 List resources
-  getList: (resource, params) =>
-    httpClient(`${apiUrl}/${resource}`).then(({ json }) => ({
-      data: json.map((item) => ({ ...item, id: item._id })), // ✅ map _id
-      total: json.length,
-    })),
-
-  // 📌 Get one record
-  getOne: (resource, params) =>
-    httpClient(`${apiUrl}/${resource}/${params.id}`).then(({ json }) => ({
-      data: { ...json, id: json._id }, // ✅ map _id
-    })),
-
-  // 📌 Get many records by IDs
-  getMany: (resource, params) => {
-    const query = params.ids.map((id) => `id=${id}`).join("&");
-    return httpClient(`${apiUrl}/${resource}?${query}`).then(({ json }) => ({
-      data: json.map((item) => ({ ...item, id: item._id })), // ✅ map _id
-    }));
+  getList: async (resource, params) => {
+    const res = await axios.get(`${apiUrl}/admin/${resource}`);
+    return {
+      data: res.data.data.map((item) => ({ ...item, id: item._id })),
+      total: res.data.data.length,
+    };
   },
 
-  // 📌 Create new record
-  create: (resource, params) =>
-    httpClient(`${apiUrl}/${resource}`, {
-      method: "POST",
-      body: JSON.stringify(params.data),
-    }).then(({ json }) => ({
-      data: { ...params.data, id: json._id || json.id },
-    })),
-
-  // 📌 Update existing record
-  update: (resource, params) => {
-    const url =
-      resource === "withdrawals"
-        ? `${apiUrl}/${resource}/admin/update/${params.id}` // special route for withdrawals
-        : `${apiUrl}/${resource}/${params.id}`;
-
-    return httpClient(url, {
-      method: resource === "withdrawals" ? "POST" : "PUT",
-      body: JSON.stringify(params.data),
-    }).then(({ json }) => ({
-      data: { ...json, id: json._id || json.id },
-    }));
+  getOne: async (resource, params) => {
+    const res = await axios.get(`${apiUrl}/admin/${resource}/${params.id}`);
+    return { data: { ...res.data.data, id: res.data.data._id } };
   },
 
-  // 📌 Delete record
-  delete: (resource, params) =>
-    httpClient(`${apiUrl}/${resource}/${params.id}`, {
-      method: "DELETE",
-    }).then(({ json }) => ({
-      data: { ...json, id: json._id || json.id },
-    })),
+  create: async (resource, params) => {
+    const res = await axios.post(`${apiUrl}/admin/${resource}`, params.data);
+    return { data: { ...res.data.data, id: res.data.data._id } };
+  },
+
+  update: async (resource, params) => {
+    const res = await axios.put(`${apiUrl}/admin/${resource}/${params.id}`, params.data);
+    return { data: { ...res.data.data, id: res.data.data._id } };
+  },
+
+  delete: async (resource, params) => {
+    await axios.delete(`${apiUrl}/admin/${resource}/${params.id}`);
+    return { data: { id: params.id } };
+  },
+
+  // ✅ Custom method for approve/reject
+  customMethod: async (url, options) => {
+    const res = await axios({
+      url: `${apiUrl}/${url}`,
+      method: options.method || "GET",
+      data: options.data || {},
+    });
+    return res.data;
+  },
 };
 
 export default dataProvider;

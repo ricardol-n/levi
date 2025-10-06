@@ -5,12 +5,12 @@ const User = require("../models/user");
 const Deposit = require("../models/Deposit");
 const Withdrawal = require("../models/Withdrawal");
 
-const verifyToken = require("../middleware/auth");
+const verifyToken = require("../middleware/verifyToken");
 const adminOnly = require("../middleware/adminOnly");
 
 const router = express.Router();
 
-// ✅ Create a new user (admin or signup)
+// ✅ Create a new user
 router.post("/", async (req, res) => {
   try {
     const { username, email, password, role } = req.body;
@@ -30,9 +30,9 @@ router.post("/", async (req, res) => {
       username,
       email,
       password: hashedPassword,
-      role: email === "ezelevi7@gmail.com" ? "admin" : "user", // default "user"
-      balance: 0,           // ✅ always initialize balance
-      depositAddressBTC: { BTC: "" }, // ✅ single BTC wallet for BTCPay
+      role: email === "ezelevi7@gmail.com" ? "admin" : "user",
+      balance: 0,
+      depositAddressBTC: { BTC: "" },
     });
 
     await newUser.save();
@@ -40,7 +40,7 @@ router.post("/", async (req, res) => {
     return res.status(201).json({
       success: true,
       message: "User created",
-      user: {
+      data: {
         _id: newUser._id,
         username: newUser.username,
         email: newUser.email,
@@ -53,52 +53,40 @@ router.post("/", async (req, res) => {
   }
 });
 
-/**
- * 📌 Get all users (Admin Panel)
- */
-router.get("/",verifyToken, adminOnly, async (req, res) => {
+// ✅ Get all users (Admin Panel)
+router.get("/", verifyToken, adminOnly, async (req, res) => {
   try {
     const users = await User.find().sort({ createdAt: -1 });
-    res.json(users.map(u => ({ ...u.toObject(), id: u._id })));
+    res.json({ success: true, data: users.map(u => ({ ...u.toObject(), id: u._id })) });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    res.status(500).json({ success: false, message: err.message });
   }
 });
 
-
-// ✅ Get user balance (always from DB)
-router.get("/:id/balance",verifyToken, async (req, res) => {
+// ✅ Get user balance
+router.get("/:id/balance", verifyToken, async (req, res) => {
   try {
     const { id } = req.params;
+    console.log("🔎 Balance request for userId param:", id);
+    console.log("🔑 Token decoded user:", req.user);
 
-    // Allow self or admin
     if (req.user.role !== "admin" && req.user._id.toString() !== id) {
+      console.log("❌ Forbidden: token user does not match param");
       return res.status(403).json({ success: false, message: "Forbidden" });
     }
 
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({ success: false, message: "Invalid user ID" });
-    }
-
     const user = await User.findById(id).select("balance");
-    if (!user) {
-      console.log("❌ User not found for ID:", id);
-      return res.status(404).json({ success: false, message: "User not found" });
-    }
+    console.log("📊 Balance in DB:", user?.balance);
 
-    res.json({ success: true, balance: user.balance });
+    res.json({ success: true, balance: user?.balance ?? 0 });
   } catch (err) {
     console.error("❌ Balance fetch error:", err);
     res.status(500).json({ success: false, message: "Server error" });
   }
 });
 
-
-
-/**
- * ✅ Get user's BTC deposit logs
- */
-router.get("/:id/deposits",verifyToken, async (req, res) => {
+// ✅ Get deposits
+router.get("/:id/deposits", verifyToken, async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -117,29 +105,26 @@ router.get("/:id/deposits",verifyToken, async (req, res) => {
   }
 });
 
-/**
- * ✅ Get user's BTC withdrawal logs
- */
-router.get("/:id/withdrawals",verifyToken, async (req, res) => {
+// ✅ Get withdrawals
+router.get("/:id/withdrawals", verifyToken, async (req, res) => {
   try {
     const { id } = req.params;
-    
-     if (req.user.role !== "admin" && req.user._id.toString() !== id) {
+
+    if (req.user.role !== "admin" && req.user._id.toString() !== id) {
       return res.status(403).json({ success: false, message: "Forbidden" });
     }
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({ success: false, message: "Invalid user ID" });
     }
+
     const withdrawals = await Withdrawal.find({ userId: id }).sort({ createdAt: -1 });
-    res.json(withdrawals.map(w => ({ ...w.toObject(), id: w._id })));
+    res.json({ success: true, data: withdrawals.map(w => ({ ...w.toObject(), id: w._id })) });
   } catch (err) {
     res.status(500).json({ success: false, message: "Server error" });
   }
 });
 
-/**
- * 📌 Update user (Admin edit)
- */
+// ✅ Update user (Admin)
 router.put("/:id", async (req, res) => {
   try {
     const { id } = req.params;
@@ -148,15 +133,13 @@ router.put("/:id", async (req, res) => {
     }
     const updated = await User.findByIdAndUpdate(id, req.body, { new: true });
     if (!updated) return res.status(404).json({ success: false, message: "User not found" });
-    res.json({ ...updated.toObject(), id: updated._id });
+    res.json({ success: true, data: { ...updated.toObject(), id: updated._id } });
   } catch (err) {
     res.status(500).json({ success: false, message: "Server error" });
   }
 });
 
-/**
- * 📌 Delete user (Admin remove)
- */
+// ✅ Delete user (Admin)
 router.delete("/:id", async (req, res) => {
   try {
     const { id } = req.params;
@@ -171,5 +154,5 @@ router.delete("/:id", async (req, res) => {
   }
 });
 
-
 module.exports = router;
+              

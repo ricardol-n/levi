@@ -1,14 +1,16 @@
 import React from "react";
-import { List, Datagrid, TextField, DateField, NumberField } from "react-admin";
+import { List, Datagrid, TextField, NumberField, DateField } from "react-admin";
 
-export const TransactionList = () => (
+const TransactionsList = () => (
   <List>
     <Datagrid rowClick="show">
       <TextField source="id" />
       <TextField source="userId.email" label="User Email" />
-      <TextField source="type" />
       <NumberField source="amount" />
+      <TextField source="status" />
       <DateField source="createdAt" />
     </Datagrid>
   </List>
 );
+
+export default TransactionsList;

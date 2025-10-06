@@ -2,23 +2,22 @@ const express = require("express");
 const router = express.Router();
 const mongoose = require("mongoose");
 const User = require("../models/user");
-const Investment = require("../models/Investment"); // ✅ needed for profits
+const Investment = require("../models/Investment");
 const Withdrawal = require("../models/Withdrawal");
-
-const verifyToken = require("../middleware/auth");
+const verifyToken = require("../middleware/verifyToken");
 const adminOnly = require("../middleware/adminOnly");
 
 /**
- * 📌 User requests a withdrawal
- * ✅ Only allows matured profits (not full balance)
- * ✅ Does NOT deduct balance immediately
+ * 📌 USER: Submit a withdrawal request
+ * ✅ Users can only withdraw matured profits (10% ROI)
+ * ✅ Request logged for admin review
  */
 router.post("/", verifyToken, async (req, res) => {
   try {
-    const {method, amount, address } = req.body;
+    const { method, amount, address } = req.body;
     const userId = req.user._id;
 
-    if ( !method || !amount || !address) {
+    if (!method || !amount || !address) {
       return res.status(400).json({ success: false, message: "Missing fields" });
     }
 
@@ -29,33 +28,45 @@ router.post("/", verifyToken, async (req, res) => {
     const user = await User.findById(userId);
     if (!user) return res.status(404).json({ success: false, message: "User not found" });
 
-    // ✅ Calculate withdrawable profit from matured investments
+    // ✅ Calculate withdrawable profit (10% of completed investments)
     const maturedInvestments = await Investment.find({ userId, status: "completed" });
     const withdrawableProfit = maturedInvestments.reduce(
-      (sum, inv) => sum + ((inv.expectedReturn || 0) - (inv.amount || 0)),
+      (sum, inv) => sum + (inv.amount * 0.1), // 10% ROI profit only
       0
     );
+
+    console.log(`💰 Withdrawable profit for ${user.email}: $${withdrawableProfit}`);
 
     if (amount > withdrawableProfit) {
       return res.status(400).json({
         success: false,
-        message: `You can only withdraw matured profits. Max available: $${withdrawableProfit.toFixed(
-          2
-        )}`,
+        message: `You can only withdraw up to your matured profit of $${withdrawableProfit.toFixed(2)}.`,
       });
     }
 
-    // ✅ Just log withdrawal request (don’t deduct yet)
+    // ✅ Create withdrawal request (pending)
     const withdrawal = new Withdrawal({
       userId,
       method,
       amount,
       address,
       status: "pending",
+      createdAt: new Date(),
     });
     await withdrawal.save();
 
-    return res.status(201).json({ success: true, withdrawal });
+    console.log("📥 New withdrawal request logged:", {
+      user: user.email,
+      amount,
+      method,
+      status: withdrawal.status,
+    });
+
+    return res.status(201).json({
+      success: true,
+      message: "✅ Withdrawal request submitted! Please wait for admin approval.",
+      data: withdrawal,
+    });
   } catch (err) {
     console.error("❌ Withdrawal request error:", err);
     res.status(500).json({ success: false, message: "Server error" });
@@ -63,77 +74,33 @@ router.post("/", verifyToken, async (req, res) => {
 });
 
 /**
- * 📌 Admin approves withdrawal
- * ✅ Deducts balance only at approval
+ * 📌 ADMIN: View all withdrawals (React Admin)
  */
-router.post("/:id/approve", verifyToken, adminOnly, async (req, res) => {
+router.get("/", verifyToken, async (req, res) => {
   try {
-    const { id } = req.params;
+    const query = req.user.role === "admin"
+      ? {}
+      : { userId: req.user._id };
 
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({ success: false, message: "Invalid withdrawal ID" });
-    }
+    const withdrawals = await Withdrawal.find(query)
+      .populate("userId", "email username")
+      .sort({ createdAt: -1 });
 
-    const withdrawal = await Withdrawal.findById(id);
-    if (!withdrawal || withdrawal.status !== "pending") {
-      return res.status(400).json({ success: false, message: "Invalid or already processed withdrawal" });
-    }
-
-    const user = await User.findById(withdrawal.userId);
-    if (!user) return res.status(404).json({ success: false, message: "User not found" });
-
-    if (user.balance < withdrawal.amount) {
-      return res.status(400).json({ success: false, message: "Insufficient balance at approval" });
-    }
-
-    // ✅ Deduct on approval
-    user.balance -= withdrawal.amount;
-    await user.save();
-
-    withdrawal.status = "approved";
-    await withdrawal.save();
-
-    res.json({ success: true, message: "Withdrawal approved", withdrawal, balance: user.balance });
+    res.json(withdrawals.map(w => ({ ...w.toObject(), id: w._id })));
   } catch (err) {
-    console.error("❌ Approve withdrawal error:", err);
-    res.status(500).json({ success: false, message: "Server error" });
+    console.error("❌ Get withdrawals error:", err);
+    res.status(500).json({ message: err.message });
   }
 });
 
 /**
- * 📌 Admin rejects withdrawal
- * ✅ No balance change, just mark rejected
+ * 📌 ADMIN: Approve or Reject withdrawal (React Admin)
+ * ✅ Handles balance deduction on approval
  */
-router.post("/:id/reject",verifyToken, adminOnly, async (req, res) => {
+router.put("/:id", verifyToken, adminOnly, async (req, res) => {
   try {
     const { id } = req.params;
-
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({ success: false, message: "Invalid withdrawal ID" });
-    }
-
-    const withdrawal = await Withdrawal.findById(id);
-    if (!withdrawal || withdrawal.status !== "pending") {
-      return res.status(400).json({ success: false, message: "Invalid or already processed withdrawal" });
-    }
-
-    withdrawal.status = "rejected";
-    await withdrawal.save();
-
-    res.json({ success: true, message: "Withdrawal rejected", withdrawal });
-  } catch (err) {
-    console.error("❌ Reject withdrawal error:", err);
-    res.status(500).json({ success: false, message: "Server error" });
-  }
-});
-/**
- * 📌 Standard update route (for React-Admin)
- * Allows updating status via PUT /withdrawals/:id
- */
-router.put("/:id", async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { status } = req.body; // expected: "approved" | "rejected" | "pending"
+    const { status } = req.body; // expected: "approved" | "rejected"
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({ success: false, message: "Invalid withdrawal ID" });
@@ -144,13 +111,13 @@ router.put("/:id", async (req, res) => {
       return res.status(404).json({ success: false, message: "Withdrawal not found" });
     }
 
-    // ✅ Only process if it was still pending
+    // ✅ If admin approves, deduct from user balance
     if (status === "approved" && withdrawal.status === "pending") {
       const user = await User.findById(withdrawal.userId);
       if (!user) return res.status(404).json({ success: false, message: "User not found" });
 
       if (user.balance < withdrawal.amount) {
-        return res.status(400).json({ success: false, message: "Insufficient balance" });
+        return res.status(400).json({ success: false, message: "Insufficient user balance" });
       }
 
       user.balance -= withdrawal.amount;
@@ -160,24 +127,10 @@ router.put("/:id", async (req, res) => {
     withdrawal.status = status;
     await withdrawal.save();
 
-    res.json({ success: true, withdrawal });
+    res.json({ success: true, message: `Withdrawal ${status} successfully`, withdrawal });
   } catch (err) {
     console.error("❌ Withdrawal update error:", err);
     res.status(500).json({ success: false, message: "Server error" });
-  }
-
-});
-
-router.get("/", verifyToken, async (req, res) => {
-  try {
-    const query = req.user.role === "admin"
-      ? {}
-      : { userId: req.user._id };
-
-    const withdrawals = await Withdrawal.find(query).populate("userId", "email");
-    res.json(withdrawals.map(w => ({ ...w.toObject(), id: w._id })));
-  } catch (err) {
-    res.status(500).json({ message: err.message });
   }
 });
 

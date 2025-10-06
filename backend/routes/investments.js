@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const User = require("../models/user");
 const Investment = require("../models/Investment");
-const verifyToken = require("../middleware/auth"); // ensure user is logged in
+const verifyToken = require("../middleware/verifyToken");
 const adminOnly = require("../middleware/adminOnly");
 
 // ✅ Create a new investment
@@ -11,13 +11,12 @@ router.post("/", verifyToken, async (req, res) => {
     const { name, amount, roi, duration } = req.body;
 
     if (!name || !amount || !roi || !duration) {
-      return res.status(400).json({ message: "Missing required fields." });
+      return res.status(400).json({ success: false, message: "Missing required fields." });
     }
 
-    // Deduct from user balance BEFORE saving investment
     const user = await User.findById(req.user._id);
     if (!user || user.balance < amount) {
-      return res.status(400).json({ message: "Insufficient balance." });
+      return res.status(400).json({ success: false, message: "Insufficient balance." });
     }
 
     user.balance -= amount;
@@ -28,54 +27,55 @@ router.post("/", verifyToken, async (req, res) => {
     const profitOnly = amount * (roi / 100);
 
     const investment = new Investment({
-      userId: req.user._id, // from auth middleware
+      userId: req.user._id,
       name,
       amount,
-      roi,                 // save ROI separately too
+      roi,
       expectedReturn: profitOnly,
       startDate,
       endDate,
-      status:"active",
+      status: "active",
     });
 
     await investment.save();
-    res.status(201).json({ investment, balance: user.balance });
+    res.status(201).json({ success: true, investment, balance: user.balance });
   } catch (err) {
     console.error("❌ Investment creation error:", err.message);
-    res.status(500).json({ message: "Server error creating investment." });
+    res.status(500).json({ success: false, message: "Server error creating investment." });
   }
 });
 
-
-// ✅ Get all investments of the logged-in user
+// ✅ Get user investments
 router.get("/", verifyToken, async (req, res) => {
   try {
+    console.log("🔎 Investments request. Token user:", req.user);
+
     const investments = await Investment.find({ userId: req.user._id }).sort({ createdAt: -1 });
-    res.json({ data: investments });
+     console.log("📊 Found investments:", investments.length);
+
+    res.json({ success: true, data: investments });
   } catch (err) {
     console.error("❌ Error fetching investments:", err.message);
-    res.status(500).json({ message: "Server error fetching investments." });
+    res.status(500).json({ success: false, message: "Server error fetching investments." });
   }
 });
 
-// ✅ Admin route: get all investments (optional, for admin panel)
+// ✅ Admin: get all investments
 router.get("/all", verifyToken, adminOnly, async (req, res) => {
   try {
-    // Optionally check if req.user.role === 'admin'
     const investments = await Investment.find().populate("userId", "username email").sort({ createdAt: -1 });
-    res.json({ data: investments });
+    res.json({ success: true, data: investments });
   } catch (err) {
     console.error("❌ Error fetching all investments:", err.message);
-    res.status(500).json({ message: "Server error fetching all investments." });
+    res.status(500).json({ success: false, message: "Server error fetching all investments." });
   }
 });
 
-// Cancel investment
-// Cancel investment
+// ✅ Cancel investment
 router.post("/cancel", verifyToken, async (req, res) => {
   try {
     const { investmentId } = req.body;
-    const userId = req.user._id; // ✅ from token
+    const userId = req.user._id;
 
     if (!investmentId) {
       return res.status(400).json({ success: false, message: "Missing investmentId" });
@@ -90,19 +90,16 @@ router.post("/cancel", verifyToken, async (req, res) => {
       return res.status(400).json({ success: false, message: "Only active investments can be cancelled" });
     }
 
-    // ✅ Apply 20% penalty
     const penalty = Number(investment.amount) * 0.2;
     const refund = Number(investment.amount) - penalty;
 
-    // Mark investment as cancelled
     investment.status = "cancelled";
     await investment.save();
 
-    // Refund user balance & return updated user
     const user = await User.findByIdAndUpdate(
       userId,
       { $inc: { balance: refund } },
-      { new: true } // return updated user
+      { new: true }
     );
 
     res.json({

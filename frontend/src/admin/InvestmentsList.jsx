@@ -1,13 +1,7 @@
 import React from "react";
-import {
-  List,
-  Datagrid,
-  TextField,
-  NumberField,
-  DateField,
-} from "react-admin";
+import { List, Datagrid, TextField, NumberField, DateField } from "react-admin";
 
-export const InvestmentList = () => (
+const InvestmentsList = () => (
   <List>
     <Datagrid rowClick="show">
       <TextField source="id" />
@@ -23,3 +17,5 @@ export const InvestmentList = () => (
     </Datagrid>
   </List>
 );
+
+export default InvestmentsList;

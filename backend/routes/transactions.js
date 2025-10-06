@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Transaction = require('../models/Transaction');
 
-const verifyToken = require("../middleware/auth");
+const verifyToken = require("../middleware/verifyToken");
 const adminOnly = require("../middleware/adminOnly");
 
 router.get("/", verifyToken, async (req, res) => {

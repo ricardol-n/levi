@@ -5,6 +5,7 @@ import ScrollToTop from './ScrollToTop.jsx';
 import Dashboard from './Dashboard.jsx';
 import ProtectedRoute from './ProtectedRoute.jsx';
 import AdminPanel from './admin/AdminPanel.jsx';
+import ProtectedAdminRoute from "./admin/ProtectedAdminRoute.jsx";
 
 
 import { InvestmentPlans, InvestLog } from './pages/Reports.jsx';
@@ -24,19 +25,22 @@ import LoginPage from './Login.jsx';
 import RegisterPage from './Register.jsx';
 import TermsOfService from "./TermsOfService";
 import PrivacyPolicy from "./PrivacyPolicy";
+import AdminLogin from "./admin/AdminLogin.jsx";
 
 
 function App() {
   const { token,loading } = useContext(AuthContext);
   const isLoggedIn = !!token;
+  const role = localStorage.getItem("role");
 
-   if (loading) {
-    return <div className="loading-screen">Loading...</div>; 
-  }
+   if (loading) return <div className="loading-screen">Loading...</div>; 
+  
 
 
   return (
-    <>
+  <>
+ 
+    
       <ScrollToTop />
       <Routes>
            <Route path="/" element={<CompanyInfo />} />
@@ -45,13 +49,10 @@ function App() {
             <Route path="/terms" element={<TermsOfService />} />
             <Route path="/privacy" element={<PrivacyPolicy />} />
 
-        {/* Public Routes */}
-
-        <Route path="/login" element={isLoggedIn ? <Navigate to="/dashboard" /> : <LoginPage />}/>
-        <Route path="/register" element={isLoggedIn ? <Navigate to="/dashboard" /> : <RegisterPage />}/>
-
-
-        {/* Protected Routes */}
+             {/* Login/Register with role-based redirects */}
+        <Route path="/login" element={<LoginPage /> } />
+        <Route path="/register"element={ <RegisterPage />}/>
+           {/* Protected Routes */}
        
             <Route path="/dashboard" element={<ProtectedRoute> <Dashboard /> </ProtectedRoute>} />
             <Route path="/investmentplans" element={<ProtectedRoute><InvestmentPlans /></ProtectedRoute>} />
@@ -72,13 +73,17 @@ function App() {
             <Route path="/charts" element={<ProtectedRoute><Charts /></ProtectedRoute>} />
         
 
-        {/* Admin */}
-        <Route path="/admin/*" element={ <ProtectedRoute adminOnly> <AdminPanel/> </ProtectedRoute> } />
+        {/* Admin routes */}
+
+        <Route path="/admin/login" element={ <AdminLogin />} />
+
+        <Route path="/admin/*" element={ <ProtectedAdminRoute> <AdminPanel />  </ProtectedAdminRoute>} />
 
         {/* Fallback */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
-    </>
+
+     </>  
   );
 }
 

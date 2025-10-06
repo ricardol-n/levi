@@ -3,14 +3,13 @@ import { FaArtstation,FaDigitalTachograph } from "react-icons/fa";
 import { GiTimeTrap } from "react-icons/gi";
 import { FaHandHoldingDollar,FaArrowTurnDown,FaRegFaceSadCry } from "react-icons/fa6";
 import { MdOutlineMoneyOffCsred,MdFolderCopy } from "react-icons/md";
-import {useCopyToClipboard} from 'usehooks-ts' 
 import {BalanceContext}  from '../BalanceContext';
 import { motion ,useAnimation} from "framer-motion";
 import ChartDataLabels from "chartjs-plugin-datalabels";
 import { Pie } from "react-chartjs-2";
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
 import { AuthContext } from '../context/AuthContext';
-import { duration } from '@mui/material';
+
 
 ChartJS.register(ArcElement, Tooltip, Legend,ChartDataLabels);
 
@@ -29,12 +28,7 @@ export const Overview = () => {
     cancelInvestment,
     transactions: ctxTransactions = [],
   } = balanceCtx || {};
-    const [totalInvested, setTotalInvested] = useState(0);
-    const [expectedReturns, setExpectedReturns] = useState(0);
-    const [pendingInvestments, setPendingInvestments] = useState(0);
-    const [pendingWithdrawals, setPendingWithdrawals] = useState(0);
-    const [currentInvestments, setCurrentInvestments] = useState(0);
-    const [currentPlan, setCurrentPlan] = useState("N/A");
+
     const [showCancelModal, setShowCancelModal] = useState(false);
     const [investmentToCancel, setInvestmentToCancel] = useState(null);
     const [notification, setNotification] = useState("");
@@ -43,46 +37,45 @@ export const Overview = () => {
     const controls = useAnimation();
     const tickerTransition = { repeat: Infinity, duration: 20, ease: "linear" };
     // compute sums when investments/withdrawals change
-useEffect(() => {
-  if (!Array.isArray(investments)) return;
 
-  // 💰 Total invested = sum of all amounts (active + completed + cancelled)
-  const totalInvested = investments.reduce(
-    (sum, inv) => sum + Number(inv.amount || 0),
-    0
-  );
 
-  // 📌 Current active investments (still running)
-  const activeInvestments = investments
-    .filter((inv) => inv.status === "active")
+// ✅ Compute key investment metrics with useMemo
+const totalInvested = React.useMemo(() => {
+  return investments.reduce((sum, inv) => sum + Number(inv.amount || 0), 0);
+}, [investments]);
+
+const expectedProfit = React.useMemo(() => {
+  // 10% of all investments (active + pending)
+  return investments
+    .filter(inv => inv.status === "active" || inv.status === "pending")
+    .reduce((sum, inv) => sum + Number(inv.amount || 0) * 0.1, 0);
+}, [investments]);
+
+const maturedProfit = React.useMemo(() => {
+  // 10% of all completed investments
+  return investments
+    .filter(inv => inv.status === "completed")
+    .reduce((sum, inv) => sum + Number(inv.amount || 0) * 0.1, 0);
+}, [investments]);
+
+const pendingInvestments = React.useMemo(() => {
+  return investments
+    .filter(inv => inv.status === "pending")
     .reduce((sum, inv) => sum + Number(inv.amount || 0), 0);
+}, [investments]);
 
-  // 🎯 Expected profits (sum of profit parts for all investments)
-  const expectedProfits = investments.reduce(
-  (sum, inv) => sum + Number(inv.expectedReturn || 0),0);
+const currentInvestments = React.useMemo(() => {
+  return investments
+    .filter(inv => inv.status === "active")
+    .reduce((sum, inv) => sum + Number(inv.amount || 0), 0);
+}, [investments]);
 
-  // 🏆 Matured profits (only completed investments, withdrawable)
-  const maturedProfits = investments
-    .filter((inv) => inv.status === "completed")
-    .reduce(
-      (sum, inv) => sum + (Number(inv.expectedReturn || 0) - Number(inv.amount || 0)),
-      0
-    );
-
-  // 📌 Latest active plan
-  const latestActive = investments.find((inv) => inv.status === "active") || null;
-
-  // ✅ Set state
-  setTotalInvested(totalInvested);
-  setCurrentInvestments(activeInvestments);
-  setPendingInvestments(activeInvestments); // synonym for clarity
-  setExpectedReturns(expectedProfits);
-  setPendingWithdrawals(maturedProfits);
-  setCurrentPlan(latestActive?.name || "N/A");
+const currentPlan = React.useMemo(() => {
+  const latestActive = investments.find(inv => inv.status === "active");
+  return latestActive?.name || "N/A";
 }, [investments]);
 
 
-    
         const calculateTimeLeft = (endDate) => {
             if (!endDate) return "Matured";
     
@@ -239,7 +232,6 @@ return () => controls.stop();
               key={inv._id || `${inv.name}-${inv.amount}`}
               className="ticker-item inline-flex items-center mx-6 gap-3"
             >
-              {/* 👷 Miner inline */}
               
 
               {/* Investment details */}
@@ -299,12 +291,12 @@ return () => controls.stop();
 
                      <div className="container-card1">
                        <div className="piggy"><GiTimeTrap /></div>
-                       <div className="piggy-content"><p>Pending Investment</p> <p>${Number(pendingInvestments || 0).toFixed(2)} USD</p></div>
+                       <div className="piggy-content"><p>Pending Investment</p> <p>${Number(currentInvestments || 0).toFixed(2)} USD</p></div>
                      </div>
 
                      <div className="container-card1">
                        <div className="piggy"><FaHandHoldingDollar /></div>
-                       <div className="piggy-content"><p>Expected Profits</p> <p>${Number(expectedReturns || 0).toFixed(2)} USD</p></div>
+                       <div className="piggy-content"><p>Expected Profits</p> <h3>${expectedProfit.toFixed(2)} USD</h3></div>
                      </div>
                 </div>
 
@@ -318,13 +310,13 @@ return () => controls.stop();
         <div className="details-card2">
           <div className="details-content"><FaDigitalTachograph /></div>
           <p className="con-tails">Pending invest</p>
-          <div className="details-content1"><h1>${Number(pendingInvestments || 0).toFixed(2)} USD</h1> {""}<a href="#"><FaArrowTurnDown /></a></div>
+          <div className="details-content1"><h1>${Number(currentInvestments || 0).toFixed(2)} USD</h1> {""}<a href="#"><FaArrowTurnDown /></a></div>
         </div>
 
         <div className="details-card3">
           <div className="details-content"><GiTimeTrap /></div>
           <p className="con-tails">Matured Profits</p>
-          <div className="details-content1"><h1>${Number(pendingWithdrawals || 0).toFixed(2)} USD</h1>{" "} <a href="#"><FaArrowTurnDown /></a></div>
+          <div className="details-content1"><h3>${maturedProfit.toFixed(2)} USD</h3>{" "} <a href="#"><FaArrowTurnDown /></a></div>
         </div>
 
         <div className="details-card4">

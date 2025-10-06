@@ -1,13 +1,16 @@
 import React from "react";
-import { List, Datagrid, TextField, EmailField } from "react-admin";
+import { List, Datagrid, TextField, EmailField, DateField } from "react-admin";
 
-export const UserList = () => (
+const UsersList = () => (
   <List>
-    <Datagrid rowClick="edit">
+    <Datagrid rowClick="show">
       <TextField source="id" />
       <TextField source="username" />
       <EmailField source="email" />
       <TextField source="role" />
+      <DateField source="createdAt" />
     </Datagrid>
   </List>
 );
+
+export default UsersList;
