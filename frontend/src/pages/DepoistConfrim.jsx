@@ -8,14 +8,17 @@ import MessageBox from "./MessageBox";
 import { useBalance } from "../BalanceContext";
 
 export const DepositConfirmationPage = () => {
+  const API_BASE = import.meta.env.VITE_API_URL; // ✅ Use .env base URL
+
   const location = useLocation();
   const navigate = useNavigate();
   const { syncFromBackend } = useBalance();
+
   const { amount, conversionRate, checkoutUrl } = location.state || {};
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [usdAmount, setUsdAmount] = useState(location.state?.amount || 10); // default $10
+  const [usdAmount, setUsdAmount] = useState(location.state?.amount || 10);
   const [btcPrice, setBtcPrice] = useState(0);
-   const [btcEquivalent, setBtcEquivalent] = useState(null);
+  const [btcEquivalent, setBtcEquivalent] = useState(null);
   const [depositId, setDepositId] = useState(null);
   const [status, setStatus] = useState("pending");
   const [showMessageBox, setShowMessageBox] = useState(false);
@@ -23,43 +26,43 @@ export const DepositConfirmationPage = () => {
 
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
 
-    // ✅ Fetch BTC price when page loads
+  // ✅ Fetch BTC price when page loads
   useEffect(() => {
     const fetchPrice = async () => {
       try {
-        const res = await axios.get("/api/rates");
+        const res = await axios.get(`${API_BASE}/rates`);
         const coingecko = res?.data?.data;
         setBtcPrice(coingecko?.bitcoin?.usd || conversionRate || 0);
-
       } catch (err) {
         console.error("BTC price fetch error:", err.message);
       }
     };
     fetchPrice();
-    const interval = setInterval(fetchPrice, 30000); // refresh every 30s
+    const interval = setInterval(fetchPrice, 30000);
     return () => clearInterval(interval);
-  }, [conversionRate]);
+  }, [conversionRate, API_BASE]);
 
   // ✅ Convert USD → BTC whenever input changes
   useEffect(() => {
     if (usdAmount && btcPrice) {
-      setBtcEquivalent((usdAmount / btcPrice).toFixed(8)); // 8 decimals for BTC
+      setBtcEquivalent((usdAmount / btcPrice).toFixed(8));
     }
   }, [usdAmount, btcPrice]);
 
-  // 2️⃣ Create BTC invoice
+  // ✅ Create BTC invoice
   const createBTCPayInvoice = async () => {
     try {
       const userId = localStorage.getItem("userId");
-      const res = await fetch("/api/create-invoice", {
+      const res = await fetch(`${API_BASE}/create-invoice`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ amount: usdAmount, userId }), // BTC amount only
+        body: JSON.stringify({ amount: usdAmount, userId }),
       });
       const data = await res.json();
+
       if (data.success && data.checkoutUrl && data.deposit?._id) {
         setDepositId(data.deposit._id);
-        window.location.href = data.checkoutUrl; // redirect to BTCPay
+        window.location.href = data.checkoutUrl;
       } else {
         setMessage("❌ Failed to create BTC invoice.");
         setShowMessageBox(true);
@@ -71,52 +74,50 @@ export const DepositConfirmationPage = () => {
     }
   };
 
-  // 3️⃣ Check for pending deposit on page load
+  // ✅ Check for pending deposit
   useEffect(() => {
-  const checkPendingDeposit = async () => {
-    const userId = localStorage.getItem("userId");
-    if (!userId) return;
+    const checkPendingDeposit = async () => {
+      const userId = localStorage.getItem("userId");
+      if (!userId) return;
 
-    try {
-      const res = await fetch(`/api/deposits?userId=${userId}`);
-      const deposits = await res.json();
-      const pending = deposits.find((d) => d.status === "pending");
+      try {
+        const res = await fetch(`${API_BASE}/deposits?userId=${userId}`);
+        const deposits = await res.json();
+        const pending = deposits.find((d) => d.status === "pending");
 
-      if (pending) {
-        setDepositId(pending._id);
+        if (pending) {
+          setDepositId(pending._id);
 
-        // ✅ Redirect user back to BTCPay invoice if available
-        if (pending.checkoutUrl) {
-          window.location.href = pending.checkoutUrl;
+          if (pending.checkoutUrl) {
+            window.location.href = pending.checkoutUrl;
+          }
+        } else if (usdAmount) {
+          createBTCPayInvoice();
+        } else {
+          setMessage("No deposit in progress.");
+          setShowMessageBox(true);
         }
-      } else if (usdAmount) {
-        createBTCPayInvoice();
-      } else {
-        setMessage("No deposit in progress.");
-        setShowMessageBox(true);
+      } catch (err) {
+        console.error("Error fetching pending deposits:", err);
       }
-    } catch (err) {
-      console.error("Error fetching pending deposits:", err);
-    }
-  };
+    };
 
-  checkPendingDeposit();
-}, [usdAmount]);
+    checkPendingDeposit();
+  }, [usdAmount, API_BASE]);
 
-  // 4️⃣ Poll backend for deposit confirmation
+  // ✅ Poll backend for deposit confirmation
   useEffect(() => {
     if (!depositId) return;
 
     const interval = setInterval(async () => {
       try {
-        const res = await fetch(`/api/deposit-status/${depositId}`);
+        const res = await fetch(`${API_BASE}/deposit-status/${depositId}`);
         const data = await res.json();
 
-         if (data.checkoutUrl && !window.checkoutOpened) {
-            // 🚀 Open invoice only once
-            window.checkoutOpened = true;
-            window.location.href = data.checkoutUrl;
-          }
+        if (data.checkoutUrl && !window.checkoutOpened) {
+          window.checkoutOpened = true;
+          window.location.href = data.checkoutUrl;
+        }
 
         if (data?.status === "confirmed") {
           setStatus("confirmed");
@@ -130,7 +131,7 @@ export const DepositConfirmationPage = () => {
     }, 5000);
 
     return () => clearInterval(interval);
-  }, [depositId, navigate, syncFromBackend]);
+  }, [depositId, navigate, syncFromBackend, API_BASE]);
 
   if (!usdAmount) {
     return <p>❌ Missing deposit details. Please start again.</p>;
@@ -156,7 +157,10 @@ export const DepositConfirmationPage = () => {
               <p>
                 <strong>BTC Price:</strong> ${btcPrice.toLocaleString()}
               </p>
-              <p><strong>You will send:</strong> {btcEquivalent || "Loading..."} BTC</p>
+              <p>
+                <strong>You will send:</strong>{" "}
+                {btcEquivalent || "Loading..."} BTC
+              </p>
             </div>
 
             {status === "pending" && (

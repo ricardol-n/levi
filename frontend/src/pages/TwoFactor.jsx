@@ -4,6 +4,7 @@ import Sidebar from "../Sidebar";
 import axios from "axios";
 
 export const TwoFactor = () => {
+  const API_BASE = import.meta.env.VITE_API_URL;
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [qrCode, setQrCode] = useState(null);
   const [token, setToken] = useState("");
@@ -13,7 +14,7 @@ export const TwoFactor = () => {
 
   const setup2FA = async () => {
     try {
-      const res = await axios.post("/api/2fa/generate-2fa", {
+      const res = await axios.post(`${API_BASE}/2fa/generate-2fa`, {
         userId: "USER_ID_HERE", // replace with logged-in user
       });
       setQrCode(res.data.qrCodeUrl);
@@ -24,7 +25,7 @@ export const TwoFactor = () => {
 
   const verify2FA = async () => {
     try {
-      const res = await axios.post("/api/2fa/verify-2fa", {
+      const res = await axios.post(`${API_BASE}/2fa/verify-2fa`, {
         userId: "USER_ID_HERE",
         token,
       });

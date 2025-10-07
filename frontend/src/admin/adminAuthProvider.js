@@ -1,10 +1,10 @@
 // src/admin/adminAuthProvider.js
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:4000";
-
+const API_BASE_URL =
+  import.meta.env.VITE_API_URL ;
 
 const adminAuthProvider = {
   login: async ({ username, password }) => {
-    const res = await fetch(`${API_BASE_URL}/api/admin/auth/login`, {
+    const res = await fetch(`${API_BASE_URL}/admin/auth/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email: username, password }),

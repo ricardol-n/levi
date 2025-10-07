@@ -1,5 +1,6 @@
 // admin/authProvider.js
-const API_URL = "/api/admin"; // Vite proxy handles /api → backend
+const API_URL = `${import.meta.env.VITE_API_URL}/admin`;
+
 
 const authProvider = {
   login: ({ username, password }) => {

@@ -13,6 +13,7 @@ const investmentPlans = [
 ];
 
 export const InvestmentPlans = () => {
+  const API_BASE = import.meta.env.VITE_API_URL; 
   const { balance, syncFromBackend} = useContext(BalanceContext);
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [amount, setAmount] = useState("");
@@ -43,7 +44,7 @@ export const InvestmentPlans = () => {
 
   try {
  const res = await axios.post(
-  "/api/investments",
+  `${API_BASE}/investments`,
   {
     name: selectedPlan.name,
     amount: investmentAmount,
@@ -139,7 +140,7 @@ setShowConfirmModal(false);
 
 export const InvestLog = () => {
 
-  const { investments , setInvestments  } = useContext(BalanceContext);
+  const { investments , syncFromBackend   } = useContext(BalanceContext);
   const [sortBy, setSortBy] = useState("date"); 
   const [filter, setFilter] = useState("all");
   const [sidebarOpen, setSidebarOpen] = useState(false);

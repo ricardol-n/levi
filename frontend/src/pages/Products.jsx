@@ -8,6 +8,9 @@ import { AuthContext } from "../context/AuthContext";
 import axios from 'axios';
 
 export const Deposit = () => {
+
+  const API_BASE = import.meta.env.VITE_API_URL;
+
   const [amount, setAmount] = useState("");
   const [showInput, setShowInput] = useState(false);
   const [message, setMessage] = useState({ type: "", text: "" });
@@ -27,7 +30,7 @@ export const Deposit = () => {
   useEffect(() => {
     const fetchConversionRates = async () => {
       try {
-        const response = await axios.get('/api/rates');
+        const response = await axios.get(`${API_BASE}/rates`);
         const coingecko = response?.data?.data;
         setBtcPrice(coingecko?.bitcoin?.usd || 0);
       } catch (error) {
@@ -71,7 +74,7 @@ export const Deposit = () => {
     }
 
     try {
-      const res = await axios.post('/api/create-invoice', {
+      const res = await axios.post(`${API_BASE}/create-invoice`, {
         userId,
         amount: depositAmount,
       });

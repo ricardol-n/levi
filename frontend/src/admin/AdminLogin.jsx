@@ -8,11 +8,13 @@ function AdminLogin() {
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
+   const API_BASE = import.meta.env.VITE_API_URL;
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     try {
-      const res = await fetch("/api/admin/auth/login", {
+      const res = await fetchfetch(`${API_BASE}/admin/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }), // 🚨 force admin login

@@ -27,8 +27,7 @@ export const BalanceProvider = ({ children }) => {
 
   // ✅ Production API base (Render backend)
   const API_BASE =
-    import.meta.env.VITE_API_URL ||
-    "https://admin-backend-qyhk.onrender.com/api";
+    import.meta.env.VITE_API_URL ;
 
   console.log("🌍 Using API base:", API_BASE);
 
@@ -45,7 +44,7 @@ export const BalanceProvider = ({ children }) => {
       const storedRefreshToken = localStorage.getItem("refreshToken");
       if (!storedRefreshToken) throw new Error("No refresh token found");
 
-      const res = await axios.post(`${API_BASE}/auth/refresh-token`, {
+      const res = await axios.post(`/auth/refresh-token`, {
         refreshToken: storedRefreshToken,
       });
 
@@ -103,18 +102,16 @@ export const BalanceProvider = ({ children }) => {
     setSyncError("");
 
     const investmentsUrl =
-      authUser?.role === "admin"
-        ? `${API_BASE}/investments/all`
-        : `${API_BASE}/investments`;
+      authUser?.role === "admin" ? `/investments/all` : `/investments`;
 
     try {
       const headers = { Authorization: `Bearer ${token}` };
 
-      const [depsRes, wdsRes, invRes, balRes] = await Promise.all([
-        axios.get(`${API_BASE}/users/${userId}/deposits`, { headers }),
-        axios.get(`${API_BASE}/users/${userId}/withdrawals`, { headers }),
+     const [depsRes, wdsRes, invRes, balRes] = await Promise.all([
+        axios.get(`/users/${userId}/deposits`, { headers }),
+        axios.get(`/users/${userId}/withdrawals`, { headers }),
         axios.get(investmentsUrl, { headers }),
-        axios.get(`${API_BASE}/users/${userId}/balance`, { headers }),
+        axios.get(`/users/${userId}/balance`, { headers }),
       ]);
 
       setDeposits(depsRes.data?.data ?? depsRes.data ?? []);
@@ -127,7 +124,7 @@ export const BalanceProvider = ({ children }) => {
       console.error("❌ Sync error:", err?.response?.data || err.message);
       if (err.response?.status === 404 && err.response?.data?.message === "User not found") {
         localStorage.clear();
-        window.location.href = "/login";
+        navigate("/login", { replace: true });
       } else if (err.response?.status === 403) {
         setSyncError("Forbidden: Cannot access this resource.");
       } else {
@@ -137,7 +134,7 @@ export const BalanceProvider = ({ children }) => {
       setLoading(false);
       syncing.current = false;
     }
-  }, [authUser, authToken, logout, API_BASE]);
+  }, [authUser, authToken, logout, navigate]);
 
   // ✅ Auto-sync every 20s
   useEffect(() => {
@@ -152,7 +149,7 @@ export const BalanceProvider = ({ children }) => {
     const token = authToken || localStorage.getItem("token");
     const headers = { Authorization: `Bearer ${token}` };
     const res = await axios.post(
-      `${API_BASE}/investments`,
+      `/investments`,
       { name, amount, roi, duration },
       { headers }
     );
@@ -170,7 +167,7 @@ export const BalanceProvider = ({ children }) => {
     const headers = { Authorization: `Bearer ${token}` };
 
     const res = await axios.post(
-      `${API_BASE}/investments/cancel`,
+      `/investments/cancel`,
       { investmentId, userId },
       { headers }
     );
@@ -211,7 +208,7 @@ export const BalanceProvider = ({ children }) => {
 
     const headers = { Authorization: `Bearer ${token}` };
     const res = await axios.post(
-      `${API_BASE}/withdrawals`,
+      `/withdrawals`,
       { userId, method, amount, address },
       { headers }
     );

@@ -14,13 +14,16 @@ export const AuthProvider = ({ children }) => {
   });
   const [loading, setLoading] = useState(true);
 
+  const API_BASE =
+    import.meta.env.VITE_API_URL;
+
 
   // ✅ Refresh access token
   const refreshAccessToken = async () => {
     try {
       if (!refreshToken) throw new Error("No refresh token available");
 
-      const res = await axios.post("/api/auth/refresh-token", { refreshToken });
+      const res = await axios.post(`${API_BASE}/auth/refresh-token`, { refreshToken });
 
       if (res.data?.token) {
         setToken(res.data.token);
@@ -72,7 +75,7 @@ export const AuthProvider = ({ children }) => {
   // ✅ Login
   const login = async (email, password, isAdmin = false) => {
     try {
-      const res = await axios.post("/api/auth/login", { email, password });
+      const res = await axios.post(`${API_BASE}/auth/login`, { email, password });
       if (!res.data.success) return { success: false, message: res.data.message };
 
       const { token, refreshToken, user } = res.data;
@@ -111,7 +114,7 @@ export const AuthProvider = ({ children }) => {
   // ✅ Register
   const register = async ({ username, email, phone, password }, isAdmin = false) => {
     try {
-      const res = await axios.post("/api/auth/register", { username, email, phone, password });
+      const res = await axios.post(`${API_BASE}/auth/register`, { username, email, phone, password });
 
       if (res.data.success) {
         const { token, refreshToken, user } = res.data;
