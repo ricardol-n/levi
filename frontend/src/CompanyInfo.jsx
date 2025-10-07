@@ -110,40 +110,9 @@ const CompanyInfo = () => {
   }, []);
 
   
-
-  // TradingView chart
-//  useEffect(() => {
-//   if (!window.TradingView) {
-//     console.error("TradingView library not loaded yet");
-//     return;
-//   }
-
-//   const widget = new window.TradingView.widget({
-//     autosize: true,
-//     symbol: selectedSymbol, // you can later make this dynamic
-//     interval: "D",
-//     container_id: "tradingview_chart",
-//     theme: "dark",
-//     style: "1",
-//     locale: "en",
-//   });
-
-//   return () => {
-//     // ✅ Don't force remove if TV handles it
-//     if (widget && widget.remove) {
-//       try {
-//         widget.remove();
-//       } catch (err) {
-//         console.warn("TradingView cleanup error:", err.message);
-//       }
-//     }
-//   };
-// }, [selectedSymbol]);
   return (
     <Wrapper>
-      {/* <div className={`overlay ${menuOpen ? "active" : ""}`} onClick={() => setMenuOpen(false)}>
-
-      </div> */}
+    
 
       <header className="header1">
         <img src={tesla} alt="Tesla Logo" className="tesla-logo1" />
@@ -178,19 +147,7 @@ const CompanyInfo = () => {
           onClick={() => setMenuOpen(false)}
           aria-hidden={!menuOpen}/>
 
-          {/* <nav className={`mobile-sidebar ${menuOpen ? "active" : ""}`} aria-hidden={!menuOpen}>
-            <Link to="/" onClick={() => setMenuOpen(false)}>Home</Link>
-            <Link to="/about" onClick={() => setMenuOpen(false)}>About</Link>
-            <Link
-              to="#FAQ"
-              onClick={(e) => {
-                e.preventDefault();
-                document.getElementById("FAQ")?.scrollIntoView({ behavior: "smooth" });
-                setMenuOpen(false);
-              }}>FAQ</Link>
-            <Link to="/contact" onClick={() => setMenuOpen(false)}>Contact</Link>
-          </nav> */}
-        
+          
       </header>
 
       <section className="tesla">

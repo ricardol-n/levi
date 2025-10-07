@@ -9,6 +9,7 @@ import React, {
 } from "react";
 import axios from "axios";
 import { AuthContext } from "./context/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 export const BalanceContext = createContext();
 export const useBalance = () => useContext(BalanceContext);
@@ -16,6 +17,7 @@ export const useBalance = () => useContext(BalanceContext);
 export const BalanceProvider = ({ children }) => {
   const { user: authUser, token: authToken, logout, loading: authLoading } =
     useContext(AuthContext);
+    const navigate = useNavigate();
 
   const [balance, setBalance] = useState(0);
   const [deposits, setDeposits] = useState([]);

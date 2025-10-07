@@ -35,24 +35,36 @@ console.log("ENV FRONTEND_URLS:", process.env.FRONTEND_URLS);
 
 
 // ✅ CORS
-const allowedOrigins = process.env.FRONTEND_URLS
-  ? process.env.FRONTEND_URLS.split(",").map((url) => url.trim())
-  : [];
 
+const allowedOrigins = [
+  "http://localhost:5173",             // local dev
+  "https://levi-indol.vercel.app",     // your Vercel deployment
+  "https://admin-backend-qyhk.onrender.com", // your backend (self-call safety)
+  process.env.FRONTEND_URL,            // single domain (optional)
+  ...(process.env.FRONTEND_URLS
+    ? process.env.FRONTEND_URLS.split(",").map((url) => url.trim())
+    : []),
+];
 
-console.log("Allowed Origins:", allowedOrigins);
+// ✅ Log once on startup
+console.log("🟢 Allowed origins for CORS:", allowedOrigins);
 
-app.use((req, res, next) => {
-  const origin = req.headers.origin;
-  if (allowedOrigins.includes(origin)) {
-    res.setHeader("Access-Control-Allow-Origin", origin);
-  }
-  res.setHeader("Access-Control-Allow-Credentials", "true");
-  res.setHeader("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type,Authorization");
-  if (req.method === "OPTIONS") return res.sendStatus(200);
-  next();
-});
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        console.warn("🚫 Blocked by CORS:", origin);
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
+);
+
 
 app.use((req, res, next) => {
   if (req.originalUrl === "/api/webhook/btcpay") {
