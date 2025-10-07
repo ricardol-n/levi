@@ -4,11 +4,10 @@ const mongoose = require("mongoose");
 require("dotenv").config();
 const verifyToken = require("./middleware/verifyToken"); // normal users
 const verifyAdmin = require("./middleware/verifyAdmin"); // admins
-
 const path = require("path");
 
 
-const app = express();
+
 
 
 // ✅ Import routes
@@ -26,6 +25,7 @@ const adminWithdrawalsRoutes = require("./routes/admin");
 
 
 
+const app = express();
 
 require("./cron/investmentCron");
 
@@ -44,7 +44,7 @@ const allowedOrigins = [
   ...(process.env.FRONTEND_URLS
     ? process.env.FRONTEND_URLS.split(",").map((url) => url.trim())
     : []),
-];
+].filter(Boolean);
 
 // ✅ Log once on startup
 console.log("🟢 Allowed origins for CORS:", allowedOrigins);
@@ -67,11 +67,8 @@ app.use(
 
 
 app.use((req, res, next) => {
-  if (req.originalUrl === "/api/webhook/btcpay") {
-    next(); // raw body handled inside webhook route
-  } else {
-    express.json()(req, res, next);
-  }
+  if (req.originalUrl === "/api/webhook/btcpay") next();
+  else express.json()(req, res, next);
 });
 
 // ✅ MongoDB connect
@@ -113,10 +110,10 @@ app.use("/api/admin/auth",adminAuthRoutes);
 app.use("/api/admin/action", verifyAdmin, adminWithdrawalsRoutes);
 
 
+app.get("/", (req, res) => {
+  res.json({ message: "🚀 Backend running successfully!" });
+});
 // ✅ Start server
 const port = process.env.PORT || 4000;
-
-app.listen(port, () => {
-  console.log(`🚀 Server running on http://localhost:${port}`);
-});
+app.listen(port, () => console.log(`✅ Server running on port ${port}`));
 
