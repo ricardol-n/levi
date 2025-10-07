@@ -3,7 +3,7 @@ import { PiUserCircleDashedThin } from "react-icons/pi";
 import tesla from "./assets/tesla.png";
 import {RiMenu4Fill} from "react-icons/ri";
 import { AuthContext } from "./context/AuthContext";
-import { useNavigate } from "react-router-dom";
+
 
 function Header({toggleSidebar}) {
   const [open, setOpen] = useState(false);
