@@ -1,23 +1,35 @@
-import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react-swc';
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react-swc";
 
-// https://vitejs.dev/config/
+// ✅ Load environment variables
+const API_URL =
+  process.env.VITE_API_URL || "https://admin-backend-qyhk.onrender.com";
+
 export default defineConfig({
   plugins: [react()],
+
+  // ✅ Local dev server only (Vercel ignores this)
   server: {
     port: 5175,
     open: true,
     proxy: {
-      '/api': {
-        target: 'http://localhost:4000',
+      "/api": {
+        target: API_URL,
         changeOrigin: true,
-        secure: false,
-      }
-    }
+        secure: true,
+      },
+    },
   },
+
+  // ✅ Aliases for clean imports
   resolve: {
     alias: {
-      '@': '/src',
-    }
-  }
+      "@": "/src",
+    },
+  },
+
+  // ✅ Optional but recommended: disable big chunk warnings
+  build: {
+    chunkSizeWarningLimit: 1600,
+  },
 });
