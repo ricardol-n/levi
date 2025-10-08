@@ -5,7 +5,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import Header from "../Header";
 import Sidebar from "../Sidebar";
 import MessageBox from "./MessageBox";
-import { useBalance } from "../BalanceContext";
+import { useBalance } from "../BalanceContext"; 
 
 export const DepositConfirmationPage = () => {
   const API_BASE = import.meta.env.VITE_API_URL; // ✅ Use .env base URL
@@ -27,20 +27,25 @@ export const DepositConfirmationPage = () => {
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
 
   // ✅ Fetch BTC price when page loads
-  useEffect(() => {
-    const fetchPrice = async () => {
-      try {
-        const res = await axios.get(`${API_BASE}/rates`);
-        const coingecko = res?.data?.data;
-        setBtcPrice(coingecko?.bitcoin?.usd || conversionRate || 0);
-      } catch (err) {
-        console.error("BTC price fetch error:", err.message);
-      }
-    };
-    fetchPrice();
-    const interval = setInterval(fetchPrice, 30000);
-    return () => clearInterval(interval);
-  }, [conversionRate, API_BASE]);
+  const fetchPrice = async () => {
+  try {
+    const res = await axios.get(`${API_BASE}/rates`);
+    const btcUsd = res?.data?.data?.bitcoin?.usd;
+    const source = res?.data?.source || "unknown";
+
+    if (!btcUsd) {
+      console.warn("⚠️ No BTC price found in response:", res.data);
+      setBtcPrice(0);
+    } else {
+      console.log(`💰 BTC price from ${source}: $${btcUsd.toLocaleString()}`);
+      setBtcPrice(btcUsd);
+    }
+  } catch (err) {
+    console.error("❌ BTC price fetch failed:", err.response?.data || err.message);
+    setBtcPrice(0);
+  }
+};
+
 
   // ✅ Convert USD → BTC whenever input changes
   useEffect(() => {

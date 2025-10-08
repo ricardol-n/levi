@@ -2,38 +2,68 @@
 const express = require("express");
 const axios = require("axios");
 const router = express.Router();
-require("dotenv").config();
 
-// ✅ Define fallback URL if env missing
 const COINGECKO_API = process.env.COINGECKO_API || "https://api.coingecko.com/api/v3";
 
-// ✅ Fetch BTC price in USD
+// 🧠 Cache to store last known BTC price
+let lastKnownPrice = null;
+let lastUpdatedAt = null;
+
+// ✅ Unified endpoint for BTC price in USD
 router.get("/", async (req, res) => {
   try {
+    // Try Coingecko first
     const url = `${COINGECKO_API}/simple/price?ids=bitcoin&vs_currencies=usd`;
-    console.log("🔍 Fetching BTC price from:", url);
+    const cg = await axios.get(url);
+    const btcUsd = cg.data?.bitcoin?.usd;
 
-    const response = await axios.get(url);
-    console.log("✅ BTC price response:", response.data);
+    if (!btcUsd) throw new Error("Invalid Coingecko response");
 
-    res.json({ data: response.data });
-  } catch (err) {
-    console.error("❌ BTC price fetch error:");
-    console.error("  • Message:", err.message);
+    // ✅ Cache the price
+    lastKnownPrice = btcUsd;
+    lastUpdatedAt = new Date();
 
-    // If Axios error has a response (from Coingecko)
-    if (err.response) {
-      console.error("  • Status:", err.response.status);
-      console.error("  • Response data:", err.response.data);
+    return res.json({
+      success: true,
+      source: "coingecko",
+      updatedAt: lastUpdatedAt,
+      data: { bitcoin: { usd: btcUsd } },
+    });
+  } catch (cgErr) {
+    console.warn("⚠️ Coingecko failed, switching to Binance:", cgErr.message);
+
+    try {
+      // Fallback: Binance API
+      const binance = await axios.get("https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT");
+      const btcUsd = parseFloat(binance.data.price);
+
+      // ✅ Cache the price
+      lastKnownPrice = btcUsd;
+      lastUpdatedAt = new Date();
+
+      return res.json({
+        success: true,
+        source: "binance",
+        updatedAt: lastUpdatedAt,
+        data: { bitcoin: { usd: btcUsd } },
+      });
+    } catch (binanceErr) {
+      console.error("❌ Binance fallback failed:", binanceErr.message);
+
+      // ⚠️ Final fallback: use last known cached price
+      if (lastKnownPrice) {
+        console.log("🟡 Using cached BTC price:", lastKnownPrice);
+        return res.json({
+          success: true,
+          source: "cache",
+          updatedAt: lastUpdatedAt,
+          data: { bitcoin: { usd: lastKnownPrice } },
+        });
+      }
+
+      // ❌ No cache? Return failure
+      return res.status(500).json({ error: "Failed to fetch BTC price" });
     }
-
-    // If Axios error has request (but no response)
-    if (err.request) {
-      console.error("  • No response received from API");
-    }
-
-    // Send user-friendly response
-    res.status(500).json({ error: "Failed to fetch BTC price", details: err.message });
   }
 });
 
