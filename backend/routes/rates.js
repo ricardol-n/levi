@@ -3,22 +3,23 @@ const express = require("express");
 const axios = require("axios");
 const router = express.Router();
 
-// Load env variables
-require("dotenv").config();
-
 // ✅ Fetch BTC price in USD
 router.get("/", async (req, res) => {
   try {
-    // Use env variable instead of hardcoded URL
-    const url = `${process.env.COINGECKO_API}/simple/price?ids=bitcoin&vs_currencies=usd`;
+    // Use Coingecko public API directly
+    const url = "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd";
 
     const response = await axios.get(url);
+    const btcPrice = response.data?.bitcoin?.usd;
 
-    // ⚡ Return data in the same format your frontend expects
-    res.json({ data: response.data });
+    if (!btcPrice) {
+      throw new Error("BTC price not found in API response");
+    }
+
+    res.json({ success: true, BTC_USD: btcPrice });
   } catch (err) {
-    console.error("BTC price fetch error:", err.message);
-    res.status(500).json({ error: "Failed to fetch BTC price" });
+    console.error("❌ BTC price fetch error:", err.response?.data || err.message);
+    res.status(500).json({ success: false, message: "Failed to fetch BTC price" });
   }
 });
 

@@ -120,7 +120,7 @@ setShowConfirmModal(false);
                     <p>
                       <strong>Preview:</strong> $
                       {(parseFloat(amount) * (1 + selectedPlan.roi / 100)).toFixed(2)}
-                      {" "} (calculated only for display, actual saved return is backend-driven)
+                      {" "}
                     </p>
                   )}
 
