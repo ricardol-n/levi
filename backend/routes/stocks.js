@@ -20,42 +20,33 @@ const stockSymbols = [
 // ✅ Route: GET /api/stocks
 router.get("/stocks", async (req, res) => {
   try {
-    // Check for API key
     if (!FINNHUB_API_KEY) {
-      console.error("❌ FINNHUB_API_KEY is missing in environment variables!");
-      return res.status(500).json({
-        success: false,
-        message: "Server misconfiguration: missing Finnhub API key.",
+  console.error("❌ Missing FINNHUB_API_KEY in environment variables!");
+  return res.status(500).json({
+    success: false,
+    message: "Stock API temporarily unavailable. Missing API key.",
+  });
+}
+
+    const stocks = [];
+
+    for (const stock of stockSymbols) {
+      const url = `${FINNHUB_API}/quote?symbol=${stock.symbol}&token=${FINNHUB_API_KEY}`;
+      const { data } = await axios.get(url);
+
+      stocks.push({
+        ...stock,
+        price: data.c ?? null, // ✅ price is null-safe
       });
     }
 
-    // Fetch all stock quotes in parallel
-    const requests = stockSymbols.map(async (stock) => {
-      const url = `${FINNHUB_API}/quote?symbol=${stock.symbol}&token=${FINNHUB_API_KEY}`;
-      const { data } = await axios.get(url);
-      return {
-        ...stock,
-        price: data.c || 0,
-        change: data.d || 0,
-        percentChange: data.dp || 0,
-      };
-    });
-
-    const results = await Promise.all(requests);
-
-    res.json({
-      success: true,
-      data: results, // ✅ return as array for frontend
-    });
+    res.json(stocks); // ✅ send as a clean array
   } catch (error) {
     console.error("❌ Error fetching stock prices:", error.message);
-    res.status(500).json({
-      success: false,
-      message: "Failed to fetch stock prices",
-      error: error.message,
-    });
+    res.status(500).json({ error: "Failed to fetch stock prices" });
   }
 });
+
 
 // ✅ Route: GET /api/candles/:symbol (for TradingView)
 router.get("/candles/:symbol", async (req, res) => {

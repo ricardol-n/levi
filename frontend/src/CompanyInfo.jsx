@@ -81,22 +81,38 @@ const CompanyInfo = () => {
   const [stocks, setStocks] = useState([]); // ✅ define state
  const symbols = ["NFLX", "SPOT", "TSLA", "META", "AMZN", "GOOGL"];
  
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const { data } = await axios.get(`${API_BASE_URL}/stocks`);
-        const stockArray = Object.values(data);
-        setStocks(stockArray);
+ useEffect(() => {
+  const fetchData = async () => {
+    console.log("🌍 Using API base:", API_BASE_URL);
+    setLoading(true);
+
+    try {
+      const { data } = await axios.get(`${API_BASE_URL}/stocks`);
+      console.log("✅ Raw stock data:", data);
+
+      // Handle array or object just in case
+      const stocksArray = Array.isArray(data)
+        ? data
+        : Array.isArray(data.data)
+        ? data.data
+        : Object.values(data || {});
+
+      console.log("✅ Normalized stocks:", stocksArray);
+      setStocks(stocksArray);
     } catch (error) {
-      console.error("❌ Error fetching stock data:", error);
+      console.error("❌ Error fetching stock data:", error.message);
+      setStocks([]); // Fallback
     } finally {
       setLoading(false);
     }
   };
-    fetchData(); // initial fetch
-    const interval = setInterval(fetchData, 60000); // poll every 3s
-    return () => clearInterval(interval);
-  }, []);
+
+  fetchData();
+  const interval = setInterval(fetchData, 60000); // Refresh every 60s
+  return () => clearInterval(interval);
+}, []);
+
+
   useEffect(() => {
     // lock body scroll when menu open
     document.body.style.overflow = menuOpen ? "hidden" : "";
@@ -198,24 +214,37 @@ const CompanyInfo = () => {
                 <h1>Discover Top-Performing Stocks</h1>
 
         </div>
-            <div className="invest">
-              {loading ? (
-                <p style={{ textAlign: "center", color: "#ccc" }}>Loading stock data...</p>
-              ) : stocks.length === 0 ? (
-                <p style={{ textAlign: "center", color: "#f66" }}>No stocks available</p>
-              ) : (
-                stocks.map(stock => (
-                  <div key={stock.symbol} className="invest-card" onClick={() => setSelectedSymbol(stock.symbol)}>
-                    <img src={logoMap[stock.symbol]} alt={stock.name} className="stock-logo" />
-                    <p className="NFLX">{stock.name}</p>  
-                    <p className="NFL">{stock.symbol}</p>
-                    <p className="price">
-                      {stock.price ? `$${Number(stock.price).toFixed(2)}` : <span className="loading-spinner"></span>}
-                    </p>
-                  </div>
-                ))
-              )}
-            </div>
+          <div className="invest">
+  {loading ? (
+    <p style={{ textAlign: "center", color: "#ccc" }}>Loading stock data...</p>
+  ) : stocks.length === 0 ? (
+    <p style={{ textAlign: "center", color: "#f66" }}>No stocks available</p>
+  ) : (
+    stocks.map(stock => (
+      <div
+        key={stock.symbol || stock.name}
+        className="invest-card"
+        onClick={() => setSelectedSymbol(stock.symbol)}
+      >
+        <img
+          src={logoMap[stock.symbol]}
+          alt={stock.name}
+          className="stock-logo"
+        />
+        <p className="NFLX">{stock.name || "Unknown"}</p>
+        <p className="NFL">{stock.symbol || "?"}</p>
+        <p className="price">
+          {stock.price ? (
+            `$${Number(stock.price).toFixed(2)}`
+          ) : (
+            <span className="loading-spinner"></span>
+          )}
+        </p>
+      </div>
+    ))
+  )}
+</div>
+
     
             <div className="Trending">
             <h1>Trending Stocks</h1>
