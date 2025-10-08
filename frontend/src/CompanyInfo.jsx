@@ -85,16 +85,16 @@ const CompanyInfo = () => {
     const fetchData = async () => {
       try {
         const { data } = await axios.get(`${API_BASE_URL}/stocks`);
-        setStocks(data);
-        setLoading(false);
-      } catch (error) {
-        console.error("Error fetching stock data:", error);
-      }
-    };
-
+        const stockArray = Object.values(data);
+        setStocks(stockArray);
+    } catch (error) {
+      console.error("❌ Error fetching stock data:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
     fetchData(); // initial fetch
     const interval = setInterval(fetchData, 60000); // poll every 3s
-
     return () => clearInterval(interval);
   }, []);
   useEffect(() => {
@@ -196,26 +196,28 @@ const CompanyInfo = () => {
         <div className="invest-text">
                 <p>Get started with Txla Investment</p>
                 <h1>Discover Top-Performing Stocks</h1>
-    
-        </div>
-       <div className="invest"> 
-       {Object.values(stocks).map(stock => (
-        <div key={stock.symbol} className="invest-card" onClick={() => setSelectedSymbol(stock.symbol)}>
-          <img src={logoMap[stock.symbol]} alt={stock.name} className="stock-logo" />
-          <p className="NFLX">{stock.name}</p>
-          <p className="NFL">{stock.symbol}</p>
-          <p className="price">
-            {stock.price ? (
-              `$${stock.price.toFixed(2)}`
-            ) : (
-              <span className="loading-spinner"></span>
-            )}
-          </p>
-        </div>
-))}
-      </div>
 
-        <div className="Trending">
+        </div>
+            <div className="invest">
+              {loading ? (
+                <p style={{ textAlign: "center", color: "#ccc" }}>Loading stock data...</p>
+              ) : stocks.length === 0 ? (
+                <p style={{ textAlign: "center", color: "#f66" }}>No stocks available</p>
+              ) : (
+                stocks.map(stock => (
+                  <div key={stock.symbol} className="invest-card" onClick={() => setSelectedSymbol(stock.symbol)}>
+                    <img src={logoMap[stock.symbol]} alt={stock.name} className="stock-logo" />
+                    <p className="NFLX">{stock.name}</p>  
+                    <p className="NFL">{stock.symbol}</p>
+                    <p className="price">
+                      {stock.price ? `$${Number(stock.price).toFixed(2)}` : <span className="loading-spinner"></span>}
+                    </p>
+                  </div>
+                ))
+              )}
+            </div>
+    
+            <div className="Trending">
             <h1>Trending Stocks</h1>
             <p>Discover the most popular Stocks available on Txla Investment</p>
             <div style={{ width: "100%", height: "500px" }}>
