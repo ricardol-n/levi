@@ -1,3 +1,4 @@
+// backend/routes/btcpayWebhook.js
 const express = require("express");
 const crypto = require("crypto");
 const mongoose = require("mongoose");
@@ -6,37 +7,50 @@ const Deposit = require("../models/Deposit");
 
 const router = express.Router();
 
-// ⚡ Use raw body for signature check
+// ⚡ Use raw body for signature verification
 router.use("/btcpay", express.raw({ type: "*/*" }));
 
-router.post("/btcpay", async (req, res) =>  {
+router.post("/btcpay", async (req, res) => {
   try {
     const rawBody = req.body.toString("utf8");
-    const signature = req.headers["btcpay-sig"];
     const secret = process.env.BTCPAY_WEBHOOK_SECRET;
+    if (!secret) {
+      console.error("❌ Missing BTCPAY_WEBHOOK_SECRET");
+      return res.status(500).send("Server misconfigured");
+    }
 
-    // 🔑 Verify HMAC
+    const signature =
+      req.headers["btcpay-sig"] ||
+      req.headers["Btcpay-Sig"] ||
+      req.headers["BTCPAY-SIG"];
+
     const computed =
-      "sha256=" +
-      crypto.createHmac("sha256", secret).update(rawBody).digest("hex");
+      "sha256=" + crypto.createHmac("sha256", secret).update(rawBody).digest("hex");
 
-      // 🐛 DEBUG LOGGING
     console.log("📩 BTCPay webhook received");
-    console.log("🔑 Received signature:", signature);
-    console.log("🔑 Computed signature:", computed);
+    console.log("🔑 Received:", signature);
+    console.log("🔑 Computed:", computed);
 
     if (signature !== computed) {
       console.warn("❌ Invalid BTCPay signature");
       return res.status(403).send("Invalid signature");
     }
 
-    const event = JSON.parse(rawBody);
-    console.log("📩 BTCPay event:", event?.type);
+    // ✅ Parse JSON body safely
+    let event;
+    try {
+      event = JSON.parse(rawBody);
+    } catch (e) {
+      console.error("❌ Invalid JSON payload:", e.message);
+      return res.status(400).send("Invalid JSON");
+    }
 
     const invoice = event?.data;
     if (!invoice?.id) {
       return res.status(400).json({ success: false, message: "Invalid payload" });
     }
+
+    console.log("📩 BTCPay event type:", event?.type);
 
     if (event.type === "InvoiceSettled" || event.type === "InvoiceCompleted") {
       const txId = invoice.id;
@@ -44,13 +58,13 @@ router.post("/btcpay", async (req, res) =>  {
       const userIdRaw = invoice?.metadata?.userId;
 
       if (!userIdRaw || !mongoose.Types.ObjectId.isValid(userIdRaw)) {
-        console.error("❌ Missing invoice data:", userIdRaw);
-        return res.status(400).json({ success: false, message: "Missing invoice data" });
+        console.error("❌ Invalid or missing userId:", userIdRaw);
+        return res.status(400).json({ success: false, message: "Invalid userId" });
       }
 
       const userId = new mongoose.Types.ObjectId(userIdRaw);
 
-      // ✅ Prevent duplicate
+      // 🔁 Prevent duplicate deposits
       const existing = await Deposit.findOne({ txId });
       if (existing) {
         console.log("🔁 Duplicate invoice ignored:", txId);
@@ -61,7 +75,7 @@ router.post("/btcpay", async (req, res) =>  {
       const newDeposit = new Deposit({
         userId,
         address: invoice.address,
-        amount:amountUsd,
+        amount: amountUsd,
         currency: "USD",
         txId,
         status: "confirmed",
@@ -70,7 +84,7 @@ router.post("/btcpay", async (req, res) =>  {
       await newDeposit.save();
 
       // ✅ Update balance
-      await User.findByIdAndUpdate(userId, { $inc: { balance: amountUsd  } });
+      await User.findByIdAndUpdate(userId, { $inc: { balance: amountUsd } });
 
       console.log(`✅ Deposit credited: $${amountUsd} USD → user ${userId}`);
     }

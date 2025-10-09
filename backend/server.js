@@ -40,6 +40,7 @@ const allowedOrigins = [
   "http://localhost:5173",             // local dev
   "https://levi-wfcr.vercel.app",     // your Vercel deployment
   "https://levi.vercel.app",
+  "https://levi-wfcr-amdl6snho-levis-projects-e13e0406.vercel.app",
   "https://admin-backend-qyhk.onrender.com", // your backend (self-call safety)
   process.env.FRONTEND_URL,            // single domain (optional)
   ...(process.env.FRONTEND_URLS

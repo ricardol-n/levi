@@ -5,21 +5,26 @@ const router = express.Router();
 
 const COINGECKO_API = process.env.COINGECKO_API || "https://api.coingecko.com/api/v3";
 
-// 🧠 Cache to store last known BTC price
 let lastKnownPrice = null;
 let lastUpdatedAt = null;
 
-// ✅ Unified endpoint for BTC price in USD
 router.get("/", async (req, res) => {
   try {
-    // Try Coingecko first
-    const url = `${COINGECKO_API}/simple/price?ids=bitcoin&vs_currencies=usd`;
-    const cg = await axios.get(url);
-    const btcUsd = cg.data?.bitcoin?.usd;
+    // Use cache if it's fresh (<30 min old)
+    if (lastKnownPrice && Date.now() - new Date(lastUpdatedAt).getTime() < 30 * 60 * 1000) {
+      return res.json({
+        success: true,
+        source: "cache",
+        updatedAt: lastUpdatedAt,
+        data: { bitcoin: { usd: lastKnownPrice } },
+      });
+    }
 
+    // Fetch from Coingecko
+    const cg = await axios.get(`${COINGECKO_API}/simple/price?ids=bitcoin&vs_currencies=usd`);
+    const btcUsd = cg.data?.bitcoin?.usd;
     if (!btcUsd) throw new Error("Invalid Coingecko response");
 
-    // ✅ Cache the price
     lastKnownPrice = btcUsd;
     lastUpdatedAt = new Date();
 
@@ -33,11 +38,9 @@ router.get("/", async (req, res) => {
     console.warn("⚠️ Coingecko failed, switching to Binance:", cgErr.message);
 
     try {
-      // Fallback: Binance API
       const binance = await axios.get("https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT");
       const btcUsd = parseFloat(binance.data.price);
 
-      // ✅ Cache the price
       lastKnownPrice = btcUsd;
       lastUpdatedAt = new Date();
 
@@ -50,7 +53,6 @@ router.get("/", async (req, res) => {
     } catch (binanceErr) {
       console.error("❌ Binance fallback failed:", binanceErr.message);
 
-      // ⚠️ Final fallback: use last known cached price
       if (lastKnownPrice) {
         console.log("🟡 Using cached BTC price:", lastKnownPrice);
         return res.json({
@@ -61,8 +63,14 @@ router.get("/", async (req, res) => {
         });
       }
 
-      // ❌ No cache? Return failure
-      return res.status(500).json({ error: "Failed to fetch BTC price" });
+      // 🩹 No cache available — return dummy data instead of 500
+      return res.json({
+        success: false,
+        source: "none",
+        updatedAt: new Date(),
+        data: { bitcoin: { usd: 0 } },
+        message: "Rate service temporarily unavailable",
+      });
     }
   }
 });
