@@ -34,42 +34,37 @@ console.log("ENV FRONTEND_URL:", process.env.FRONTEND_URL);
 console.log("ENV FRONTEND_URLS:", process.env.FRONTEND_URLS);
 
 
-// ✅ CORS
 
+
+// ✅ CORS — Safe for production (Vercel + Render + Localhost)
 const allowedOrigins = [
-  "http://localhost:5173",             // local dev
-  "https://levi-wfcr.vercel.app",     // your Vercel deployment
-  "https://levi.vercel.app",
-  "https://levi-wfcr-amdl6snho-levis-projects-e13e0406.vercel.app",
-  "https://admin-backend-qyhk.onrender.com", // your backend (self-call safety)
-  process.env.FRONTEND_URL,            // single domain (optional)
+  "http://localhost:5173",
+  "https://admin-backend-qyhk.onrender.com", // backend self-calls
+  process.env.FRONTEND_URL,
   ...(process.env.FRONTEND_URLS
     ? process.env.FRONTEND_URLS.split(",").map((url) => url.trim())
     : []),
 ].filter(Boolean);
 
-// ✅ Log once on startup
-console.log("🟢 Allowed origins for CORS:", allowedOrigins);
+console.log("🟢 Allowed origins (exact):", allowedOrigins);
 
-// ✅ UNIVERSAL CORS for Vercel + Render + Localhost
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Allow requests with no origin (e.g., curl, Postman)
+      // Allow Postman, curl, server-to-server (no origin)
       if (!origin) return callback(null, true);
 
+      // ✅ Whitelist regex patterns
       const allowedPatterns = [
-  /\.vercel\.app$/,
-  /\.onrender\.com$/,
-  /^https:\/\/levi\.vercel\.app$/,
-  /^https:\/\/levi-wfcr\.vercel\.app$/,
-  /localhost/,
-];
+        /\.vercel\.app$/,           // all Vercel preview domains
+        /\.onrender\.com$/,         // backend self-requests
+        /localhost/,                // local dev
+      ];
 
+      const isExplicitlyAllowed = allowedOrigins.includes(origin);
+      const isPatternAllowed = allowedPatterns.some((p) => p.test(origin));
 
-      const isAllowed = allowedPatterns.some((pattern) => pattern.test(origin));
-
-      if (isAllowed) {
+      if (isExplicitlyAllowed || isPatternAllowed) {
         callback(null, true);
       } else {
         console.warn("🚫 Blocked by CORS:", origin);
@@ -81,6 +76,7 @@ app.use(
     allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
+
 
 
 
