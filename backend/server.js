@@ -51,10 +51,25 @@ const allowedOrigins = [
 // ✅ Log once on startup
 console.log("🟢 Allowed origins for CORS:", allowedOrigins);
 
+// ✅ UNIVERSAL CORS for Vercel + Render + Localhost
 app.use(
   cors({
     origin: (origin, callback) => {
-      if (!origin || allowedOrigins.includes(origin)) {
+      // Allow requests with no origin (e.g., curl, Postman)
+      if (!origin) return callback(null, true);
+
+      const allowedPatterns = [
+  /\.vercel\.app$/,
+  /\.onrender\.com$/,
+  /^https:\/\/levi\.vercel\.app$/,
+  /^https:\/\/levi-wfcr\.vercel\.app$/,
+  /localhost/,
+];
+
+
+      const isAllowed = allowedPatterns.some((pattern) => pattern.test(origin));
+
+      if (isAllowed) {
         callback(null, true);
       } else {
         console.warn("🚫 Blocked by CORS:", origin);
@@ -66,6 +81,7 @@ app.use(
     allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
+
 
 
 app.use((req, res, next) => {

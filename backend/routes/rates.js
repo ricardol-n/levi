@@ -3,15 +3,20 @@ const express = require("express");
 const axios = require("axios");
 const router = express.Router();
 
+// ✅ Default API and cache variables
 const COINGECKO_API = process.env.COINGECKO_API || "https://api.coingecko.com/api/v3";
-
-let lastKnownPrice = null;
+let lastKnownPrice = 0;
 let lastUpdatedAt = null;
 
+/**
+ * @route   GET /api/rates
+ * @desc    Fetch BTC price in USD — now optional, for display only
+ */
 router.get("/", async (req, res) => {
   try {
-    // Use cache if it's fresh (<30 min old)
-    if (lastKnownPrice && Date.now() - new Date(lastUpdatedAt).getTime() < 30 * 60 * 1000) {
+    // ✅ Serve cached value if under 1 hour old
+    const oneHour = 60 * 60 * 1000;
+    if (lastKnownPrice && Date.now() - new Date(lastUpdatedAt).getTime() < oneHour) {
       return res.json({
         success: true,
         source: "cache",
@@ -20,9 +25,10 @@ router.get("/", async (req, res) => {
       });
     }
 
-    // Fetch from Coingecko
-    const cg = await axios.get(`${COINGECKO_API}/simple/price?ids=bitcoin&vs_currencies=usd`);
-    const btcUsd = cg.data?.bitcoin?.usd;
+    // ✅ Fetch fresh price from Coingecko
+    const cgRes = await axios.get(`${COINGECKO_API}/simple/price?ids=bitcoin&vs_currencies=usd`);
+    const btcUsd = cgRes.data?.bitcoin?.usd;
+
     if (!btcUsd) throw new Error("Invalid Coingecko response");
 
     lastKnownPrice = btcUsd;
@@ -35,12 +41,12 @@ router.get("/", async (req, res) => {
       data: { bitcoin: { usd: btcUsd } },
     });
   } catch (cgErr) {
-    console.warn("⚠️ Coingecko failed, switching to Binance:", cgErr.message);
+    console.warn("⚠️ Coingecko failed:", cgErr.message);
 
+    // ✅ Fallback to Binance
     try {
       const binance = await axios.get("https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT");
       const btcUsd = parseFloat(binance.data.price);
-
       lastKnownPrice = btcUsd;
       lastUpdatedAt = new Date();
 
@@ -50,26 +56,15 @@ router.get("/", async (req, res) => {
         updatedAt: lastUpdatedAt,
         data: { bitcoin: { usd: btcUsd } },
       });
-    } catch (binanceErr) {
-      console.error("❌ Binance fallback failed:", binanceErr.message);
+    } catch (err2) {
+      console.error("❌ Binance fallback failed:", err2.message);
 
-      if (lastKnownPrice) {
-        console.log("🟡 Using cached BTC price:", lastKnownPrice);
-        return res.json({
-          success: true,
-          source: "cache",
-          updatedAt: lastUpdatedAt,
-          data: { bitcoin: { usd: lastKnownPrice } },
-        });
-      }
-
-      // 🩹 No cache available — return dummy data instead of 500
       return res.json({
-        success: false,
-        source: "none",
+        success: true,
+        source: "fallback",
         updatedAt: new Date(),
-        data: { bitcoin: { usd: 0 } },
-        message: "Rate service temporarily unavailable",
+        data: { bitcoin: { usd: lastKnownPrice || 0 } },
+        message: "Rate service temporarily unavailable — using last known price.",
       });
     }
   }

@@ -1,6 +1,5 @@
 // pages/DepositConfirmationPage.jsx
 import React, { useState, useEffect } from "react";
-import axios from "axios";
 import { useLocation, useNavigate } from "react-router-dom";
 import Header from "../Header";
 import Sidebar from "../Sidebar";
@@ -14,11 +13,8 @@ export const DepositConfirmationPage = () => {
   const navigate = useNavigate();
   const { syncFromBackend } = useBalance();
 
-  const { amount, conversionRate, checkoutUrl } = location.state || {};
+  const { amount } = location.state || {};
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [usdAmount, setUsdAmount] = useState(location.state?.amount || 10);
-  const [btcPrice, setBtcPrice] = useState(0);
-  const [btcEquivalent, setBtcEquivalent] = useState(null);
   const [depositId, setDepositId] = useState(null);
   const [status, setStatus] = useState("pending");
   const [showMessageBox, setShowMessageBox] = useState(false);
@@ -26,48 +22,20 @@ export const DepositConfirmationPage = () => {
 
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
 
-  // ✅ Fetch BTC price when page loads
-  const fetchPrice = async () => {
-  try {
-    const res = await axios.get(`${API_BASE}/rates`);
-    const btcUsd = res?.data?.data?.bitcoin?.usd;
-    const source = res?.data?.source || "unknown";
-
-    if (!btcUsd) {
-      console.warn("⚠️ No BTC price found in response:", res.data);
-      setBtcPrice(0);
-    } else {
-      console.log(`💰 BTC price from ${source}: $${btcUsd.toLocaleString()}`);
-      setBtcPrice(btcUsd);
-    }
-  } catch (err) {
-    console.error("❌ BTC price fetch failed:", err.response?.data || err.message);
-    setBtcPrice(0);
-  }
-};
-
-
-  // ✅ Convert USD → BTC whenever input changes
-  useEffect(() => {
-    if (usdAmount && btcPrice) {
-      setBtcEquivalent((usdAmount / btcPrice).toFixed(8));
-    }
-  }, [usdAmount, btcPrice]);
-
-  // ✅ Create BTC invoice
+  // ✅ Create BTCPay invoice (let BTCPay handle conversion)
   const createBTCPayInvoice = async () => {
     try {
       const userId = localStorage.getItem("userId");
       const res = await fetch(`${API_BASE}/create-invoice`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ amount: usdAmount, userId }),
+        body: JSON.stringify({ amount, userId }),
       });
       const data = await res.json();
 
       if (data.success && data.checkoutUrl && data.deposit?._id) {
         setDepositId(data.deposit._id);
-        window.location.href = data.checkoutUrl;
+        window.location.href = data.checkoutUrl; // 🔁 redirect to BTCPay invoice
       } else {
         setMessage("❌ Failed to create BTC invoice.");
         setShowMessageBox(true);
@@ -79,7 +47,7 @@ export const DepositConfirmationPage = () => {
     }
   };
 
-  // ✅ Check for pending deposit
+  // ✅ Check for existing pending deposit
   useEffect(() => {
     const checkPendingDeposit = async () => {
       const userId = localStorage.getItem("userId");
@@ -92,11 +60,10 @@ export const DepositConfirmationPage = () => {
 
         if (pending) {
           setDepositId(pending._id);
-
           if (pending.checkoutUrl) {
             window.location.href = pending.checkoutUrl;
           }
-        } else if (usdAmount) {
+        } else if (amount) {
           createBTCPayInvoice();
         } else {
           setMessage("No deposit in progress.");
@@ -108,7 +75,7 @@ export const DepositConfirmationPage = () => {
     };
 
     checkPendingDeposit();
-  }, [usdAmount, API_BASE]);
+  }, [amount, API_BASE]);
 
   // ✅ Poll backend for deposit confirmation
   useEffect(() => {
@@ -118,11 +85,6 @@ export const DepositConfirmationPage = () => {
       try {
         const res = await fetch(`${API_BASE}/deposit-status/${depositId}`);
         const data = await res.json();
-
-        if (data.checkoutUrl && !window.checkoutOpened) {
-          window.checkoutOpened = true;
-          window.location.href = data.checkoutUrl;
-        }
 
         if (data?.status === "confirmed") {
           setStatus("confirmed");
@@ -138,7 +100,7 @@ export const DepositConfirmationPage = () => {
     return () => clearInterval(interval);
   }, [depositId, navigate, syncFromBackend, API_BASE]);
 
-  if (!usdAmount) {
+  if (!amount) {
     return <p>❌ Missing deposit details. Please start again.</p>;
   }
 
@@ -157,19 +119,13 @@ export const DepositConfirmationPage = () => {
 
             <div className="details">
               <p>
-                <strong>Amount in USD:</strong> ${usdAmount.toFixed(2)}
+                <strong>Amount in USD:</strong> ${amount.toFixed(2)}
               </p>
-              <p>
-                <strong>BTC Price:</strong> ${btcPrice.toLocaleString()}
-              </p>
-              <p>
-                <strong>You will send:</strong>{" "}
-                {btcEquivalent || "Loading..."} BTC
-              </p>
+              <p>💰 BTC amount will be calculated automatically by BTCPay Server.</p>
             </div>
 
             {status === "pending" && (
-              <p className="redirect-text">🔄 Redirecting to secure checkout...</p>
+              <p className="redirect-text">🔄 Redirecting to secure BTCPay checkout...</p>
             )}
             {status === "confirmed" && (
               <p className="redirect-text">
