@@ -32,12 +32,15 @@ export const DepositConfirmationPage = () => {
         body: JSON.stringify({ amount, userId }),
       });
       const data = await res.json();
+      console.log("create-invoice response:", res.status, data);
 
-      if (data.success && data.checkoutUrl && data.deposit?._id) {
+      const checkoutUrl = data.checkoutUrl || data.checkoutLink || data.invoice?.checkoutLink || data.checkout_link;
+      if (data.success && checkoutUrl && data.deposit?._id) {
         setDepositId(data.deposit._id);
-        window.location.href = data.checkoutUrl; // 🔁 redirect to BTCPay invoice
+        window.location.href = checkoutUrl;
       } else {
-        setMessage("❌ Failed to create BTC invoice.");
+        console.error("Create invoice failed:", data);
+        setMessage(data.message || "❌ Failed to create BTC invoice.");
         setShowMessageBox(true);
       }
     } catch (err) {

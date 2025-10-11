@@ -1,32 +1,31 @@
-import React, { useContext, useEffect, useRef, useState } from 'react';
-import bitcoin from './asset/bitcoin.png';
-import { BalanceContext } from '../BalanceContext';
-import { useNavigate } from 'react-router-dom';
-import Header from '../Header';
-import Sidebar from '../Sidebar';
+// ✅ frontend/pages/Deposit.jsx
+import React, { useContext, useEffect, useRef, useState } from "react";
+import bitcoin from "./asset/bitcoin.png";
+import { BalanceContext } from "../BalanceContext";
+import { useNavigate } from "react-router-dom";
+import Header from "../Header";
+import Sidebar from "../Sidebar";
 import { AuthContext } from "../context/AuthContext";
-import axios from 'axios';
+import axios from "axios";
 
 export const Deposit = () => {
-
   const API_BASE = import.meta.env.VITE_API_URL;
+  const navigate = useNavigate();
 
   const [amount, setAmount] = useState("");
   const [showInput, setShowInput] = useState(false);
   const [message, setMessage] = useState({ type: "", text: "" });
   const [sidebarOpen, setSidebarOpen] = useState(false);
-
   const inputBoxRef = useRef(null);
-  const navigate = useNavigate();
+
   const { user } = useContext(AuthContext);
   const { balance } = useContext(BalanceContext);
-  const name = 'Bitcoin';
+
   const [btcPrice, setBtcPrice] = useState(0);
-  const [conversionRates, setConversionRates] = useState({});
   const MIN_DEPOSIT = 1;
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
 
-  // ✅ Fetch conversion rates
+  // ✅ Fetch BTC/USD conversion rate
   useEffect(() => {
     const fetchConversionRates = async () => {
       try {
@@ -34,135 +33,160 @@ export const Deposit = () => {
         const coingecko = response?.data?.data;
         setBtcPrice(coingecko?.bitcoin?.usd || 0);
       } catch (error) {
-        console.error('❌ Failed to fetch conversion rates:', error.message || error);
+        console.error("❌ Failed to fetch conversion rates:", error.message || error);
       }
     };
 
     fetchConversionRates();
-  }, []);
+  }, [API_BASE]);
 
-  // ✅ Handle click outside input
+  // ✅ Close popup when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (inputBoxRef.current && !inputBoxRef.current.contains(event.target)) {
         setShowInput(false);
       }
     };
-    if (showInput) {
-      document.addEventListener('mousedown', handleClickOutside);
-    } else {
-      document.removeEventListener('mousedown', handleClickOutside);
-    }
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
+    if (showInput) document.addEventListener("mousedown", handleClickOutside);
+    else document.removeEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [showInput]);
 
   const handlePayNow = () => {
-    setAmount('');
-    setMessage({ type: '', text: '' });
+    setAmount("");
+    setMessage({ type: "", text: "" });
     setShowInput(true);
   };
 
   const handleDeposit = async () => {
-    const depositAmount = parseFloat(amount);
-    const userId = localStorage.getItem("userId");
+  const depositAmount = parseFloat(amount);
+  const userId = localStorage.getItem("userId");
 
-    if (isNaN(depositAmount) || depositAmount < MIN_DEPOSIT) {
-      setMessage({ type: 'error', text: `Minimum deposit is $${MIN_DEPOSIT}` });
+  if (!userId) {
+    setMessage({ type: "error", text: "⚠️ Please log in before depositing." });
+    return;
+  }
+
+  if (isNaN(depositAmount) || depositAmount < MIN_DEPOSIT) {
+    setMessage({ type: "error", text: `Minimum deposit is $${MIN_DEPOSIT}` });
+    return;
+  }
+
+  try {
+    console.log("🌐 Sending to API:", `${API_BASE}/create-invoice`);
+    console.log("🧾 Creating invoice with:", { userId, amount: depositAmount });
+
+    const res = await axios.post(`${API_BASE}/create-invoice`, {
+      userId,
+      amount: depositAmount,
+    });
+
+    const { success, checkoutUrl, testMode } = res.data;
+
+    if (!success || !checkoutUrl) {
+      console.error("❌ Invalid invoice response:", res.data);
+      setMessage({
+        type: "error",
+        text: res.data?.message || "❌ Failed to create invoice.",
+      });
       return;
     }
 
-    try {
-      const res = await axios.post(`${API_BASE}/create-invoice`, {
-        userId,
-        amount: depositAmount,
-      });
-
-      const { success, checkoutUrl } = res.data;
-
-      if (!success || !checkoutUrl) {
-        setMessage({ type: 'error', text: '❌ Failed to create invoice.' });
-        return;
-      }
-
-      const btcPrice = conversionRates['Bitcoin'] || 1;
-
-      navigate('/depositconfirmationpage', {
-        state: {
-          method: 'Bitcoin',
-          amount: depositAmount,
-          charge: 2.5,
-          conversionRate:btcPrice,
-          checkoutUrl,
-        },
-      });
-
-    } catch (err) {
-      console.error('❌ Error creating invoice:', err);
-      setMessage({ type: 'error', text: '❌ Failed to create invoice.' });
+    // ✅ Optional: auto-redirect to BTCPay
+    if (!testMode && checkoutUrl.includes("btcpay")) {
+      window.location.href = checkoutUrl;
+      return;
     }
-  };
+
+    // ✅ Navigate to confirmation page
+    navigate("/depositconfirmationpage", {
+      state: { method: "Bitcoin", amount: depositAmount, checkoutUrl, testMode },
+    });
+  } catch (err) {
+    console.error("❌ Error creating invoice:", err.response?.data || err.message);
+    setMessage({
+      type: "error",
+      text: `❌ Failed to create invoice. ${
+        err.response?.data?.message || "Server error"
+      }`,
+    });
+  }
+};
+
 
   return (
-    <div className="dashboard-contaniner">
-      <Header toggleSidebar={toggleSidebar}/>
+    <div className="dashboard-container">
+      <Header toggleSidebar={toggleSidebar} />
       <div className="dashboard-content">
-        <Sidebar sidebarOpen={sidebarOpen} toggleSidebar={toggleSidebar}/>
+        <Sidebar sidebarOpen={sidebarOpen} toggleSidebar={toggleSidebar} />
         <main className="main-content">
           <div className="deposit-container">
             <div className="deposit-card">
-            <div className="item">
-              {name === 'Bitcoin' && (
-                  <div className="caption">One small deposit for you, one giant leap for your balance. 🌕</div>
-                )}
-              <div className="card-xrp">
-                
-                <img src={bitcoin} alt="Bitcoin" className="bitcoin" />
+              <div className="item">
+                <div className="caption">
+                  One small deposit for you, one giant leap for your balance. 🌕
+                </div>
+
+                <div className="card-xrp">
+                  <img src={bitcoin} alt="Bitcoin" className="bitcoin" />
+                </div>
+
+                <button className="pay-btn" onClick={handlePayNow}>
+                  Pay now
+                </button>
               </div>
-              {/* <h3 className="item-mid">Bitcoin</h3> */}
-              <button className="pay-btn" onClick={handlePayNow}>
-                Pay now
-              </button>
-            </div>
 
-            {message.text && (
-              <div style={{
-                padding: "10px",
-                marginBottom: "20px",
-                color: message.type === "success" ? "#4CAF50" : "#F44336",
-                border: `1px solid ${message.type === "success" ? "#4CAF50" : "#F44336"}`,
-                borderRadius: "4px",
-                backgroundColor: message.type === "success" ? "#e8f5e9" : "#ffebee"
-              }}>
-                {message.text}
-              </div>
-            )}
+              {message.text && (
+                <div
+                  style={{
+                    padding: "10px",
+                    marginBottom: "20px",
+                    color: message.type === "success" ? "#4CAF50" : "#F44336",
+                    border: `1px solid ${
+                      message.type === "success" ? "#4CAF50" : "#F44336"
+                    }`,
+                    borderRadius: "4px",
+                    backgroundColor:
+                      message.type === "success" ? "#e8f5e9" : "#ffebee",
+                  }}
+                >
+                  {message.text}
+                </div>
+              )}
 
-            {showInput && (
-              <div className="deposit-popup" ref={inputBoxRef}>
-                <button onClick={() => setShowInput(false)} className="close-btn" aria-label="close">&times;</button>
+              {showInput && (
+                <div className="deposit-popup" ref={inputBoxRef}>
+                  <button
+                    onClick={() => setShowInput(false)}
+                    className="close-btn"
+                    aria-label="close"
+                  >
+                    &times;
+                  </button>
 
-                <h3>Deposit via: <span style={{ color: "#4CAF50" }}>Bitcoin</span></h3>
-                <label htmlFor="amount">Enter deposit amount ($):</label>
-                <input
-                  id="amount"
-                  type="number"
-                  value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
-                  placeholder="Enter amount"
-          
-                />
-                {btcPrice > 0 && amount && (
-                    <p>
-                      ≈ {(parseFloat(amount) / btcPrice).toFixed(8)} BTC
-                    </p>
+                  <h3>
+                    Deposit via:{" "}
+                    <span style={{ color: "#4CAF50" }}>Bitcoin</span>
+                  </h3>
+                  <label htmlFor="amount">Enter deposit amount ($):</label>
+                  <input
+                    id="amount"
+                    type="number"
+                    value={amount}
+                    onChange={(e) => setAmount(e.target.value)}
+                    placeholder="Enter amount"
+                  />
+
+                  {btcPrice > 0 && amount && (
+                    <p>≈ {(parseFloat(amount) / btcPrice).toFixed(8)} BTC</p>
                   )}
-                <button
-                  onClick={handleDeposit} className='pay-btn'>Confirm Deposit</button>
-              </div>
-            )}
-          </div>
+
+                  <button onClick={handleDeposit} className="pay-btn">
+                    Confirm Deposit
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </main>
       </div>

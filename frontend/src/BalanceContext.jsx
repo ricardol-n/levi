@@ -14,10 +14,21 @@ import { useNavigate } from "react-router-dom";
 export const BalanceContext = createContext();
 export const useBalance = () => useContext(BalanceContext);
 
+// ✅ Global Axios setup (applies to ALL requests)
+axios.defaults.baseURL = import.meta.env.VITE_API_URL;
+axios.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem("token");
+    if (token) config.headers.Authorization = `Bearer ${token}`;
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
 export const BalanceProvider = ({ children }) => {
   const { user: authUser, token: authToken, logout, loading: authLoading } =
     useContext(AuthContext);
-    const navigate = useNavigate();
+  const navigate = useNavigate();
 
   const [balance, setBalance] = useState(0);
   const [deposits, setDeposits] = useState([]);
@@ -27,17 +38,15 @@ export const BalanceProvider = ({ children }) => {
   const [syncError, setSyncError] = useState("");
   const syncing = useRef(false);
 
-  // ✅ Production API base (Render backend)
-  const API_BASE =
-    import.meta.env.VITE_API_URL ;
-
+  const API_BASE = import.meta.env.VITE_API_URL;
   console.log("🌍 Using API base:", API_BASE);
 
-  // ✅ Global axios config
+  // ✅ Keep axios in sync with token
   useEffect(() => {
     axios.defaults.baseURL = API_BASE;
     const token = authToken || localStorage.getItem("token");
     if (token) axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+    else delete axios.defaults.headers.common["Authorization"];
   }, [authToken, API_BASE]);
 
   // ✅ Refresh Access Token
@@ -109,7 +118,7 @@ export const BalanceProvider = ({ children }) => {
     try {
       const headers = { Authorization: `Bearer ${token}` };
 
-     const [depsRes, wdsRes, invRes, balRes] = await Promise.all([
+      const [depsRes, wdsRes, invRes, balRes] = await Promise.all([
         axios.get(`/users/${userId}/deposits`, { headers }),
         axios.get(`/users/${userId}/withdrawals`, { headers }),
         axios.get(investmentsUrl, { headers }),
@@ -150,11 +159,7 @@ export const BalanceProvider = ({ children }) => {
   const addInvestment = async (name, amount, roi, duration) => {
     const token = authToken || localStorage.getItem("token");
     const headers = { Authorization: `Bearer ${token}` };
-    const res = await axios.post(
-      `/investments`,
-      { name, amount, roi, duration },
-      { headers }
-    );
+    const res = await axios.post(`/investments`, { name, amount, roi, duration }, { headers });
     if (res.data?.investment) {
       setInvestments((prev) => [res.data.investment, ...prev]);
       setBalance(res.data.balance ?? balance);
@@ -168,17 +173,11 @@ export const BalanceProvider = ({ children }) => {
     const userId = authUser?._id || localStorage.getItem("userId");
     const headers = { Authorization: `Bearer ${token}` };
 
-    const res = await axios.post(
-      `/investments/cancel`,
-      { investmentId, userId },
-      { headers }
-    );
+    const res = await axios.post(`/investments/cancel`, { investmentId, userId }, { headers });
 
     if (res.data.success) {
       setInvestments((prev) =>
-        prev.map((inv) =>
-          inv._id === investmentId ? { ...inv, status: "cancelled" } : inv
-        )
+        prev.map((inv) => (inv._id === investmentId ? { ...inv, status: "cancelled" } : inv))
       );
       await syncFromBackend();
     } else {
@@ -209,11 +208,7 @@ export const BalanceProvider = ({ children }) => {
       throw new Error("You can only withdraw matured profits.");
 
     const headers = { Authorization: `Bearer ${token}` };
-    const res = await axios.post(
-      `/withdrawals`,
-      { userId, method, amount, address },
-      { headers }
-    );
+    const res = await axios.post(`/withdrawals`, { userId, method, amount, address }, { headers });
 
     const created = res.data?.data || res.data?.withdrawal;
     setWithdrawals((prev) => [created, ...prev]);

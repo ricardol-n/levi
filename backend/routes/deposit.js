@@ -11,6 +11,7 @@ const TEST_MODE = process.env.TEST_MODE === "true";
 
 router.post("/create-invoice", async (req, res) => {
   try {
+    console.log("📩 /create-invoice called with body:", req.body);
     const { userId, amount } = req.body;
 
     if (!mongoose.Types.ObjectId.isValid(userId)) {
@@ -46,11 +47,18 @@ router.post("/create-invoice", async (req, res) => {
     }
 
     // Step 1: Create invoice in BTCPay
-    const invoice = await createBTCPayInvoice({
+   const invoice = await createBTCPayInvoice({
       amount,
       userId,
       redirectUrl: `${process.env.FRONTEND_URL}/depositconfirmationpage`,
     });
+
+    console.log("🧾 Invoice from BTCPay util:", invoice);
+
+    if (!invoice || !invoice.id || !invoice.checkoutLink) {
+      console.error("❌ Invoice missing id or checkoutLink:", invoice);
+      return res.status(502).json({ success: false, message: "Failed to create invoice with BTCPay", invoice });
+    }
 
     // Step 2: Save pending deposit
     const newDeposit = new Deposit({
