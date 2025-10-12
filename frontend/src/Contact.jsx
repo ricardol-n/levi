@@ -17,10 +17,10 @@ function Contact() {
           <strong>Email:</strong> support@txlainvestment.com
         </p>
         <p>
-          <strong>Phone:</strong> +234 801 234 5678
+          <strong>Phone:</strong> +1 (317) 618-2969
         </p>
         <p>
-          <strong>Office:</strong> No. 15 Investment Street, Lagos, Nigeria
+          <strong>Office:</strong> Washington, D.C., USA (East) – iad1
         </p>
       </div>
 

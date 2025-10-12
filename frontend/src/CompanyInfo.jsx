@@ -1,4 +1,4 @@
-import React, { useState ,useEffect } from 'react';
+import React, { useState ,useEffect,useRef } from 'react';
 import { useNavigate ,useLocation} from 'react-router-dom';
 import styled from 'styled-components';
 import tesla from './assets/tesla.png';
@@ -27,6 +27,9 @@ import { Link } from "react-router-dom";
 import { sliderClasses } from '@mui/material';
 import Counter from './Counter';
 import { FaFacebookF, FaTwitter, FaLinkedinIn, FaInstagram } from "react-icons/fa";
+import { motion } from "framer-motion";
+
+const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 
 
@@ -62,7 +65,48 @@ const LoginButton = styled.button`
     background-color: #ff3d33ff;
   }
 `;
-const API_BASE_URL = import.meta.env.VITE_API_URL;
+// 🔹 Fade-in section
+const FadeInSection = ({ children, delay = 0 }) => {
+  const [isVisible, setVisible] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    const element = ref.current;
+    if (!element) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setVisible(true);
+            observer.unobserve(element); // Animate only once
+          }
+        });
+      },
+      { threshold: 0.2 }
+    );
+
+    observer.observe(element);
+
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y: 100, scale: 0.95, filter: "blur(20px)" }}
+      animate={
+        isVisible
+          ? { opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }
+          : { opacity: 0, y: 100, scale: 0.95, filter: "blur(10px)" }
+      }
+      transition={{ duration: 1.2, delay,ease: [0.22, 1, 0.36, 1], }}
+      style={{ willChange: "transform, opacity, filter" }}
+    >
+      {children}
+    </motion.div>
+  );
+};
 
 const CompanyInfo = () => {
   const navigate = useNavigate();
@@ -79,7 +123,8 @@ const CompanyInfo = () => {
     setOpenDropdown(openDropdown === index ? null : index);
   };
   const [stocks, setStocks] = useState([]); // ✅ define state
- const symbols = ["NFLX", "SPOT", "TSLA", "META", "AMZN", "GOOGL"];
+  const symbols = ["NFLX", "SPOT", "TSLA", "META", "AMZN", "GOOGL"];
+
  
  useEffect(() => {
   const fetchData = async () => {
@@ -124,9 +169,13 @@ const CompanyInfo = () => {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, []);
+  
+  
 
+ 
   
   return (
+   
     <Wrapper>
     
 
@@ -165,7 +214,7 @@ const CompanyInfo = () => {
 
           
       </header>
-
+     <FadeInSection delay={0.4}>
       <section className="tesla">
         <div className="tesla-text">
           <h1>Trade CFDs on FX, Stocks and more with a leading global broker</h1>
@@ -195,8 +244,9 @@ const CompanyInfo = () => {
         </div>
         <div className="tesla-text1">
             <h1>Take That Step</h1>
-            <p>With Txla Investment you get a transparent pricing structure and a secure and regulated trading environment. As an active trader, you can also qualify for lower fees and extra benefits.</p>
+            <p>With TXLA Investment you get a transparent pricing structure and a secure and regulated trading environment. As an active trader, you can also qualify for lower fees and extra benefits.</p>
             <div className="tesla-ul" >
+              <FadeInSection delay={0.4}>
                 <ul>
                     <li >Access to US investments</li>
                     <li >Commission- free stock trades</li>
@@ -205,12 +255,15 @@ const CompanyInfo = () => {
                     <li >Local deposit methods</li>
                     <li >Seamless US Dollar conversion</li>
                 </ul>
+              </FadeInSection>
         </div>
         </div>
       </section>
+      </FadeInSection>
+      
        <section className='tesla2'>
         <div className="invest-text">
-                <p>Get started with Txla Investment</p>
+                <p>Get started with TXLA Investment</p>
                 <h1>Discover Top-Performing Stocks</h1>
 
         </div>
@@ -248,7 +301,7 @@ const CompanyInfo = () => {
     
             <div className="Trending">
             <h1>Trending Stocks</h1>
-            <p>Discover the most popular Stocks available on Txla Investment</p>
+            <p>Discover the most popular Stocks available on TXLA Investment</p>
             <div style={{ width: "100%", height: "500px" }}>
               <iframe
                 key={selectedSymbol} // 🔑 ensures iframe reloads on symbol change
@@ -263,14 +316,19 @@ const CompanyInfo = () => {
 
         </div>
       </section>
+      
+
+
       <section id="about-us" className="why-choose">
             <div className="why-choose-header">
-              <h1>Why Choose Txla Investment</h1>
+              <h1>Why Choose TXLA Investment</h1>
               <p>
-                Txla Investment is specially designed to help you start investing easily,
+                TXLA Investment is specially designed to help you start investing easily,
                 with powerful tools, competitive pricing, and award-winning customer support.
               </p>
             </div>
+
+            <FadeInSection delay={0.2}>
 
             <div className= "why-choose-grid" >
               <div className="why-card">
@@ -315,9 +373,11 @@ const CompanyInfo = () => {
                 <p>No hidden charges — keep more of your profits.</p>
               </div>
             </div>
+            </FadeInSection>
       </section>
+      
 
-
+      <FadeInSection delay={0.4}>
       <section className='security fixed-sec' >
           <div className="sec-info">
             <div className="security-img"> <img src={female} alt="Security Illustration" /> </div>
@@ -371,6 +431,8 @@ const CompanyInfo = () => {
                   </div>
             </div>
         </section>
+      </FadeInSection>
+
         <section className="stats-section">
       <div className="stat-card" >
         <h2>
@@ -586,6 +648,7 @@ const CompanyInfo = () => {
       </div>
     </footer>
     </Wrapper>
+  
   );
 };
 
