@@ -30,12 +30,16 @@ router.post("/btcpay", async (req, res) => {
     console.log("📩 BTCPay webhook received");
     console.log("🔑 Received:", signature);
     console.log("🔑 Computed:", computed);
-    console.log("🔍 Signature mismatch:", { received: signature, computed });
-
+    
+    // ✅ Only log mismatch if actually mismatched
     if (signature !== computed) {
       console.warn("❌ Invalid BTCPay signature");
+      console.log("🔍 Signature mismatch:", { received: signature, computed });
       return res.status(403).send("Invalid signature");
     }
+
+    console.log("✅ Signature verified successfully");
+    
 
     // ✅ Parse JSON body safely
     let event;
