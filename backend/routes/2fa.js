@@ -62,4 +62,9 @@ router.post("/verify-2fa", async (req, res) => {
   }
 });
 
+router.get("/test", (req, res) => {
+  res.json({ message: "2FA route is live ✅" });
+});
+
+
 module.exports = router;
