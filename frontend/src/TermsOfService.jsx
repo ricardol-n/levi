@@ -81,10 +81,10 @@ const TermsOfService = () => {
 
       {/* Page Content */}
       <div className="legal-page">
-        <h1>Txla Company – Terms & Conditions</h1>
-        <p><strong>Effective Date:</strong> [Insert Date]</p>
+        <h1>Txla Investment – Terms & Conditions</h1>
+        <p><strong>Effective Date:</strong> 01-20-2025</p>
         <p>
-          Welcome to Txla Company! By using our services, investing with us, or learning 
+          Welcome to Txla Investment! By using our services, investing with us, or learning 
           through our programs, you agree to the Terms and Conditions below. 
           Please read them carefully.
         </p>
@@ -127,7 +127,7 @@ const TermsOfService = () => {
 
         <section>
           <h2>👤 Your Responsibilities</h2>
-          <p>When working with Txla Company, you agree to:</p>
+          <p>When working with Txla Investment, you agree to:</p>
           <ul>
             <li>Provide accurate information when registering.</li>
             <li>Use our services lawfully and responsibly.</li>
@@ -139,14 +139,14 @@ const TermsOfService = () => {
           <h2>📚 Our Materials</h2>
           <p>
             All learning resources, strategies, and trading content are the property 
-            of Txla Company. Please do not copy, share, or resell them without our permission.
+            of Txla Investment. Please do not copy, share, or resell them without our permission.
           </p>
         </section>
 
         <section>
           <h2>🛡 Limitation of Liability</h2>
           <p>
-            Txla Company is not responsible for market losses, banking delays, or 
+            Txla Investment is not responsible for market losses, banking delays, or 
             third-party issues beyond our control.
             We are committed to transparency and fairness, but investment outcomes 
             may differ from expectations.
@@ -165,10 +165,10 @@ const TermsOfService = () => {
           <h2>📞 Contact Us</h2>
           <p>If you have questions, reach out to us anytime:</p>
           <p>
-            <strong>Txla Company</strong><br />
-            📧 Email: [Insert Email]<br />
-            📞 Phone: [Insert Phone]<br />
-            🏢 Address: [Insert Address]
+            <strong>Txla Investment</strong><br />
+            📧 Email: support@txlainvestment.com <br />
+            📞 Phone: +1 (317) 618-2969<br />
+            {/* 🏢 Address: [Insert Address] */}
           </p>
         </section>
       </div>
