@@ -136,7 +136,7 @@
   grid-template-columns: repeat(3, 1fr);
   grid-template-rows: auto;
   gap: 20px;
-  padding: 20px;
+  padding: 10px;
   border: 2px solid rgba(0, 0, 0, 0.2);
   color: white;
   background: linear-gradient(45deg, #FFD700, #FFF4E0, #FFC107, #B8860B, #000);
@@ -1124,19 +1124,7 @@ html {
 }
 
 /* GRID for top section */
-.home-container-content {
- display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 20px;
-  padding: 20px;
-  border: 2px solid rgba(0, 0, 0, 0.2);
-  color: white;
-  background: linear-gradient(45deg, #FFD700, #FFF4E0, #FFC107, #B8860B, #000);
-  background-size: 400% 400%;
-  animation: goldShine 4s infinite alternate ease-in-out;
-  z-index: 5;
-  height: auto;  
-}
+
 
 /* Details section */
 .home-container-content2 {
@@ -1560,8 +1548,10 @@ html {
   height: 100vh;
   background-color: rgba(31, 30, 30, 0.717);
   max-width: 1200px; 
-  margin: 0 auto;
-  padding: 20px;
+  margin: 3rem auto;
+}
+.investment-container h1{
+font-size: 25px;
 }
 
 /* Grid Layout for Investment Cards */
@@ -2305,6 +2295,65 @@ table th {
 table tbody tr:nth-child(even) {
   background-color: #f9f9f9;
 }
+.twofactor-container {
+  background: #fff;
+  padding: 2rem;
+  max-width: 500px;
+  margin: 4rem auto;
+  border-radius: 16px;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.twofactor-container h2 {
+  margin-bottom: 1rem;
+  color: #1e1e1e;
+}
+
+.primary-btn {
+  background: #090360;
+  color: white;
+  padding: 12px 20px;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background 0.3s;
+  width: 100%;
+  margin-top: 1rem;
+}
+
+.primary-btn:hover {
+  background: #0056b3;
+}
+
+.input-field {
+  width: 100%;
+  padding: 12px;
+  margin: 1rem 0;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  font-size: 16px;
+  text-align: center;
+}
+
+.input-field:focus {
+  border-color: #007bff;
+  outline: none;
+}
+
+.qr-code {
+  max-width: 200px;
+  margin: 1rem auto;
+  display: block;
+}
+
+.status-message {
+  margin-top: 1rem;
+  color: #333;
+  font-weight: 500;
+}
 
 table tbody tr:hover {
   background-color: #f1f1f1;
@@ -2313,11 +2362,7 @@ table tbody tr:hover {
 .messages,
 .transaction-log,
 .referral {
-  /* background: #2b2b44; */
-  /* background: #2a004d; */
-  /* background-color: rgba(31, 30, 30, 0.717); */
   background: #1e1e2f;
-  /* border: 1px solid #c9a227; */
   border-radius: 16px;
   color: wheat;
   padding: 2rem;
@@ -2540,13 +2585,11 @@ button:hover {
 /* Main content takes remaining space */
 .main-content {
   flex: 1;
-  padding: 20px;
   overflow-y: auto;
-  /* background-color: rgba(31, 30, 30, 0.717); */
   background: #1e1e2f;
   -webkit-overflow-scrolling: touch;
-  margin: 0;
-  padding: 20px;
+  padding-top: 2rem;
+  padding-left: 12rem;
   min-height: calc(100vh - 63px);
 }
 
@@ -3409,6 +3452,15 @@ button:hover {
   font-size: 12px;
 }
 }
+
+
+@media (max-width: 600px) {
+  .twofactor-container {
+    width: 90%;
+    padding: 1.5rem;
+  }
+}
+
 
 
 @media (max-width: 480px) {

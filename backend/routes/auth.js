@@ -20,10 +20,11 @@ const signRefreshToken = (user) => jwt.sign(
 );
 
 
-// ✅ Registration Route
+
+// ✅ Registration Route (with referral support)
 router.post("/register", async (req, res) => {
   try {
-    const { username, email, phone, password } = req.body;
+    const { username, email, phone, password, referralCode } = req.body;
     if (!username || !email || !password) {
       return res.status(400).json({ success: false, message: "username, email and password are required" });
     }
@@ -32,28 +33,42 @@ router.post("/register", async (req, res) => {
     if (existing) return res.status(400).json({ success: false, message: "Email already registered" });
 
     const hashed = await bcrypt.hash(password, 10);
-    const user = new User({ username, email, phone, password: hashed });
+
+    // ✅ Check if referred by someone
+    let referredBy = null;
+    if (referralCode) {
+      const referrer = await User.findOne({ referralCode });
+      if (referrer) {
+        referredBy = referrer._id;
+        referrer.referralCount += 1;
+        referrer.referralBonus += 10; // $10 reward
+        referrer.balance += 10;
+        await referrer.save();
+      }
+    }
+
+    const user = new User({ username, email, phone, password: hashed, referredBy });
     await user.save();
 
     // issue tokens
     const token = signAccessToken(user);
     const refreshToken = signRefreshToken(user);
-
-    // store refresh token (persist)
     user.refreshToken = refreshToken;
     await user.save();
 
     res.json({
       success: true,
+      message: "Registered successfully",
       token,
       refreshToken,
-      user: { _id: user._id, username: user.username, email: user.email, role: user.role }
+      user: { _id: user._id, username: user.username, email: user.email, role: user.role },
     });
   } catch (err) {
     console.error("Register error:", err);
     res.status(500).json({ success: false, message: "Server error" });
   }
 });
+
 
 // ✅ Login Route
 router.post('/login', async (req, res) => {

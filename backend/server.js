@@ -9,7 +9,6 @@ const path = require("path");
 
 
 
-
 // ✅ Import routes
 const authRouter = require("./routes/auth");
 const ratesRoutes = require("./routes/rates");
@@ -22,6 +21,7 @@ const webhookRoutes = require("./routes/btcpayWebhook");
 const candlesRoute = require("./routes/stocks");
 const adminAuthRoutes = require("./routes/adminAuth");
 const adminWithdrawalsRoutes = require("./routes/admin");
+const twoFARoutes = require("./routes/2fa");
 
 
 
@@ -122,6 +122,9 @@ app.use("/api", candlesRoute);
 app.use("/api/admin/auth",adminAuthRoutes);
 
 app.use("/api/admin/action", verifyAdmin, adminWithdrawalsRoutes);
+
+app.use("/api/2fa", twoFARoutes);
+
 
 
 app.get("/", (req, res) => {

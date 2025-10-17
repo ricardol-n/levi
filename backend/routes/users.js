@@ -125,7 +125,7 @@ router.get("/:id/withdrawals", verifyToken, async (req, res) => {
 });
 
 // ✅ Update user (Admin)
-router.put("/:id", async (req, res) => {
+router.put("/:id",verifyToken, adminOnly, async (req, res) => {
   try {
     const { id } = req.params;
     if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -140,7 +140,7 @@ router.put("/:id", async (req, res) => {
 });
 
 // ✅ Delete user (Admin)
-router.delete("/:id", async (req, res) => {
+router.delete("/:id",verifyToken, adminOnly, async (req, res) => {
   try {
     const { id } = req.params;
     if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -153,6 +153,44 @@ router.delete("/:id", async (req, res) => {
     res.status(500).json({ success: false, message: "Server error" });
   }
 });
+
+
+// ✅ Get referral stats for a user (dynamic)
+router.get("/:id/referrals", verifyToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (req.user._id.toString() !== id && req.user.role !== "admin") {
+      return res.status(403).json({ success: false, message: "Forbidden" });
+    }
+
+    const user = await User.findById(id).select("referralCode referralBonus");
+    if (!user) return res.status(404).json({ success: false, message: "User not found" });
+
+    // Get all referred users dynamically
+    const referredUsers = await User.find({ referredBy: id }).select("email username createdAt");
+
+    const frontendBase =
+      process.env.FRONTEND_URL ||
+      process.env.FRONTEND_BASE_URL ||
+      "https://txlaadvisory.com";
+
+    res.json({
+      success: true,
+      data: {
+        referrals: referredUsers.length,
+        bonus: user.referralBonus,
+        referralLink: `${frontendBase.replace(/\/$/, "")}/register?ref=${user.referralCode}`,
+        referredUsers,
+      },
+    });
+  } catch (err) {
+    console.error("Referral fetch error:", err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
+
 
 module.exports = router;
               

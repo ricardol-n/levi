@@ -120,6 +120,8 @@ const API_BASE = import.meta.env.VITE_API_URL || "/api";
 const AuthForm = ({ type }) => {
   const isLogin = type === "login" || type === "adminLogin";
   const isAdmin = type === "adminLogin" || type === "adminRegister";
+  const queryParams = new URLSearchParams(window.location.search);
+  const referralCode = queryParams.get("ref");
 
   const [currentBg, setCurrentBg] = useState(images[0]);
   const [formData, setFormData] = useState({
@@ -194,7 +196,8 @@ const handleSubmit = async (e) => {
       if (isLogin) {
         res = await login(formData.email, formData.password, isAdmin);
       } else {
-        res = await register(formData, isAdmin);
+        const payload = referralCode ? { ...formData, referralCode } : formData;
+        res = await register(payload, isAdmin);
       }
 
       if (res.success) {
