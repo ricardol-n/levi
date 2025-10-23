@@ -190,6 +190,27 @@ router.get("/:id/referrals", verifyToken, async (req, res) => {
   }
 });
 
+// ✅ Get a single user (for profile settings)
+router.get("/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ success: false, message: "Invalid user ID" });
+    }
+
+    const user = await User.findById(id).select("-password");
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    res.json({ success: true, data: user });
+  } catch (err) {
+    console.error("❌ Fetch user error:", err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
 
 
 module.exports = router;

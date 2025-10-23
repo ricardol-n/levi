@@ -12,7 +12,7 @@ import { InvestmentPlans, InvestLog } from './pages/Reports.jsx';
 import { Deposit, DepositLog } from './pages/Products.jsx';
 import { Withdraw, WithdrawLog } from './pages/Team.jsx';
 import { Transfer, TransferMoneyLog, InterestLog, TransactionLog } from './pages/Messages.jsx';
-import { Setting, Logout } from './pages/Setting.jsx';
+import { Setting } from './pages/Setting.jsx';
 import { RefferalLog } from './pages/Refferal.jsx';
 import { TwoFactor } from './pages/TwoFactor.jsx';
 import { DepositConfirmationPage } from "./pages/DepoistConfrim.jsx";
@@ -68,7 +68,6 @@ function App() {
             <Route path="/refferallog" element={<ProtectedRoute><RefferalLog /></ProtectedRoute>} />
             <Route path="/twofactor" element={<ProtectedRoute><TwoFactor /></ProtectedRoute>} />
             <Route path="/setting/profile" element={<ProtectedRoute><Setting /></ProtectedRoute>} />
-            <Route path="/setting/logout" element={<ProtectedRoute><Logout /></ProtectedRoute>} />
             <Route path="/depositconfirmationpage" element={<ProtectedRoute><DepositConfirmationPage /></ProtectedRoute>} />
             <Route path="/charts" element={<ProtectedRoute><Charts /></ProtectedRoute>} />
         
