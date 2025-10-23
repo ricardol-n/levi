@@ -62,8 +62,6 @@ function App() {
             <Route path="/withdraw" element={<ProtectedRoute><Withdraw /></ProtectedRoute>} />
             <Route path="/withdrawlog" element={<ProtectedRoute><WithdrawLog /></ProtectedRoute>} />
             <Route path="/transfer" element={<ProtectedRoute><Transfer /></ProtectedRoute>} />
-            <Route path="/transfer/transferlog" element={<ProtectedRoute><TransferMoneyLog /></ProtectedRoute>} />
-            <Route path="/transfer/interestlog" element={<ProtectedRoute><InterestLog /></ProtectedRoute>} />
             <Route path="/transfer/transactionlog" element={<ProtectedRoute><TransactionLog /></ProtectedRoute>} />
             <Route path="/refferallog" element={<ProtectedRoute><RefferalLog /></ProtectedRoute>} />
             <Route path="/twofactor" element={<ProtectedRoute><TwoFactor /></ProtectedRoute>} />

@@ -85,18 +85,7 @@ export const SidebarData = [
         iconClosed:<RiIcons.RiArrowDownSFill/>,
         iconOpened:<RiIcons.RiArrowUpSFill/>,
         subNav:[
-            {
-                title: 'Transfer Money Log',
-                path: '/transfer/transferlog',
-                icons:<FaMoneyBillTransfer/>,
-                
-            },
-            {
-                title: 'Interest Log',
-                path: '/transfer/interestlog',
-                icons:<IoIcons.IoIosPaper/>,
-                
-            },
+
             {
                 title: 'Transaction Log',
                 path: '/transfer/transactionlog',

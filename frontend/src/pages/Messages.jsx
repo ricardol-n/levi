@@ -49,42 +49,6 @@ export const Transfer = () => {
     );
 };
 
-export const TransferMoneyLog = () => {
-    return (
-        <div className="dashboard-container">
-        <Header />
-        <div className="dashboard-content">
-          <Sidebar />
-          <main className="main-content">
-        
-        <div className="messages">
-            <h1 color='red'>TransferMoneyLog</h1>
-        </div>
-        </main>
-        </div>
-        </div>
-
-    );
-};
-
-export const InterestLog = () => {
-    return (
-        <div className="dashboard-container">
-        <Header />
-        <div className="dashboard-content">
-          <Sidebar />
-          <main className="main-content">
-        
-        <div className="messages">
-            <h1 color='red'>interestlog</h1>
-        </div>
-
-        </main>
-        </div>
-        </div>
-
-    );
-};
 
 export const TransactionLog = () => {
     const { transactions } = useContext(BalanceContext);
