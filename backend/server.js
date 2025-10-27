@@ -22,6 +22,8 @@ const candlesRoute = require("./routes/stocks");
 const adminAuthRoutes = require("./routes/adminAuth");
 const adminWithdrawalsRoutes = require("./routes/admin");
 const twoFARoutes = require("./routes/2fa");
+const phoneRoutes = require("./routes/phone");
+
 
 
 
@@ -124,6 +126,9 @@ app.use("/api/admin/auth",adminAuthRoutes);
 app.use("/api/admin/action", verifyAdmin, adminWithdrawalsRoutes);
 
 app.use("/api/2fa", twoFARoutes);
+
+app.use("/api/phone", phoneRoutes);
+
 
 
 
