@@ -11,7 +11,7 @@ import ProtectedAdminRoute from "./admin/ProtectedAdminRoute.jsx";
 import { InvestmentPlans, InvestLog } from './pages/Reports.jsx';
 import { Deposit, DepositLog } from './pages/Products.jsx';
 import { Withdraw, WithdrawLog } from './pages/Team.jsx';
-import { Transfer, TransferMoneyLog, InterestLog, TransactionLog } from './pages/Messages.jsx';
+import { Transfer, TransactionLog } from './pages/Messages.jsx';
 import { Setting } from './pages/Setting.jsx';
 import { RefferalLog } from './pages/Refferal.jsx';
 import { TwoFactor } from './pages/TwoFactor.jsx';
