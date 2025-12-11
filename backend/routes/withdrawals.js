@@ -64,7 +64,7 @@ router.post("/", verifyToken, async (req, res) => {
 
     return res.status(201).json({
       success: true,
-      message: "✅ Withdrawal request submitted! Please wait for admin approval.",
+      message: "✅ Withdrawal request submitted! Please wait for admin confirmation within 24 hours.",
       data: withdrawal,
     });
   } catch (err) {
