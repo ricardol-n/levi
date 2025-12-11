@@ -226,12 +226,7 @@ const CompanyInfo = () => {
           <LoginButton onClick={() => navigate('/register')}>
             Create An Account
           </LoginButton>
-          <p style={{ marginTop: "10px", fontSize: "0.9rem" }}> Are you an admin? <span style={{ color: "#ff3d33", cursor: "pointer", textDecoration: "underline" }} 
-        onClick={() => navigate('/admin/login')}
-      >
-        Login here
-      </span>
-    </p>
+       
 
         </div>
         <div className="tesla-img">

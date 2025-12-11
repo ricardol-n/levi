@@ -1,4 +1,3 @@
-// src/admin/WithdrawalsList.jsx
 import React from "react";
 import {
   List,
@@ -6,53 +5,92 @@ import {
   TextField,
   NumberField,
   DateField,
-  Button,
-  useDataProvider,
-  useNotify,
+  TextInput,
+  EditButton,
+  useRecordContext,
   useRefresh,
+  useNotify,
+  Button,
 } from "react-admin";
 
-const WithdrawalsList = () => {
-  const dataProvider = useDataProvider();
+const ApproveButton = () => {
+  const record = useRecordContext();
   const notify = useNotify();
   const refresh = useRefresh();
 
-  const handleApprove = async (id) => {
+  if (!record || record.status !== "pending") return null;
+
+  const handleApprove = async () => {
     try {
-      await dataProvider.customMethod(`admin/withdrawals/${id}/approve`, { method: "POST" });
+      const res = await fetch(`/api/withdrawals/${record.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("adminToken")}`,
+        },
+        body: JSON.stringify({ status: "approved" }),
+      });
+
+      if (!res.ok) throw new Error("Approve failed");
+
       notify("Withdrawal approved", { type: "success" });
       refresh();
     } catch (err) {
-      console.error(err);
-      notify("Error approving withdrawal", { type: "warning" });
-    }
-  };
-
-  const handleReject = async (id) => {
-    try {
-      await dataProvider.customMethod(`admin/withdrawals/${id}/reject`, { method: "POST" });
-      notify("Withdrawal rejected", { type: "info" });
-      refresh();
-    } catch (err) {
-      console.error(err);
-      notify("Error rejecting withdrawal", { type: "warning" });
+      notify("Error approving withdrawal", { type: "error" });
     }
   };
 
   return (
-    <List resource="withdrawals" perPage={20}>
-      <Datagrid>
-        <TextField source="userId" label="User ID" />
-        <NumberField source="amount" label="Amount" />
-        <TextField source="method" label="Method" />
-        <TextField source="address" label="Wallet/Bank" />
-        <TextField source="status" label="Status" />
-        <DateField source="createdAt" label="Requested At" />
-        <Button label="Approve" onClick={(e) => handleApprove(e.record.id)} />
-        <Button label="Reject" onClick={(e) => handleReject(e.record.id)} />
-      </Datagrid>
-    </List>
+    <Button label="Approve" onClick={handleApprove} color="primary" />
   );
 };
+
+const RejectButton = () => {
+  const record = useRecordContext();
+  const notify = useNotify();
+  const refresh = useRefresh();
+
+  if (!record || record.status !== "pending") return null;
+
+  const handleReject = async () => {
+    try {
+      const res = await fetch(`/api/withdrawals/${record.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("adminToken")}`,
+        },
+        body: JSON.stringify({ status: "rejected" }),
+      });
+
+      if (!res.ok) throw new Error("Reject failed");
+
+      notify("Withdrawal rejected", { type: "success" });
+      refresh();
+    } catch (err) {
+      notify("Error rejecting withdrawal", { type: "error" });
+    }
+  };
+
+  return (
+    <Button label="Reject" onClick={handleReject} color="warning" />
+  );
+};
+
+const WithdrawalsList = () => (
+  <List>
+   <Datagrid rowClick={false}>
+      <TextField source="id" />
+      <TextField source="method" />
+      <NumberField source="amount" />
+      <TextField source="status" />
+      <DateField source="createdAt" />
+
+      {/* ACTION BUTTONS */}
+      <ApproveButton />
+      <RejectButton />
+    </Datagrid>
+  </List>
+);
 
 export default WithdrawalsList;

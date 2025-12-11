@@ -1,14 +1,15 @@
 import React from "react";
-import { List, Datagrid, TextField, EmailField, DateField } from "react-admin";
+import { List, Datagrid, TextField, EmailField, NumberField } from "react-admin";
 
 const UsersList = () => (
   <List>
-    <Datagrid rowClick="show">
+    <Datagrid rowClick="edit">
       <TextField source="id" />
-      <TextField source="username" />
+      <TextField source="username" label="Name" />
       <EmailField source="email" />
+      <TextField source="phone" />
+      <NumberField source="balance" />
       <TextField source="role" />
-      <DateField source="createdAt" />
     </Datagrid>
   </List>
 );

@@ -50,11 +50,12 @@ export const Withdraw = () => {
       });
 
       setMessage({
-        type: "success",
-        text:
-          res?.message ||
-          "✅ Withdrawal request submitted successfully. Please wait for admin confirmation.",
-      });
+  type: "success",
+  text:
+    res?.message ||
+    "Your withdrawal is pending. Please wait for admin confirmation within 24 hours.",
+});
+
 
       // Reset fields
       setAmount("");

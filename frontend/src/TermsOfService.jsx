@@ -19,6 +19,7 @@ const TermsOfService = () => {
       {/* Header */}
       <header className="header1 fixed-header">
         <img src={tesla} alt="Tesla Logo" className="tesla-logo1" />
+        
 
         <nav className={menuOpen ? "open" : ""}>
           <ul className="header-title">
