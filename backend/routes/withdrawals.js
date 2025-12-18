@@ -9,7 +9,8 @@ const adminOnly = require("../middleware/adminOnly");
 
 /**
  * 📌 USER: Submit a withdrawal request
- * ✅ Users can only withdraw matured profits (10% ROI)
+ * ✅ Users can ONLY withdraw matured profits (10% ROI)
+ * ✅ Profit cannot be withdrawn twice
  * ✅ Request logged for admin review
  */
 router.post("/", verifyToken, async (req, res) => {
@@ -17,6 +18,7 @@ router.post("/", verifyToken, async (req, res) => {
     const { method, amount, address } = req.body;
     const userId = req.user._id;
 
+    // 🔒 Validate input
     if (!method || !amount || !address) {
       return res.status(400).json({ success: false, message: "Missing fields" });
     }
@@ -26,25 +28,39 @@ router.post("/", verifyToken, async (req, res) => {
     }
 
     const user = await User.findById(userId);
-    if (!user) return res.status(404).json({ success: false, message: "User not found" });
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
 
-    // ✅ Calculate withdrawable profit (10% of completed investments)
-    const maturedInvestments = await Investment.find({ userId, status: "completed" });
-    const withdrawableProfit = maturedInvestments.reduce(
-      (sum, inv) => sum + (inv.amount * 0.1), // 10% ROI profit only
-      0
+    // 🔒 Get completed investments only
+    const maturedInvestments = await Investment.find({
+      userId,
+      status: "completed",
+    });
+
+    // 🔒 Calculate REMAINING withdrawable profit
+    const withdrawableProfit = maturedInvestments.reduce((sum, inv) => {
+      const totalProfit = inv.amount * 0.1; // 10% ROI
+      const withdrawn = inv.withdrawnProfit || 0;
+      const remainingProfit = totalProfit - withdrawn;
+      return sum + Math.max(remainingProfit, 0);
+    }, 0);
+
+    console.log(
+      `💰 Withdrawable profit for ${user.email}: $${withdrawableProfit.toFixed(2)}`
     );
 
-    console.log(`💰 Withdrawable profit for ${user.email}: $${withdrawableProfit}`);
-
+    // ❌ Block over-withdraw
     if (amount > withdrawableProfit) {
       return res.status(400).json({
         success: false,
-        message: `You can only withdraw up to your matured profit of $${withdrawableProfit.toFixed(2)}.`,
+        message: `You can only withdraw up to your matured profit of $${withdrawableProfit.toFixed(
+          2
+        )}.`,
       });
     }
 
-    // ✅ Create withdrawal request (pending)
+    // 📥 Create withdrawal request (PENDING)
     const withdrawal = new Withdrawal({
       userId,
       method,
@@ -53,84 +69,143 @@ router.post("/", verifyToken, async (req, res) => {
       status: "pending",
       createdAt: new Date(),
     });
+
     await withdrawal.save();
 
-    console.log("📥 New withdrawal request logged:", {
+    console.log("📥 Withdrawal request submitted:", {
       user: user.email,
       amount,
       method,
-      status: withdrawal.status,
+      status: "pending",
     });
 
     return res.status(201).json({
       success: true,
-      message: "✅ Withdrawal request submitted! Please wait for admin confirmation within 24 hours.",
+      message:
+        "Your withdrawal is pending. Please wait for admin confirmation within 24 hours.",
       data: withdrawal,
     });
   } catch (err) {
     console.error("❌ Withdrawal request error:", err);
-    res.status(500).json({ success: false, message: "Server error" });
+    return res.status(500).json({ success: false, message: "Server error" });
   }
 });
 
 /**
- * 📌 ADMIN: View all withdrawals (React Admin)
+ * 📌 ADMIN / USER: View withdrawals
+ * - Admin sees all
+ * - User sees own
  */
 router.get("/", verifyToken, async (req, res) => {
   try {
-    const query = req.user.role === "admin"
-      ? {}
-      : { userId: req.user._id };
+    const query =
+      req.user.role === "admin" ? {} : { userId: req.user._id };
 
     const withdrawals = await Withdrawal.find(query)
       .populate("userId", "email username")
       .sort({ createdAt: -1 });
 
-    res.json(withdrawals.map(w => ({ ...w.toObject(), id: w._id })));
+    return res.json(
+      withdrawals.map((w) => ({ ...w.toObject(), id: w._id }))
+    );
   } catch (err) {
     console.error("❌ Get withdrawals error:", err);
-    res.status(500).json({ message: err.message });
+    return res.status(500).json({ message: err.message });
   }
 });
 
 /**
- * 📌 ADMIN: Approve or Reject withdrawal (React Admin)
- * ✅ Handles balance deduction on approval
+ * 📌 ADMIN: Approve or Reject withdrawal
+ * ✅ Balance deducted ONLY on approval
+ * ✅ Profit locked to prevent double withdrawal
  */
 router.put("/:id", verifyToken, adminOnly, async (req, res) => {
   try {
     const { id } = req.params;
-    const { status } = req.body; // expected: "approved" | "rejected"
+    const { status } = req.body; // "approved" | "rejected"
+
+    if (!["approved", "rejected"].includes(status)) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid status value" });
+    }
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({ success: false, message: "Invalid withdrawal ID" });
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid withdrawal ID" });
     }
 
     const withdrawal = await Withdrawal.findById(id);
     if (!withdrawal) {
-      return res.status(404).json({ success: false, message: "Withdrawal not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Withdrawal not found" });
     }
 
-    // ✅ If admin approves, deduct from user balance
-    if (status === "approved" && withdrawal.status === "pending") {
-      const user = await User.findById(withdrawal.userId);
-      if (!user) return res.status(404).json({ success: false, message: "User not found" });
+    if (withdrawal.status !== "pending") {
+      return res.status(400).json({
+        success: false,
+        message: "Withdrawal already processed",
+      });
+    }
 
-      if (user.balance < withdrawal.amount) {
-        return res.status(400).json({ success: false, message: "Insufficient user balance" });
+    // ✅ APPROVAL FLOW
+    if (status === "approved") {
+      const user = await User.findById(withdrawal.userId);
+      if (!user) {
+        return res
+          .status(404)
+          .json({ success: false, message: "User not found" });
       }
 
+      if (user.balance < withdrawal.amount) {
+        return res
+          .status(400)
+          .json({ success: false, message: "Insufficient user balance" });
+      }
+
+      // 🔻 Deduct balance
       user.balance -= withdrawal.amount;
       await user.save();
+
+      // 🔒 Lock withdrawn profit from investments
+      let remaining = withdrawal.amount;
+
+      const investments = await Investment.find({
+        userId: withdrawal.userId,
+        status: "completed",
+      }).sort({ createdAt: 1 });
+
+      for (const inv of investments) {
+        if (remaining <= 0) break;
+
+        const totalProfit = inv.amount * 0.1;
+        const withdrawn = inv.withdrawnProfit || 0;
+        const availableProfit = totalProfit - withdrawn;
+
+        if (availableProfit <= 0) continue;
+
+        const deduct = Math.min(availableProfit, remaining);
+        inv.withdrawnProfit += deduct;
+        remaining -= deduct;
+
+        await inv.save();
+      }
     }
 
+    // ✅ Update withdrawal status
     withdrawal.status = status;
     await withdrawal.save();
 
-    res.json({ success: true, message: `Withdrawal ${status} successfully`, withdrawal });
+    return res.json({
+      success: true,
+      message: `Withdrawal ${status} successfully`,
+      withdrawal,
+    });
   } catch (err) {
     console.error("❌ Withdrawal update error:", err);
-    res.status(500).json({ success: false, message: "Server error" });
+    return res.status(500).json({ success: false, message: "Server error" });
   }
 });
 
