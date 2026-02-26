@@ -122,6 +122,37 @@ router.post("/btcpay", async (req, res) => {
       await User.findByIdAndUpdate(userId, { $inc: { balance: amountUsd } });
 
       console.log(`✅ Deposit credited: $${amountUsd} USD → user ${userId}`);
+
+      // ==========================================
+// 🎁 REFERRAL BONUS SYSTEM
+// ==========================================
+
+// Get full user document
+const depositedUser = await User.findById(userId);
+
+if (depositedUser?.referredBy) {
+
+  const referrer = await User.findById(depositedUser.referredBy);
+
+  if (referrer) {
+
+    // 🛡 Check if already rewarded for this deposit
+    if (!newDeposit.referralRewardProcessed) {
+
+      const BONUS_AMOUNT = 10; // 🔥 change anytime
+
+      referrer.balance += BONUS_AMOUNT;
+      referrer.referralBonus += BONUS_AMOUNT;
+
+      await referrer.save();
+
+      newDeposit.referralRewardProcessed = true;
+      await newDeposit.save();
+
+      console.log(`🎁 $${BONUS_AMOUNT} referral bonus credited to ${referrer._id}`);
+    }
+  }
+}
       
    // 🟢 Mark webhook as processed
       await WebhookLog.findOneAndUpdate(

@@ -15,6 +15,8 @@ import fca from "./assets/fca.png";
 import iso from "./assets/ISO.png";
 import data from "./assets/data.png";
 import edu from "./assets/education.jpg";
+import ParallaxImage from "./utils/ParallaxImage";
+
 
 const Wrapper = styled.div`
   min-height: 100vh;
@@ -328,7 +330,7 @@ const AboutUs = () => {
           </div>
         </div>
         <div className="tesla-img">
-          <img src={edu} alt="Tesla " />
+          <ParallaxImage  src={edu} alt="Tesla " />
         </div>
       </section>
 

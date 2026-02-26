@@ -1,6 +1,6 @@
 // src/context/AuthContext.jsx
 import React, { createContext, useState, useEffect } from "react";
-import axios from "axios";
+import axios from "../utils/axios";
 
 export const AuthContext = createContext();
 
@@ -14,10 +14,7 @@ export const AuthProvider = ({ children }) => {
   });
   const [loading, setLoading] = useState(true);
 
-  // ✅ Global Axios defaults
-  axios.defaults.baseURL = API_BASE;
-  if (token) axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-
+ 
   // ✅ Refresh Access Token
   const refreshAccessToken = async () => {
     try {
@@ -70,6 +67,8 @@ export const AuthProvider = ({ children }) => {
   const login = async (email, password, isAdmin = false) => {
     try {
       const res = await axios.post(`/auth/login`, { email, password });
+      console.log("LOGIN RESPONSE:", res.data)
+      
       if (!res.data.success) return { success: false, message: res.data.message };
 
       const { token, refreshToken, user } = res.data;

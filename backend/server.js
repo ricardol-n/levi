@@ -1,7 +1,9 @@
+require("dotenv").config();
+
 const express = require("express");
 const cors = require("cors");
 const mongoose = require("mongoose");
-require("dotenv").config();
+
 const verifyToken = require("./middleware/verifyToken"); // normal users
 const verifyAdmin = require("./middleware/verifyAdmin"); // admins
 const path = require("path");
@@ -29,18 +31,19 @@ const phoneRoutes = require("./routes/phone");
 
 const app = express();
 
-require("./cron/investmentCron");
+
 
 // ✅ Log env vars
 console.log("ENV FRONTEND_URL:", process.env.FRONTEND_URL);
 console.log("ENV FRONTEND_URLS:", process.env.FRONTEND_URLS);
 
+console.log("JWT_SECRET:", process.env.JWT_SECRET);
 
 
 
 // ✅ CORS — Safe for production (Vercel + Render + Localhost)
 const allowedOrigins = [
-  "http://localhost:5173",
+  "http://localhost:5173","http://localhost:5175",
   "https://admin-backend-qyhk.onrender.com", // backend self-calls
   process.env.FRONTEND_URL,
   ...(process.env.FRONTEND_URLS
@@ -90,8 +93,18 @@ app.use((req, res, next) => {
 // ✅ MongoDB connect
 mongoose
   .connect(process.env.MONGO_URI)
-  .then(() => console.log("MongoDB Connected ✅"))
-  .catch((err) => console.error("❌ MongoDB error:",err));
+  .then(() => {
+    console.log("MongoDB Connected ✅");
+
+    // 👇 ADD THIS LINE
+    console.log("Connected to DB:", mongoose.connection.name);
+
+    // start cron AFTER connection
+    require("./cron/investmentCron");
+  })
+  .catch((err) => console.error("❌ MongoDB error:", err));
+
+
 // ✅ API to return stock list with prices
 // ✅ Debug logs before mounting each route
 console.log("Mounting /api/auth");

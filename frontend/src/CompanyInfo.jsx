@@ -27,7 +27,7 @@ import { Link } from "react-router-dom";
 import { sliderClasses } from '@mui/material';
 import Counter from './Counter';
 import { FaFacebookF, FaTwitter, FaLinkedinIn, FaInstagram } from "react-icons/fa";
-import { motion } from "framer-motion";
+import { motion,useScroll, useTransform, useReducedMotion } from "framer-motion";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
@@ -48,10 +48,40 @@ const logoMap = {
 
 const Wrapper = styled.div`
   min-height: 100vh;
-  background: linear-gradient(135deg, #141e30, #243b55);
-  color: white;
   display: block;
   overflow:hidden;
+  background:
+    radial-gradient(
+      1200px 600px at 10% 10%,
+      rgba(34, 197, 94, 0.15),
+      transparent 60%
+    ),
+    radial-gradient(
+      900px 500px at 90% 20%,
+      rgba(59, 130, 246, 0.12),
+      transparent 60%
+    ),
+    radial-gradient(
+      800px 400px at 50% 80%,
+      rgba(168, 85, 247, 0.08),
+      transparent 60%
+    ),
+    linear-gradient(
+      135deg,
+      #0b1020,
+      #0f172a,
+      #020617
+    );
+
+    @media (max-width: 768px) {
+      background:
+        linear-gradient(
+          180deg,
+          #020617,
+          #020617
+        );
+      }
+
 `;
 
 
@@ -125,6 +155,79 @@ const CompanyInfo = () => {
   const [stocks, setStocks] = useState([]); // ✅ define state
   const symbols = ["NFLX", "SPOT", "TSLA", "META", "AMZN", "GOOGL"];
 
+  /* ===== Scroll Progress Bar ===== */
+const ScrollProgress = () => {
+  const { scrollYProgress } = useScroll();
+  return (
+    <motion.div
+      style={{ scaleX: scrollYProgress, transformOrigin: "0%" }}
+      className="scroll-bar"
+    />
+  );
+};
+
+/* ===== Mobile-Safe Parallax ===== */
+const ParallaxImage = ({ src, alt }) => {
+  const shouldReduceMotion = useReducedMotion();
+  const { scrollY } = useScroll();
+
+  const y = shouldReduceMotion
+    ? 0
+    : useTransform(scrollY, [0, 600], [0, -120]);
+
+  return (
+    <motion.img
+      src={src}
+      alt={alt}
+      style={{ y }}
+      loading="lazy"
+    />
+  );
+};
+
+/* ===== Magnetic Button ===== */
+const MagneticButton = ({ children, ...props }) => {
+  const ref = useRef(null);
+  const shouldReduceMotion = useReducedMotion();
+
+  const move = (e) => {
+    if (shouldReduceMotion) return;
+    const rect = ref.current.getBoundingClientRect();
+    const x = e.clientX - rect.left - rect.width / 2;
+    const y = e.clientY - rect.top - rect.height / 2;
+    ref.current.style.transform = `translate(${x * 0.12}px, ${y * 0.12}px)`;
+  };
+
+  const reset = () => {
+    ref.current.style.transform = "translate(0,0)";
+  };
+
+  return (
+    <button
+      ref={ref}
+      onMouseMove={move}
+      onMouseLeave={reset}
+      className="btn-primary magnetic"
+      {...props}
+    >
+      {children}
+    </button>
+  );
+};
+const containerVariants = {
+  hidden: {},
+  show: {
+    transition: { staggerChildren: 0.15 }
+  }
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 40 },
+  show: { opacity: 1, y: 0 }
+};
+
+
+
  
  useEffect(() => {
   const fetchData = async () => {
@@ -175,7 +278,7 @@ const CompanyInfo = () => {
  
   
   return (
-   
+  
     <Wrapper>
     
 
@@ -217,15 +320,23 @@ const CompanyInfo = () => {
      <FadeInSection delay={0.4}>
       <section className="tesla">
         <div className="tesla-text">
-          <h1>Trade CFDs on FX, Stocks and more with a leading global broker</h1>
+        <motion.h1
+          className="gradient-text"
+          initial={{ backgroundPosition: "0%" }}
+          animate={{ backgroundPosition: "100%" }}
+          transition={{ duration: 1.8, ease: [0.22, 1, 0.36, 1] }}
+        >
+          Trade CFDs on FX, Stocks and more with a leading global broker
+        </motion.h1>
+
           <h4>Discover over 5,800 stocks, ETFs and REITs on one brokerage</h4>
           <p>
             More investment options. More opportunities to grow.
             Trade stocks or make long-term investments on the same platform.
           </p>
-          <LoginButton onClick={() => navigate('/register')}>
+          <MagneticButton onClick={() => navigate('/register')}>
             Create An Account
-          </LoginButton>
+          </MagneticButton>
           <p style={{ marginTop: "10px", fontSize: "0.9rem" }}> Are you an admin? <span style={{ color: "#ff3d33", cursor: "pointer", textDecoration: "underline" }} 
         onClick={() => navigate('/admin/login')}
       >
@@ -267,16 +378,19 @@ const CompanyInfo = () => {
                 <h1>Discover Top-Performing Stocks</h1>
 
         </div>
-          <div className="invest">
+          <motion.div className="invest" variants={containerVariants} initial="hidden" whileInView="show"
+          viewport={{ once: true, margin: "-100px" }}
+          >
   {loading ? (
     <p style={{ textAlign: "center", color: "#ccc" }}>Loading stock data...</p>
   ) : stocks.length === 0 ? (
     <p style={{ textAlign: "center", color: "#f66" }}>No stocks available</p>
   ) : (
     stocks.map(stock => (
-      <div
+      <motion.div
         key={stock.symbol || stock.name}
         className="invest-card"
+        variants={itemVariants}
         onClick={() => setSelectedSymbol(stock.symbol)}
       >
         <img
@@ -293,10 +407,10 @@ const CompanyInfo = () => {
             <span className="loading-spinner"></span>
           )}
         </p>
-      </div>
+      </motion.div>
     ))
   )}
-</div>
+          </motion.div>
 
     
             <div className="Trending">
@@ -331,11 +445,15 @@ const CompanyInfo = () => {
             <FadeInSection delay={0.2}>
 
             <div className= "why-choose-grid" >
-              <div className="why-card">
+              <motion.div className="why-card glass"
+              variants={itemVariants}
+              whileHover={{ y: -8 }}
+              transition={{ type: "spring", stiffness: 200 }}
+              >
                 <FaChartPie size={50} color="#FFD700" />
                 <h2>Fractional Shares</h2>
                 <p>Own a piece of even the most expensive US shares. Start from $1,000.</p>
-              </div>
+              </motion.div>
 
               <div className="why-card">
                  <FaAward size={50} color="#FFD700" />
@@ -380,7 +498,7 @@ const CompanyInfo = () => {
       <FadeInSection delay={0.4}>
       <section className='security fixed-sec' >
           <div className="sec-info">
-            <div className="security-img"> <img src={female} alt="Security Illustration" /> </div>
+            <div className="security-img"> <ParallaxImage  src={female} alt="Security Illustration" /> </div>
               <div>
               <div className="security-text">
                 <h1>Our Security Measures</h1>
@@ -434,27 +552,36 @@ const CompanyInfo = () => {
       </FadeInSection>
 
         <section className="stats-section">
-      <div className="stat-card" >
+      <motion.div 
+      className="stat-card glass"
+      animate={{ y: [0, -6, 0] }}
+      transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+      >
         <h2>
           <Counter end={5000} duration={3000} />+</h2>
         <p>Active Users</p>
-      </div>
+      </motion.div>
 
-      <div className="stat-card" >
+      <motion.div className="stat-card" 
+      animate={{ y: [0, -6, 0] }}
+      transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}>
         <h2>
           <Counter end={1200000} duration={4000} prefix="$" />
         </h2>
         <p>Total Investments</p>
-      </div>
+      </motion.div>
 
-      <div className="stat-card" >
+      <motion.div 
+      className="stat-card"animate={{ y: [0, -6, 0] }}
+      transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }} >
         <h2>
           <Counter end={98} duration={2000} suffix="%" />
         </h2>
         <p>Customer Satisfaction</p>
-      </div>
+      </motion.div>
     </section>
-       <section className='tesla1 edu-res1' id='edu' >
+
+    <section className='tesla1 edu-res1' id='edu' >
 
         <div className="edu-res">
             <h1>Educational Resources</h1>
@@ -497,7 +624,11 @@ const CompanyInfo = () => {
           What Are Stocks
         </button>
                     {openFAQ === 0 && (
-                        <ul className="dropdown open">
+                        <motion.ul className="dropdown open"
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: "auto", opacity: 1 }}
+                          transition={{ duration: 0.4, ease: "easeOut" }}
+                        >
                             <li >
                                 <p>Stocks, also commonly referred to as equities or shares, are issued by a public corporation and put up for sale. Companies originally used stocks as a way of raising additional capital, and as a way to boost their business growth. When the company first puts these stocks up for sale, this is called the Initial Public Offering. Once this stage is complete, the shares themselves are then sold on the stock market, which is where any stock trading will occur.
 
@@ -509,7 +640,7 @@ const CompanyInfo = () => {
     
                             </li>
 
-                        </ul>
+                        </motion.ul>
                     )}
 
                     </li>

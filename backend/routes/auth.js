@@ -47,7 +47,7 @@ router.post("/register", async (req, res) => {
       }
     }
 
-    const user = new User({ username, email, phone, password: hashed, referredBy });
+    const user = new User({ username, email: email.toLowerCase(), phone, password: hashed, referredBy });
     await user.save();
 
     // issue tokens
@@ -78,9 +78,12 @@ router.post('/login', async (req, res) => {
     const { email, password } = req.body;
     if (!email || !password) return res.status(400).json({ success: false, message: "Email and password required" });
 
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email: email.toLowerCase() });
     if (!user) return res.status(401).json({ success: false, message: 'Invalid credentials' });
 
+    console.log("Entered password:", password);
+    console.log("Stored hash:", user.password);
+    
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return res.status(401).json({ success: false, message: 'Invalid credentials' });
 

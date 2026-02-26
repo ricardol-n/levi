@@ -3,58 +3,27 @@ const mongoose = require("mongoose");
 
 const investmentSchema = new mongoose.Schema(
   {
-    userId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
-    },
-    name: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-    amount: {
-      type: Number,
-      required: true,
-      min: [1, "Investment amount must be at least $1"],
-    },
-    roi: {
-      type: Number, // ROI %
-      required: true,
-      min: 1,
-    },
-    expectedReturn: {
-      type: Number, // ✅ profit only (not principal)
-      required: true,
-    },
-    
-    withdrawnProfit: {
-      type: Number,
-      default: 0,
-    },
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+    name: String,
+    amount: { type: Number, required: true, min: 1 },
+    roi: { type: Number, required: true },
+    expectedReturn: { type: Number, required: true }, // PROFIT ONLY
 
-    startDate: {
-      type: Date,
-      default: Date.now,
-    },
-    endDate: {
-      type: Date,
-      required: true,
-    },
     status: {
       type: String,
-      enum: ["active", "completed", "pending", "cancelled"],
+      enum: ["active", "completed", "cancelled","processing"],
       default: "active",
     },
+
+    startDate: Date,
+    endDate: Date,
   },
   { timestamps: true }
 );
 
-// ✅ Automatically calculate expectedReturn (profit only)
+// 🔒 Profit is ALWAYS profit only
 investmentSchema.pre("validate", function (next) {
-  if (!this.expectedReturn && this.amount && this.roi) {
-    this.expectedReturn = this.amount * (this.roi / 100); // only profit
-  }
+  this.expectedReturn = this.amount * (this.roi / 100);
   next();
 });
 

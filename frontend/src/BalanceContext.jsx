@@ -1,245 +1,155 @@
 import React, {
   createContext,
+  useContext,
   useState,
   useEffect,
   useCallback,
-  useContext,
   useMemo,
-  useRef,
 } from "react";
-import axios from "axios";
+import axios from "../src/utils/axios";
 import { AuthContext } from "./context/AuthContext";
 import { useNavigate } from "react-router-dom";
 
-export const BalanceContext = createContext();
+export const BalanceContext = createContext(null);
 export const useBalance = () => useContext(BalanceContext);
 
-// ✅ Global Axios setup (applies to ALL requests)
-axios.defaults.baseURL = import.meta.env.VITE_API_URL;
-axios.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem("token");
-    if (token) config.headers.Authorization = `Bearer ${token}`;
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
+// ===============================
+// 🔐 SAFE NUMBER
+// ===============================
+const toNumber = (v) => {
+  const n = Number(v);
+  return Number.isFinite(n) ? n : 0;
+};
 
 export const BalanceProvider = ({ children }) => {
-  const { user: authUser, token: authToken, logout, loading: authLoading } =
-    useContext(AuthContext);
+  const { user, token, logout, loading: authLoading } = useContext(AuthContext);
+
   const navigate = useNavigate();
 
+  // ===============================
+  // 💰 STATE (DISPLAY ONLY)
+  // ===============================
   const [balance, setBalance] = useState(0);
+  const [maturedProfit, setMaturedProfit] = useState(0);
+  const [withdrawnProfit, setWithdrawnProfit] = useState(0);
+
   const [deposits, setDeposits] = useState([]);
   const [withdrawals, setWithdrawals] = useState([]);
   const [investments, setInvestments] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [syncError, setSyncError] = useState("");
-  const syncing = useRef(false);
 
-  const API_BASE = import.meta.env.VITE_API_URL;
-  console.log("🌍 Using API base:", API_BASE);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  // ✅ Keep axios in sync with token
+  // ===============================
+  // 🌍 AXIOS (SINGLE SOURCE TOKEN)
+  // ===============================
   useEffect(() => {
-    axios.defaults.baseURL = API_BASE;
-    const token = authToken || localStorage.getItem("token");
-    if (token) axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-    else delete axios.defaults.headers.common["Authorization"];
-  }, [authToken, API_BASE]);
-
-  // ✅ Refresh Access Token
-  const refreshAccessToken = async () => {
-    try {
-      const storedRefreshToken = localStorage.getItem("refreshToken");
-      if (!storedRefreshToken) throw new Error("No refresh token found");
-
-      const res = await axios.post(`/auth/refresh-token`, {
-        refreshToken: storedRefreshToken,
-      });
-
-      if (res.data?.token) {
-        localStorage.setItem("token", res.data.token);
-        axios.defaults.headers.common["Authorization"] = `Bearer ${res.data.token}`;
-        return res.data.token;
-      } else {
-        logout();
-        throw new Error("Refresh failed");
+    const interceptor = axios.interceptors.request.use((config) => {
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
       }
-    } catch (err) {
-      console.error("❌ Refresh token failed:", err);
-      logout();
-      throw err;
-    }
-  };
+      return config;
+    });
 
-  // ✅ Intercept 401 errors globally
-  useEffect(() => {
-    const interceptor = axios.interceptors.response.use(
-      (res) => res,
-      async (err) => {
-        const originalRequest = err.config;
-        if (err.response?.status === 401 && !originalRequest._retry) {
-          originalRequest._retry = true;
-          try {
-            const newToken = await refreshAccessToken();
-            if (newToken) {
-              originalRequest.headers["Authorization"] = `Bearer ${newToken}`;
-              return axios(originalRequest);
-            }
-          } catch {
-            logout();
-          }
-        }
-        return Promise.reject(err);
-      }
-    );
-    return () => axios.interceptors.response.eject(interceptor);
-  }, []);
+    return () => axios.interceptors.request.eject(interceptor);
+  }, [token]);
 
-  // ✅ Sync Data From Backend
+  // ===============================
+  // 🔁 SYNC FROM BACKEND
+  // ===============================
   const syncFromBackend = useCallback(async () => {
-    const userId = authUser?._id || localStorage.getItem("userId");
-    const token = authToken || localStorage.getItem("token");
+    if (!token) return;
 
-    if (!userId || !token || syncing.current) {
-      console.warn("⚠️ Skipping sync: missing token/userId or already syncing");
-      return;
-    }
-
-    syncing.current = true;
     setLoading(true);
-    setSyncError("");
-
-    const investmentsUrl =
-      authUser?.role === "admin" ? `/investments/all` : `/investments`;
+    setError("");
 
     try {
-      const headers = { Authorization: `Bearer ${token}` };
-
-      const [depsRes, wdsRes, invRes, balRes] = await Promise.all([
-        axios.get(`/users/${userId}/deposits`, { headers }),
-        axios.get(`/users/${userId}/withdrawals`, { headers }),
-        axios.get(investmentsUrl, { headers }),
-        axios.get(`/users/${userId}/balance`, { headers }),
+      const [userRes, depRes, witRes, invRes] = await Promise.all([
+        axios.get("/users/me"),
+        axios.get("/users/me/deposits"),
+        axios.get("/users/me/withdrawals"),
+        axios.get("/investments"),
       ]);
 
-      setDeposits(depsRes.data?.data ?? depsRes.data ?? []);
-      setWithdrawals(wdsRes.data?.data ?? wdsRes.data ?? []);
-      setInvestments(invRes.data?.data ?? invRes.data ?? []);
-      setBalance(balRes.data?.balance ?? 0);
+      const u = userRes.data?.data || userRes.data;
 
-      console.log("✅ Balance sync successful");
+
+      setBalance(toNumber(u.balance));
+      setMaturedProfit(toNumber(u.maturedProfit));
+      setWithdrawnProfit(toNumber(u.withdrawnProfit));
+
+      setDeposits(depRes.data?.data || []);
+      setWithdrawals(witRes.data?.data || []);
+      setInvestments(invRes.data?.data || []);
     } catch (err) {
-      console.error("❌ Sync error:", err?.response?.data || err.message);
-      if (err.response?.status === 404 && err.response?.data?.message === "User not found") {
-        localStorage.clear();
+      console.error("❌ Balance sync failed:", err);
+
+      if (err.response?.status === 401) {
+        logout();
         navigate("/login", { replace: true });
-      } else if (err.response?.status === 403) {
-        setSyncError("Forbidden: Cannot access this resource.");
       } else {
-        setSyncError("Failed to sync wallet. Showing last known data.");
+        setError("Failed to load wallet data");
       }
     } finally {
       setLoading(false);
-      syncing.current = false;
     }
-  }, [authUser, authToken, logout, navigate]);
+  }, [token, logout, navigate]);
 
-  // ✅ Auto-sync every 20s
+  // ===============================
+  // 🚀 INITIAL LOAD
+  // ===============================
   useEffect(() => {
-    if (authLoading || !authUser || !authToken || authUser.role === "admin") return;
-    syncFromBackend();
-    const id = setInterval(syncFromBackend, 20000);
-    return () => clearInterval(id);
-  }, [authUser, authToken, authLoading, syncFromBackend]);
+    if (authLoading || !user || !token) return;
 
-  // ✅ Add New Investment
-  const addInvestment = async (name, amount, roi, duration) => {
-    const token = authToken || localStorage.getItem("token");
-    const headers = { Authorization: `Bearer ${token}` };
-    const res = await axios.post(`/investments`, { name, amount, roi, duration }, { headers });
-    if (res.data?.investment) {
-      setInvestments((prev) => [res.data.investment, ...prev]);
-      setBalance(res.data.balance ?? balance);
-    }
-    await syncFromBackend();
-  };
+    syncFromBackend(); // initial load
+    const interval = setInterval(syncFromBackend, 20000); // repeat
 
-  // ✅ Cancel Investment
-  const cancelInvestment = async (investmentId) => {
-    const token = authToken || localStorage.getItem("token");
-    const userId = authUser?._id || localStorage.getItem("userId");
-    const headers = { Authorization: `Bearer ${token}` };
+    return () => clearInterval(interval);
+  }, [authLoading, user, token, syncFromBackend]);
 
-    const res = await axios.post(`/investments/cancel`, { investmentId, userId }, { headers });
-
-    if (res.data.success) {
-      setInvestments((prev) =>
-        prev.map((inv) => (inv._id === investmentId ? { ...inv, status: "cancelled" } : inv))
-      );
-      await syncFromBackend();
-    } else {
-      throw new Error(res.data.message || "Cancel failed");
-    }
-  };
-
-  // ✅ Withdrawal Calculation
+  // ===============================
+  // 📊 DERIVED VALUES
+  // ===============================
   const withdrawableProfit = useMemo(() => {
-    return (investments || [])
-      .filter((inv) => inv.status === "completed")
-      .reduce(
-        (sum, inv) =>
-          sum + (Number(inv.expectedReturn || 0) - Number(inv.amount || 0)),
-        0
-      );
-  }, [investments]);
+    return Math.max(maturedProfit - withdrawnProfit, 0);
+  }, [maturedProfit, withdrawnProfit]);
 
-  // ✅ Request Withdrawal
+  // ===============================
+  // 📤 WITHDRAW PROFIT
+  // ===============================
   const requestWithdrawal = async ({ amount, method, address }) => {
-    const token = authToken || localStorage.getItem("token");
-    const userId = authUser?._id || localStorage.getItem("userId");
+    amount = toNumber(amount);
 
-    if (!userId || !token) throw new Error("User not logged in.");
-    if (!address || !amount || amount < 1)
-      throw new Error("Invalid withdrawal data.");
+    if (amount <= 0) throw new Error("Invalid amount");
     if (amount > withdrawableProfit)
-      throw new Error("You can only withdraw matured profits.");
+      throw new Error("Insufficient matured profit");
 
-    const headers = { Authorization: `Bearer ${token}` };
-    const res = await axios.post(`/withdrawals`, { userId, method, amount, address }, { headers });
+    await axios.post("/withdrawals", {
+      amount,
+      method,
+      address,
+    });
 
-    const created = res.data?.data || res.data?.withdrawal;
-    setWithdrawals((prev) => [created, ...prev]);
     await syncFromBackend();
-    return created;
   };
 
-  // ✅ Merge Transactions
-  const transactions = useMemo(() => {
-    return [...deposits, ...withdrawals, ...investments].sort(
-      (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
-    );
-  }, [deposits, withdrawals, investments]);
-
+  // ===============================
+  // 📦 CONTEXT VALUE
+  // ===============================
   return (
     <BalanceContext.Provider
       value={{
-        user: authUser,
         balance,
+        maturedProfit,
+        withdrawnProfit,
+        withdrawableProfit,
         deposits,
         withdrawals,
         investments,
-        withdrawableProfit,
-        transactions,
         loading,
-        syncError,
+        error,
         syncFromBackend,
         requestWithdrawal,
-        addInvestment,
-        cancelInvestment,
-        setInvestments,
       }}
     >
       {children}

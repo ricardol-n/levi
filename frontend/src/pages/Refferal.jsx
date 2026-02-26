@@ -17,32 +17,27 @@ export const RefferalLog = () => {
   // ✅ Smart API base URL – works in both dev and production
   const API_BASE =
     import.meta.env.MODE === "development"
-      ? "http://localhost:5000/api" // your backend in local dev
+      ? "http://localhost:4000/api" // your backend in local dev
       : "https://admin-backend-qyhk.onrender.com/api"; // Render backend in production
 
   useEffect(() => {
     if (!user?._id || !token) return;
 
-    const fetchReferrals = async () => {
-      try {
-        const res = await axios.get(`${API_BASE}/users/${user._id}/referrals`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+   const fetchReferrals = async () => {
+  try {
+    const res = await axios.get(`${API_BASE}/users/me/referrals`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
 
-        // ✅ handle both structured and fallback responses
-        if (res.data?.success) {
-          setReferrals(res.data.data.referrals || 0);
-          setBonus(res.data.data.bonus || 0);
-          setLink(res.data.data.referralLink || "");
-        } else if (res.data?.referrals !== undefined) {
-          setReferrals(res.data.referrals.length || 0);
-          setBonus(res.data.bonus || 0);
-          setLink(`${window.location.origin}/register?ref=${user._id}`);
-        }
-      } catch (err) {
-        console.error("Referral fetch error:", err);
-      }
-    };
+    if (res.data?.success) {
+      setReferrals(res.data.count || 0);
+      setBonus(res.data.count * 10); // if $10 per referral
+      setLink(`${window.location.origin}/register?ref=${user._id}`);
+    }
+  } catch (err) {
+    console.error("Referral fetch error:", err);
+  }
+};
 
     fetchReferrals();
   }, [user, token]);

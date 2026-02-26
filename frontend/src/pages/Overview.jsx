@@ -1,12 +1,9 @@
-import React, { useContext, useEffect, useState, useMemo } from "react";
+import React, { useContext, useEffect, useState, useMemo,useRef } from "react";
 import { FaArtstation, FaDigitalTachograph } from "react-icons/fa";
 import { GiTimeTrap } from "react-icons/gi";
-import {
-  FaHandHoldingDollar,
-  FaArrowTurnDown,
-} from "react-icons/fa6";
+import {FaHandHoldingDollar, FaArrowTurnDown} from "react-icons/fa6";
 import { MdOutlineMoneyOffCsred, MdFolderCopy } from "react-icons/md";
-import { BalanceContext } from "../BalanceContext";
+import { useBalance } from "../BalanceContext";
 import { motion, useAnimation } from "framer-motion";
 import ChartDataLabels from "chartjs-plugin-datalabels";
 import { Pie } from "react-chartjs-2";
@@ -15,17 +12,38 @@ import { AuthContext } from "../context/AuthContext";
 
 ChartJS.register(ArcElement, Tooltip, Legend, ChartDataLabels);
 
+// ✅ SAFE NUMBER CONVERTER (FIXES NaN / NEGATIVE BUGS)
+const toNumber = (v) => {
+  const n = Number(v);
+  return isNaN(n) || !isFinite(n) ? 0 : n;
+};
+
+
 export const Overview = () => {
-  const { user } = useContext(AuthContext);
+  
+  const { user, token } = useContext(AuthContext);
   const {
     balance = 0,
+    maturedProfit = 0,
+    withdrawableProfit = 0,
     deposits = [],
     investments = [],
     withdrawals = [],
     referralEarnings = 0,
     cancelInvestment,
+    syncFromBackend,
     transactions: ctxTransactions = [],
-  } = useContext(BalanceContext) || {};
+  } = useBalance(); 
+
+useEffect(() => {
+  if (!user?._id || !token) return;
+  syncFromBackend(user._id, token);
+}, [user, token, syncFromBackend]);
+
+console.log("Balance:", balance);
+console.log("Matured Profit:", maturedProfit);
+console.log("Withdrawable Profit:", withdrawableProfit);
+
 
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [investmentToCancel, setInvestmentToCancel] = useState(null);
@@ -37,47 +55,52 @@ export const Overview = () => {
   const tickerTransition = { repeat: Infinity, duration: 20, ease: "linear" };
 
   // ✅ Key Investment Metrics
+  const activeInvestments = useMemo(
+    () => investments.filter((i) => i.status === "active"),
+    [investments]
+  );
+
+  const pendingInvestmentsList = useMemo(
+    () => investments.filter((i) => i.status === "pending"),
+    [investments]
+  );
+
   const totalInvested = useMemo(
-    () => investments.reduce((sum, inv) => sum + Number(inv.amount || 0), 0),
+    () =>
+      investments
+        .filter((i) => i.status === "active" || i.status === "pending")
+        .reduce((s, i) => s + toNumber(i.amount), 0),
     [investments]
   );
 
-  const expectedProfit = useMemo(
+   const currentInvestments = useMemo(
     () =>
-      investments
-        .filter((inv) => inv.status === "active" || inv.status === "pending")
-        .reduce((sum, inv) => sum + Number(inv.amount || 0) * 0.1, 0),
-    [investments]
-  );
-
-  const maturedProfit = useMemo(
-    () =>
-      investments
-        .filter((inv) => inv.status === "completed")
-        .reduce((sum, inv) => sum + Number(inv.amount || 0) * 0.1, 0),
-    [investments]
+      activeInvestments.reduce((s, i) => s + toNumber(i.amount), 0),
+    [activeInvestments]
   );
 
   const pendingInvestments = useMemo(
     () =>
-      investments
-        .filter((inv) => inv.status === "pending")
-        .reduce((sum, inv) => sum + Number(inv.amount || 0), 0),
-    [investments]
+      pendingInvestmentsList.reduce((s, i) => s + toNumber(i.amount), 0),
+    [pendingInvestmentsList]
   );
 
-  const currentInvestments = useMemo(
+
+  const expectedProfit = useMemo(
     () =>
-      investments
-        .filter((inv) => inv.status === "active")
-        .reduce((sum, inv) => sum + Number(inv.amount || 0), 0),
-    [investments]
+      activeInvestments.reduce((total, inv) => {
+        const amount = toNumber(inv.amount);
+        const roi = toNumber(inv.roi);
+        return total + (amount * roi) / 100;
+      }, 0),
+    [activeInvestments]
   );
+
 
   const currentPlan = useMemo(() => {
-    const latestActive = investments.find((inv) => inv.status === "active");
+    const latestActive = activeInvestments[0];
     return latestActive?.name || "N/A";
-  }, [investments]);
+  }, [activeInvestments]);
 
   // ⏱ Calculate time left for investment maturity
   const calculateTimeLeft = (endDate) => {
@@ -119,14 +142,8 @@ export const Overview = () => {
 
   // 📊 Chart Calculations
   const depositSum = deposits.reduce((sum, d) => sum + Number(d.amount || 0), 0);
-  const withdrawalSum = withdrawals.reduce(
-    (sum, w) => sum + Number(w.amount || 0),
-    0
-  );
-  const investmentSum = investments.reduce(
-    (sum, inv) => sum + Number(inv.amount || 0),
-    0
-  );
+  const withdrawalSum = withdrawals.reduce((sum, w) => sum + Number(w.amount || 0),0);
+  const investmentSum = investments.reduce((sum, inv) => sum + Number(inv.amount || 0),0);
   const total = depositSum + withdrawalSum + investmentSum;
 
   const pieData = {
@@ -134,7 +151,12 @@ export const Overview = () => {
     datasets: [
       {
         data: total > 0 ? [depositSum, withdrawalSum, investmentSum] : [1, 1, 1],
-        backgroundColor: ["#2196F3", "#FFC107", "#F44336"],
+        backgroundColor: [
+          "rgba(34,197,94,0.85)",   // deposits
+          "rgba(59,130,246,0.85)", // withdrawals
+          "rgba(239,68,68,0.85)",  // investments
+            ],
+        borderColor: "#020617",
         borderWidth: 3,
         hoverOffset: 20,
       },
@@ -156,25 +178,34 @@ export const Overview = () => {
     animation: { animateRotate: true, duration: 2000 },
   };
 
+  const tradingViewRef = useRef(null);
+
   // 📈 TradingView Widget
   useEffect(() => {
-    const container = document.getElementById("tradingview_ticker");
-    if (container) {
-      container.innerHTML = "";
-      const script = document.createElement("script");
-      script.src =
-        "https://s3.tradingview.com/external-embedding/embed-widget-mini-symbol-overview.js";
-      script.async = true;
-      script.innerHTML = JSON.stringify({
-        symbol: "NASDAQ:TSLA",
-        width: "100%",
-        height: "400",
-        locale: "en",
-        colorTheme: "dark",
-      });
-      container.appendChild(script);
+  if (!tradingViewRef.current) return;
+
+  tradingViewRef.current.innerHTML = "";
+
+  const script = document.createElement("script");
+  script.src =
+    "https://s3.tradingview.com/external-embedding/embed-widget-mini-symbol-overview.js";
+  script.async = true;
+  script.innerHTML = JSON.stringify({
+    symbol: "NASDAQ:TSLA",
+    width: "100%",
+    height: "400",
+    locale: "en",
+    colorTheme: "dark",
+  });
+
+  tradingViewRef.current.appendChild(script);
+
+  return () => {
+    if (tradingViewRef.current) {
+      tradingViewRef.current.innerHTML = "";
     }
-  }, []);
+  };
+}, []);
 
   // 🎬 Start ticker animation
   useEffect(() => {
@@ -259,7 +290,13 @@ export const Overview = () => {
         <div className="container-card1">
           <div className="card-account">
             <h1>Account Balance</h1>
-            <p>${Number(balance || 0).toFixed(2)} USD</p>
+            <motion.p 
+              key={balance}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              ${balance.toFixed(2)} USD</motion.p>
           </div>
         </div>
 
@@ -332,7 +369,8 @@ export const Overview = () => {
           </div>
           <p className="con-tails">Matured Profits</p>
           <div className="details-content1">
-            <h3>${maturedProfit.toFixed(2)} USD</h3> <FaArrowTurnDown />
+            <h3>${toNumber(maturedProfit).toFixed(2)}</h3><FaArrowTurnDown />
+          <small>Withdrawable: ${toNumber(withdrawableProfit).toFixed(2)}</small>
           </div>
         </div>
 
@@ -354,7 +392,7 @@ export const Overview = () => {
           <div className="details-card6">
             <div className="crypto-market">
               <h3>Live Crypto Market Trends</h3>
-              <div id="tradingview_ticker"></div>
+              <div ref={tradingViewRef}></div> 
             </div>
           </div>
         </div>

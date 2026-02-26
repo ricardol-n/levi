@@ -6,10 +6,10 @@ import axios from "axios";
 
 
 const investmentPlans = [
-  { id: 1, name: "TESLA STARTER", roi: 10, min: 500, max: 5000, duration: 5 },
-  { id: 2, name: "TESLA STOCK", roi: 30, min: 5000, max: 10000, duration: 5 },
-  { id: 3, name: "TESLA COINS", roi: 50, min: 10000, max: 20000, duration: 5 },
-  { id: 4, name: "TESLA GOLD", roi: 70, min: 20000, max: 50000, duration: 5 },
+  { id: 1, name: "TESLA Starter Plan", roi: 10, min: 500, max: 5000, duration: 5 },
+  { id: 2, name: "TESLA Growth Plan", roi: 30, min: 5000, max: 10000, duration: 5 },
+  { id: 3, name: "TESLA Advanced Plan", roi: 50, min: 10000, max: 20000, duration: 5 },
+  { id: 4, name: "TESLA Premium Plan", roi: 70, min: 20000, max: 50000, duration: 5 },
 ];
 
 export const InvestmentPlans = () => {
@@ -87,15 +87,22 @@ setShowConfirmModal(false);
       <Sidebar sidebarOpen={sidebarOpen} toggleSidebar={toggleSidebar}/>
       <main className="main-content">
         <div className="investment-container">
-      <h1>Choose an Investment Plan</h1>
+      {/* <h1>       Access Plan</h1> */}
       <div className="investment-grid">
         {investmentPlans.map((plan) => (
           <div key={plan.id} className="investment-card">
             <h2>{plan.name}</h2>
-            <p>ROI: {plan.roi}%</p>
+            <p>Target Return: {plan.roi}%</p>
             <p>Min: ${plan.min} | Max: ${plan.max}</p>
             <p>Duration: {plan.duration} Days</p>
-            <button onClick={() => handleInvest(plan)}>Invest Now</button>
+
+            <ul className="plan-features">
+                    <li>✔ Transparent duration</li>
+                    <li>✔ Professionally managed</li>
+                    <li>✔ Daily monitoring</li>
+                  </ul>
+
+            <button onClick={() => handleInvest(plan)}>View Plan</button>
           </div>
         ))}
       </div>
@@ -104,8 +111,9 @@ setShowConfirmModal(false);
          <div className="modal-overlay">
          <div className="modal">
              <h2>Confirm Investment</h2>
+             <p className="disclaimer">⚠️ Investments carry risk. Capital is not guaranteed.</p>
              <p><strong>Plan:</strong> {selectedPlan.name}</p>
-             <p><strong>ROI:</strong> {selectedPlan.roi}%</p>
+             <p><strong>Target Return:</strong> {selectedPlan.roi}%</p>
              <p><strong>Range:</strong> ${selectedPlan.min} - ${selectedPlan.max}</p>
              
                   <input
@@ -118,9 +126,7 @@ setShowConfirmModal(false);
               {/* Only calculate return if amount is valid */}
               {isAmountValid && (
                     <p>
-                      <strong>Preview:</strong> $
-                      {(parseFloat(amount) * (1 + selectedPlan.roi / 100)).toFixed(2)}
-                      {" "}
+                      <strong>Estimated Return at Maturity:</strong> ${(parseFloat(amount) * (1 + selectedPlan.roi / 100)).toFixed(2)}
                     </p>
                   )}
 
@@ -199,7 +205,7 @@ const filteredInvestments = sortedInvestments.filter((inv) => {
       <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
         <option value="date">Sort by Date</option>
         <option value="amount">Sort by Amount</option>
-        <option value="roi">Sort by ROI</option>
+        <option value="roi">Sort by Target Return:</option>
         <option value="return">Sort by Return</option>
         <option value="status">Sort by Status</option>
       </select>
@@ -225,7 +231,7 @@ const filteredInvestments = sortedInvestments.filter((inv) => {
               <th>#</th>
               <th>Plan</th>
               <th>Amount ($)</th>
-              <th>ROI (%)</th>
+              <th>Target Return: (%)</th>
               <th>Expected Return ($)</th>
               <th>Status</th>
               <th>Time Left</th>

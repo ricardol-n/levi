@@ -6,6 +6,9 @@ import Sidebar from '../Sidebar';
 export const Transfer = () => {
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
+
+    const {balance} = useContext(BalanceContext);
+
     return ( 
         <div className="dashboard-container">
         <Header toggleSidebar={toggleSidebar}/>
@@ -17,7 +20,7 @@ export const Transfer = () => {
             <div className="transfer-content">
                 <div className="transfer-bal">
                     <h1> Transfer money</h1>
-                    <p>Current Balance: 0.00 USD</p>
+                    <p>Current Balance:  ${balance.toFixed(2)} USD</p>
                 </div>
                 <div className="transfer-receiver">
                     <p>Receiver Email</p>
@@ -51,12 +54,15 @@ export const Transfer = () => {
 
 
 export const TransactionLog = () => {
-    const { transactions } = useContext(BalanceContext);
+    const { transactions = [] } = useContext(BalanceContext);
+    const [sidebarOpen, setSidebarOpen] = useState(false);
+    const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
+    
     return (
         <div className="dashboard-container">
-        <Header />
+        <Header toggleSidebar={toggleSidebar} />
         <div className="dashboard-content">
-          <Sidebar />
+          <Sidebar sidebarOpen={sidebarOpen} toggleSidebar={toggleSidebar} />
           <main className="main-content">
         
         <div className="transaction-log">
@@ -75,15 +81,17 @@ export const TransactionLog = () => {
                         </tr>
                     </thead>
                     <tbody>
-                        {transactions.map((tx, index) => (
-                            <tr key={index}>
-                                <td>{index + 1}</td>
-                                <td>{tx.type}</td>
-                                <td>{tx.method}</td>
-                                <td>${tx.amount.toFixed(2)}</td>
-                                <td>{tx.date}</td>
-                            </tr>
-                        ))}
+                      {transactions.map((tx, index) => (
+                        <tr key={tx._id || index}>
+                          <td>{index + 1}</td>
+                          <td>{tx.type || "N/A"}</td>
+                          <td>{tx.method || "N/A"}</td>
+                          <td>${Number(tx.amount || 0).toFixed(2)}</td>
+                          <td>
+                            {tx.date ? new Date(tx.date).toLocaleString() : "N/A"}
+                          </td>
+                        </tr>
+                      ))}
                     </tbody>
                 </table>
             )}

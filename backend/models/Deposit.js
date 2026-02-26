@@ -8,6 +8,10 @@ const depositSchema = new mongoose.Schema({
   checkoutUrl: { type: String }, // ✅ add this
   status: { type: String, enum: ["pending", "confirmed", "failed"], default: "pending" },
   source: { type: String, default: "btcpay" },
+  referralRewardProcessed: {
+    type: Boolean,
+    default: false,
+  }
 }, { timestamps: true });
 
 module.exports = mongoose.model("Deposit", depositSchema);

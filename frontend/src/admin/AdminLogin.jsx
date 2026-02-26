@@ -1,6 +1,7 @@
 // src/admin/AdminLogin.jsx
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+// import "./AdminLogin.css";
 
 function AdminLogin() {
   const [email, setEmail] = useState("");
@@ -69,3 +70,4 @@ function AdminLogin() {
 }
 
 export default AdminLogin;
+ 

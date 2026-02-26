@@ -1,16 +1,17 @@
-import React, { useContext, useState, useMemo } from "react";
+import React, { useContext, useState,useEffect } from "react";
 import { BalanceContext } from "../BalanceContext";
 import Header from "../Header";
 import Sidebar from "../Sidebar";
+import {AuthContext} from "../context/AuthContext"
 
 export const Withdraw = () => {
   const {
-    balance,
-    investments,
+    maturedProfit,
+    withdrawableProfit,
     requestWithdrawal,
     loading,
     syncError,
-    user, // ✅ ensure BalanceContext provides current user info
+    syncFromBackend, // ✅ ensure BalanceContext provides current user info
   } = useContext(BalanceContext);
 
   const [selectedMethod, setSelectedMethod] = useState("");
@@ -19,15 +20,12 @@ export const Withdraw = () => {
   const [message, setMessage] = useState({ type: "", text: "" });
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
+  
+  const {user} = useContext(AuthContext);
 
-// ---- Withdrawals ----
-  // ✅ Users can only withdraw 10% profit from completed investments
-  const withdrawableProfit = useMemo(() => {
-    if (!investments || investments.length === 0) return 0;
-    return investments
-      .filter((inv) => inv.status === "completed")
-      .reduce((sum, inv) => sum + (Number(inv.amount || 0) * 0.1), 0);
-  }, [investments]);
+  useEffect(() => {
+  syncFromBackend();
+}, [syncFromBackend]);
 
   // ✅ Handle submission
   const onSubmit = async () => {
@@ -81,12 +79,10 @@ export const Withdraw = () => {
           <div className="withdraw-page">
             {/* Form Card */}
             <div className="withdraw-card">
-              <h2 className="withdraw-title">💸 Withdrawal</h2>
+              <h2 className="withdraw-title">💸 Withdraw Profit</h2>
               <p className="balance-info">
-                Withdrawable Profit:{" "}
-                <span className="balance-amount">
-                  ${withdrawableProfit.toFixed(2)}
-                </span>
+                Withdrawable Profit:
+                <strong> ${Number(withdrawableProfit || 0).toFixed(2)}</strong>
               </p>
 
               {withdrawableProfit <= 0 ? (
@@ -141,7 +137,7 @@ export const Withdraw = () => {
                       <button
                         onClick={onSubmit}
                         className="withdraw-button"
-                        disabled={loading}
+                        disabled={loading || Number(amount) > withdrawableProfit}
                       >
                         {loading ? "Submitting..." : "Confirm Withdrawal"}
                       </button>
@@ -173,19 +169,10 @@ export const Withdraw = () => {
             <div className="withdraw-info">
               <h3>📌 Important</h3>
               <ul>
-                <li>
-                  Minimum withdrawal: <strong>$100</strong>.
-                </li>
-                <li>
-                  Use the correct <strong>{selectedMethod || "coin"}</strong> address;
-                  wrong networks lead to permanent loss.
-                </li>
-                <li>
-                  Processing time: usually within <strong>24 hours</strong>.
-                </li>
-                <li>
-                  Network fees may apply depending on the coin/network congestion.
-                </li>
+                <li>Only matured profit can be withdrawn</li>
+                <li>Minimum withdrawal: $100</li>
+                <li>Processing time: up to 24 hours</li>
+                <li>Incorrect addresses may cause permanent loss</li>
               </ul>
             </div>
           </div>
