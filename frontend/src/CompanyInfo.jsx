@@ -22,9 +22,7 @@ import fcsc from './assets/fcsc.png';
 import fca from './assets/fca.png';
 import iso from './assets/ISO.png';
 import data from './assets/data.png';
-import createDatafeed from './utils/datafeed';
 import { Link } from "react-router-dom";
-import { sliderClasses } from '@mui/material';
 import Counter from './Counter';
 import { FaFacebookF, FaTwitter, FaLinkedinIn, FaInstagram } from "react-icons/fa";
 import { motion,useScroll, useTransform, useReducedMotion } from "framer-motion";
@@ -74,12 +72,14 @@ const Wrapper = styled.div`
     );
 
     @media (max-width: 768px) {
+      
       background:
         linear-gradient(
           180deg,
           #020617,
           #020617
         );
+
       }
 
 `;
@@ -349,6 +349,7 @@ const itemVariants = {
           <img src={bg4} alt="Tesla" />
         </div>
       </section>
+
       <section className='tesla1'>
         <div className="tesla-img1">
             <img src={bg5} alt="" />
@@ -498,7 +499,7 @@ const itemVariants = {
       <FadeInSection delay={0.4}>
       <section className='security fixed-sec' >
           <div className="sec-info">
-            <div className="security-img"> <ParallaxImage  src={female} alt="Security Illustration" /> </div>
+            <div className="security-img img"> <ParallaxImage  src={female} alt="Security Illustration" /> </div>
               <div>
               <div className="security-text">
                 <h1>Our Security Measures</h1>
@@ -548,7 +549,7 @@ const itemVariants = {
                     <p>We follow industry best practices to protect your data at all times.</p>
                   </div>
             </div>
-        </section>
+      </section>
       </FadeInSection>
 
         <section className="stats-section">

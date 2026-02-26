@@ -450,11 +450,12 @@ nav ul li {
 
 
 /* TESLA SECTION */
-.tesla,.security {
+.tesla{
   position: relative;
   top: 60px;
   display: flex;
 }
+
 
 .tesla-text ,.edu-res{
   font-family: 'Poppins', 'Inter', 'Roboto', sans-serif;
@@ -649,7 +650,28 @@ nav ul li {
   position: relative;
   top: 25px;
   gap: 2rem;
-  background: linear-gradient(135deg, #141e30, #243b55);
+  background:
+    radial-gradient(
+      1200px 600px at 10% 10%,
+      rgba(34, 197, 94, 0.15),
+      transparent 60%
+    ),
+    radial-gradient(
+      900px 500px at 90% 20%,
+      rgba(59, 130, 246, 0.12),
+      transparent 60%
+    ),
+    radial-gradient(
+      800px 400px at 50% 80%,
+      rgba(168, 85, 247, 0.08),
+      transparent 60%
+    ),
+    linear-gradient(
+      135deg,
+      #0b1020,
+      #0f172a,
+      #020617
+    );
   color: white;
   margin-bottom: 2rem;
 }
@@ -667,6 +689,8 @@ nav ul li {
   max-width: 600px;
 }
 .security-text {
+  text-align: center;
+  margin: 20px;
   margin-right:60px;
 }
 .security-text h1{
@@ -890,9 +914,35 @@ html {
 }
 .why-choose,.InvestTrading {
   padding: 60px 20px;
-  background: linear-gradient(135deg, #141e30, #243b55);
   color: white;
   text-align: center;
+  background:
+    radial-gradient(
+      1200px 600px at 10% 10%,
+      rgba(34, 197, 94, 0.15),
+      transparent 60%
+    ),
+    radial-gradient(
+      900px 500px at 90% 20%,
+      rgba(59, 130, 246, 0.12),
+      transparent 60%
+    ),
+    radial-gradient(
+      800px 400px at 50% 80%,
+      rgba(168, 85, 247, 0.08),
+      transparent 60%
+    ),
+    linear-gradient(
+      135deg,
+      #0b1020,
+      #0f172a,
+      #020617
+    );
+
+  
+}
+.why-choose{
+  margin-top: -41px;
 }
 
 .why-choose-header,.InvestTrad{
@@ -979,20 +1029,18 @@ html {
 .security {
   display: block;
   justify-content: space-between;
-  /* color: white; */
+  padding: 3px;
 }
 
-.security-img img {
+.security-img {
   width: 100%;
   max-width: 500px;
   border-radius: 12px;
   box-shadow: 0 10px 20px rgba(0,0,0,0.3);
-  /* Smooth fade at bottom */
   -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 85%, rgba(0,0,0,0) 100%);
   -webkit-mask-repeat: no-repeat;
   -webkit-mask-size: 100% 100%;
-  /* mask-image: linear-gradient(to top, rgba(0,0,0,1) 85%, rgba(0,0,0,0) 100%); */
-   mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 85%, rgba(0,0,0,0) 100%);
+  mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 85%, rgba(0,0,0,0) 100%);
   mask-repeat: no-repeat;
   mask-size: 100% 100%;
 }
@@ -1006,9 +1054,10 @@ html {
   flex-wrap: wrap;
   grid-template-columns: repeat(2,1fr);
   gap: 1rem;
-  margin-top: 30px;
+  margin-left: 10px;
+  margin-bottom: 5px;
   justify-content: center;
-
+  text-align: center;
 }
 
 .equ-cap {
@@ -1017,7 +1066,6 @@ html {
   padding: 1.5rem 2rem;
   border-radius: 12px;
   box-shadow: 0 px 10px rgba(254, 3, 3, 0.991);
-  /* min-width: 200px; */
 }
 
 .equ-cap h1 {
@@ -1033,15 +1081,56 @@ html {
   display: grid;
   grid-template-columns: repeat(4,1fr);
   flex-wrap: wrap;
-  /* flex-direction: row; */
   gap: 2rem;
   padding: 2rem;
-  /* background: #f8f8f8; */
+  background:
+    radial-gradient(
+      1200px 600px at 10% 10%,
+      rgba(34, 197, 94, 0.15),
+      transparent 60%
+    ),
+    radial-gradient(
+      900px 500px at 90% 20%,
+      rgba(59, 130, 246, 0.12),
+      transparent 60%
+    ),
+    radial-gradient(
+      800px 400px at 50% 80%,
+      rgba(168, 85, 247, 0.08),
+      transparent 60%
+    ),
+    linear-gradient(
+      135deg,
+      #0b1020,
+      #0f172a,
+      #020617
+    );
 }
 
 .fca-auth:hover {
   transform: translateY(-5px);
-  background: rgba(255, 255, 255, 0.1);
+  background:
+    radial-gradient(
+      1200px 600px at 10% 10%,
+      rgba(34, 197, 94, 0.15),
+      transparent 60%
+    ),
+    radial-gradient(
+      900px 500px at 90% 20%,
+      rgba(59, 130, 246, 0.12),
+      transparent 60%
+    ),
+    radial-gradient(
+      800px 400px at 50% 80%,
+      rgba(168, 85, 247, 0.08),
+      transparent 60%
+    ),
+    linear-gradient(
+      135deg,
+      #0b1020,
+      #0f172a,
+      #020617
+    );
 }
 .fca-auth img{
   /* width: 60px; */
@@ -1080,6 +1169,8 @@ html {
 .InvestTrading{
   display: block;
   justify-content: center;
+  margin-top: -9px;
+
 }
 .InvestTrad1 {
   width: 100%;
@@ -3037,7 +3128,28 @@ button:hover {
 }
 
 .stat-card {
-  background: rgba(255,255,255,0.08);
+  background:
+    radial-gradient(
+      1200px 600px at 10% 10%,
+      rgba(34, 197, 94, 0.15),
+      transparent 60%
+    ),
+    radial-gradient(
+      900px 500px at 90% 20%,
+      rgba(59, 130, 246, 0.12),
+      transparent 60%
+    ),
+    radial-gradient(
+      800px 400px at 50% 80%,
+      rgba(168, 85, 247, 0.08),
+      transparent 60%
+    ),
+    linear-gradient(
+      135deg,
+      #0b1020,
+      #0f172a,
+      #020617
+    );
   padding: 2rem;
   border-radius: 16px;
   text-align: center;
@@ -3515,7 +3627,6 @@ button:hover {
     right: 0;
     height: 100%;
     width: 250px;
-    /* background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460); */
     background: rgba(25, 25, 35, 0.8);
     backdrop-filter: blur(12px);
     border-left: 1px solid rgba(255,255,255,0.1);
@@ -3627,9 +3738,6 @@ button:hover {
     grid-template-columns: repeat(2, 1fr); /* 2 cards per row on tablets */
   }
   
-  .security {
-    padding: 30px 15px;
-  }
   .equity-capital {
     grid-template-columns: repeat(2, 1fr);
   }
@@ -3639,9 +3747,13 @@ button:hover {
   .why-choose-grid{
     grid-template-columns: repeat(2, 1fr);
   }
+  .why-choose{
+    background: none;
+  }
   .security {
     top: 40px;
     padding: 1rem;
+    padding: 30px 15px;
   }
 
   .security-text h1 {
@@ -3688,7 +3800,28 @@ button:hover {
   .why-card,
   .stat-card {
     backdrop-filter: none;
-    background: #020617;
+   background:
+    radial-gradient(
+      1200px 600px at 10% 10%,
+      rgba(34, 197, 94, 0.15),
+      transparent 60%
+    ),
+    radial-gradient(
+      900px 500px at 90% 20%,
+      rgba(59, 130, 246, 0.12),
+      transparent 60%
+    ),
+    radial-gradient(
+      800px 400px at 50% 80%,
+      rgba(168, 85, 247, 0.08),
+      transparent 60%
+    ),
+    linear-gradient(
+      135deg,
+      #0b1020,
+      #0f172a,
+      #020617
+    );
     box-shadow: 0 10px 25px rgba(0,0,0,0.6);
   }
   .footer-column {
@@ -3818,7 +3951,6 @@ button:hover {
     padding: 40px 10px;
   }
   .deposit-card{
-    /* width: 100%; */
     max-width: 90%;
   }
   .pay-btn{

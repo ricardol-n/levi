@@ -18,6 +18,7 @@ import edu from "./assets/education.jpg";
 import ParallaxImage from "./utils/ParallaxImage";
 
 
+
 const Wrapper = styled.div`
   min-height: 100vh;
   background: linear-gradient(135deg, #141e30, #243b55);
@@ -30,14 +31,6 @@ const Wrapper = styled.div`
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 `;
 
-const Title = styled.h1`
-  font-size: 1rem;
-  font-weight: 700;
-  color: #a10a08ff;
-  margin-bottom: 1rem;
-  text-shadow: 0 0 10px rgba(255, 215, 0, 0.7);
-  letter-spacing: 2px;
-`;
 
 const Paragraph = styled.p`
   font-size: 1.2rem;
@@ -59,7 +52,7 @@ const Button = styled.button`
   transition: background-color 0.3s ease;
 
   &:hover {
-    background-color: #ff3d33;
+    background-color: #300157ff;
   }
 `;
 
@@ -154,30 +147,11 @@ const AboutUs = () => {
 
         <nav className={menuOpen ? "open" : ""}>
           <ul className="header-title">
-             <li>
-               <Link to="/" onClick={() => setMenuOpen(false)}>HOME</Link>
-             </li>
-             <li>
-               <Link to="/about" onClick={() => setMenuOpen(false)}>ABOUT US</Link>
-             </li>
-             <li>
-               <a
-                 href="#FAQ"
-                 onClick={(e) => {
-                   e.preventDefault();
-                   navigate("/");
-                   setMenuOpen(false);
-                   setTimeout(() => {
-                     document.getElementById("FAQ")?.scrollIntoView({ behavior: "smooth" });
-                   }, 300);
-                 }}
-               >
-                 FAQ
-               </a>
-             </li>
-             <li>
-               <Link to="/contact" onClick={() => setMenuOpen(false)}>CONTACT</Link>
-             </li>
+            <li onClick={() => navigate('/')}>HOME</li>
+            <li onClick={() => navigate('/about')}>ABOUT US</li>
+            <li onClick={() => {document.getElementById("FAQ")?.scrollIntoView({ behavior: "smooth" });
+              }}>FAQ</li>
+            <li><Link to="/contact">CONTACT</Link></li>
           </ul>
         </nav>
 
@@ -198,7 +172,6 @@ const AboutUs = () => {
       </header>
 
       {/* Main Content */}
-      <Title>About Txla Investment</Title>
 
       <section id="about-us" className="why-choose">
         <div className="why-choose-header">
