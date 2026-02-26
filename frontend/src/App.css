@@ -1357,7 +1357,6 @@ html {
   left: 160px;
   width: calc(100% - 160px);
   min-height: 100vh;
-  background-color: rgba(31, 30, 30, 0.9);
   padding-top: 70px;
   padding-left: 20px;
   padding-right: 20px;
@@ -1824,7 +1823,7 @@ section::after {
 .investlog {
   margin-top: 20px;
   padding: 20px;
-  background: rgba(30, 30, 47, 0.9);
+  /* background: rgba(30, 30, 47, 0.9); */
   color: #fff;
   border-radius: 12px;
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
@@ -1887,6 +1886,7 @@ section::after {
   height: 100vh;
   max-width: 1200px; 
   margin: 3rem auto;
+  
 }
 .investment-container h1{
 font-size: 25px;
@@ -3021,7 +3021,6 @@ button:hover {
 .main-content {
   flex: 1;
   overflow-y: auto;
-  background: #1e1e2f;
   -webkit-overflow-scrolling: touch;
   padding-top: 2rem;
   padding-left: 12rem;
@@ -3067,7 +3066,7 @@ button:hover {
 /* Content */
 .dashboard-contents {
   height: calc(100vh - 63px);
-  overflow-y: hidden;
+  overflow-y: auto;
   background:
     radial-gradient(
       1200px 600px at 10% 10%,
@@ -4143,7 +4142,7 @@ button:hover {
     min-height: calc(100vh - 63px);
     flex-direction: column;
     height: auto;
-    overflow: visible;
+    overflow: hidden;
   }
   .investment-grid{
     grid-template-columns: 1fr;
@@ -4276,7 +4275,6 @@ button:hover {
   .main-content{
     padding: 12px;
     width: 100%;
-    overflow-y: hidden;
   }
   .deposit-log-container{
     margin: 10px auto;
