@@ -8,12 +8,12 @@ import { IconContext } from 'react-icons/lib';
 import "./App.css";
 
 const SidebarNav = styled.nav`
-  background: #15171c;
+  background: #05070aff;
   height: 100vh;
   position: fixed;
   top: 63px;
   left: 0;
-  width: 200px;
+  width: 190px;
   z-index: 2000;
   transition: left 0.3s ease;
   overflow-y: auto;

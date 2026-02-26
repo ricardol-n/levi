@@ -54,7 +54,7 @@
   margin: 0;
   padding: 0;
   top: 0;
-  background:#15171c;
+  background:#02050e;
   height:60px;
   display:flex;
   justify-content:space-between;
@@ -1466,19 +1466,18 @@ section::after {
 }
 
 .container-card1:nth-child(2) {
- /* background: #FFD700; */
   color: #111;
 }
 .container-card1:nth-child(3) {
-  background: black;   /* black card */
+  /* background: black; */
 
 }
 .container-card1:nth-child(4) {
-   background: #B8860B; /* dark goldenrod */
+  /* background: black;  */
   color: white;
 }
 .container-card1:nth-child(5) {
-   background: #8B6508; /* deep gold-brown */
+  /* background: black;  */
    color: wheat;
 }
 
@@ -1795,7 +1794,6 @@ section::after {
 .investment-container {
   justify-content: center;
   height: 100vh;
-  background-color: rgba(31, 30, 30, 0.717);
   max-width: 1200px; 
   margin: 3rem auto;
 }
@@ -2979,7 +2977,7 @@ button:hover {
 .dashboard-contents {
   height: calc(100vh - 63px);
   overflow-y: auto; 
-  background: #1f1f1f;
+  background: blue;
   color: rgb(246, 16, 16);
   min-height: 100vh;
   flex: 1;
