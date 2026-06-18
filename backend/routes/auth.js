@@ -71,29 +71,105 @@ router.post("/register", async (req, res) => {
 
 
 // ✅ Login Route
-router.post('/login', async (req, res) => {
- 
-
-   try {
+router.post("/login", async (req, res) => {
+  try {
     const { email, password } = req.body;
-    if (!email || !password) return res.status(400).json({ success: false, message: "Email and password required" });
 
-    const user = await User.findOne({ email: email.toLowerCase() });
-    if (!user) return res.status(401).json({ success: false, message: 'Invalid credentials' });
-
-    console.log("Entered password:", password);
-    console.log("Stored hash:", user.password);
-    
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return res.status(401).json({ success: false, message: 'Invalid credentials' });
-
-    if (user.role === "admin") {
-      return res.status(403).json({ success: false, message: "Admins must log in via /api/admin/login" });
+    if (!email || !password) {
+      return res.status(400).json({
+        success: false,
+        message: "Email and password required"
+      });
     }
+
+    const user = await User.findOne({
+      email: email.toLowerCase()
+    });
+
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid credentials"
+      });
+    }
+
+    // ===========================
+    // Account lock check
+    // ===========================
+    if (user.lockUntil && user.lockUntil > Date.now()) {
+      return res.status(423).json({
+        success: false,
+        message:
+          "Account locked due to multiple failed login attempts. Try again later."
+      });
+    }
+
+    // ===========================
+    // Password validation
+    // ===========================
+    const isMatch = await bcrypt.compare(
+      password,
+      user.password
+    );
+
+    if (!isMatch) {
+      user.failedLoginAttempts += 1;
+
+      if (user.failedLoginAttempts >= 5) {
+        user.lockUntil =
+          Date.now() + 30 * 60 * 1000; // 30 mins
+      }
+
+      await user.save();
+
+      return res.status(401).json({
+        success: false,
+        message: "Invalid credentials"
+      });
+    }
+
+    // ===========================
+    // Reset security counters
+    // ===========================
+    user.failedLoginAttempts = 0;
+    user.lockUntil = null;
+    user.lastLoginAt = new Date();
+
+    user.lastLoginIP =
+      req.headers["x-forwarded-for"] ||
+      req.socket.remoteAddress ||
+      req.ip;
+
+    await user.save();
+
+    // ===========================
+    // Admin check
+    // ===========================
+    if (user.role === "admin") {
+      return res.status(403).json({
+        success: false,
+        message:
+          "Admins must log in via /api/admin/login"
+      });
+    }
+
+    // ===========================
+    // 2FA Required
+    // ===========================
+    if (user.is2FAEnabled) {
+      return res.json({
+        success: true,
+        requires2FA: true,
+        userId: user._id
+      });
+    }
+
+    // ===========================
+    // Normal Login
+    // ===========================
     const token = signAccessToken(user);
     const refreshToken = signRefreshToken(user);
 
-    // persist refresh token
     user.refreshToken = refreshToken;
     await user.save();
 
@@ -106,13 +182,17 @@ router.post('/login', async (req, res) => {
         _id: user._id,
         username: user.username,
         email: user.email,
-        role: user.role,
-      },
+        role: user.role
+      }
     });
 
   } catch (err) {
-    console.error('❌ Login error:', err);
-    res.status(500).json({ success: false, message: 'Server error' });
+    console.error("❌ Login error:", err);
+
+    return res.status(500).json({
+      success: false,
+      message: "Server error"
+    });
   }
 });
 

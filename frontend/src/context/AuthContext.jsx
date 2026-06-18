@@ -63,40 +63,181 @@ export const AuthProvider = ({ children }) => {
     return () => axios.interceptors.response.eject(interceptor);
   }, [refreshToken]);
 
-  // ✅ Login
-  const login = async (email, password, isAdmin = false) => {
-    try {
-      const res = await axios.post(`/auth/login`, { email, password });
-      console.log("LOGIN RESPONSE:", res.data)
-      
-      if (!res.data.success) return { success: false, message: res.data.message };
+ const login = async (email, password, isAdmin = false) => {
+  try {
+    const res = await axios.post("/auth/login", {
+      email,
+      password
+    });
 
-      const { token, refreshToken, user } = res.data;
+    console.log("LOGIN RESPONSE:", res.data);
 
-      // ✅ Role check
-      if (isAdmin && user.role !== "admin")
-        return { success: false, message: "Use the regular user login page." };
-      if (!isAdmin && user.role === "admin")
-        return { success: false, message: "Use the admin login page." };
-
-      // ✅ Store session
-      setToken(token);
-      setRefreshToken(refreshToken);
-      setUser(user);
-      localStorage.setItem("token", token);
-      localStorage.setItem("refreshToken", refreshToken);
-      localStorage.setItem("user", JSON.stringify(user));
-      localStorage.setItem("userId", user._id);
-      localStorage.setItem("role", user.role);
-      axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-
-      console.log("🔑 Login success:", { user, token });
-      return { success: true, user, redirectTo: user.role === "admin" ? "/admin" : "/dashboard" };
-    } catch (err) {
-      console.error("❌ Login error:", err);
-      return { success: false, message: err.response?.data?.message || "Server error" };
+    if (!res.data.success) {
+      return {
+        success: false,
+        message: res.data.message
+      };
     }
-  };
+
+    // ==========================
+    // 2FA LOGIN REQUIRED
+    // ==========================
+    if (res.data.requires2FA) {
+      return {
+        success: true,
+        requires2FA: true,
+        userId: res.data.userId
+      };
+    }
+
+    // ==========================
+    // NORMAL LOGIN
+    // ==========================
+    const {
+      token,
+      refreshToken,
+      user
+    } = res.data;
+
+    // Role checks
+    if (isAdmin && user.role !== "admin") {
+      return {
+        success: false,
+        message: "Use the regular user login page."
+      };
+    }
+
+    if (!isAdmin && user.role === "admin") {
+      return {
+        success: false,
+        message: "Use the admin login page."
+      };
+    }
+
+    setToken(token);
+    setRefreshToken(refreshToken);
+    setUser(user);
+
+    localStorage.setItem("token", token);
+    localStorage.setItem(
+      "refreshToken",
+      refreshToken
+    );
+    localStorage.setItem(
+      "user",
+      JSON.stringify(user)
+    );
+    localStorage.setItem(
+      "userId",
+      user._id
+    );
+    localStorage.setItem(
+      "role",
+      user.role
+    );
+
+    axios.defaults.headers.common[
+      "Authorization"
+    ] = `Bearer ${token}`;
+
+    return {
+      success: true,
+      user,
+      redirectTo:
+        user.role === "admin"
+          ? "/admin"
+          : "/dashboard"
+    };
+
+  } catch (err) {
+    console.error("❌ Login error:", err);
+
+    return {
+      success: false,
+      message:
+        err.response?.data?.message ||
+        "Server error"
+    };
+  }
+};
+
+  const verify2FALogin = async (userId, otp) => {
+  try {
+    const res = await axios.post(
+      "/2fa/login-verify",
+      {
+        userId,
+        token: otp
+      }
+    );
+
+    if (!res.data.success) {
+      return {
+        success: false,
+        message: res.data.message
+      };
+    }
+
+    const {
+      token,
+      refreshToken,
+      user
+    } = res.data;
+
+    setToken(token);
+    setRefreshToken(refreshToken);
+    setUser(user);
+
+    localStorage.setItem("token", token);
+    localStorage.setItem(
+      "refreshToken",
+      refreshToken
+    );
+
+    localStorage.setItem(
+      "user",
+      JSON.stringify(user)
+    );
+
+    localStorage.setItem(
+      "userId",
+      user._id
+    );
+
+    localStorage.setItem(
+      "role",
+      user.role
+    );
+
+    axios.defaults.headers.common[
+      "Authorization"
+    ] = `Bearer ${token}`;
+
+    return {
+      success: true,
+      user,
+      redirectTo:
+        user.role === "admin"
+          ? "/admin"
+          : "/dashboard"
+    };
+
+  } catch (err) {
+    console.error(
+      "❌ 2FA Login Error:",
+      err
+    );
+
+    return {
+      success: false,
+      message:
+        err.response?.data?.message ||
+        "Invalid verification code"
+    };
+  }
+};
+
+
 
   // ✅ Register
   const register = async ({ username, email, phone, password }, isAdmin = false) => {
@@ -159,6 +300,7 @@ export const AuthProvider = ({ children }) => {
         refreshToken,
         user,
         login,
+        verify2FALogin,
         register,
         logout,
         refreshAccessToken,

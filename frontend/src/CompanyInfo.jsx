@@ -22,6 +22,16 @@ import fcsc from './assets/fcsc.png';
 import fca from './assets/fca.png';
 import iso from './assets/ISO.png';
 import data from './assets/data.png';
+import conference1 from './assets/conference1.jpeg';
+import conference2 from './assets/conference2.jpeg';
+import conference3 from './assets/conference3.jpeg';
+import conference4 from './assets/conference4.jpeg';
+import conference5 from './assets/CTAf.jpeg';
+import profile from './assets/profile.jpeg';
+import profile1 from './assets/profile1.jpeg';
+import profile2 from './assets/profile2.jpeg';
+import profile3 from './assets/profile3.jpeg';
+import profile4 from './assets/profile4.jpg'; 
 import { Link } from "react-router-dom";
 import Counter from './Counter';
 import { FaFacebookF, FaTwitter, FaLinkedinIn, FaInstagram } from "react-icons/fa";
@@ -123,38 +133,23 @@ const FadeInSection = ({ children, delay = 0 }) => {
 
   return (
     <motion.div
-      ref={ref}
-      initial={{ opacity: 0, y: 100, scale: 0.95, filter: "blur(20px)" }}
-      animate={
-        isVisible
-          ? { opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }
-          : { opacity: 0, y: 100, scale: 0.95, filter: "blur(10px)" }
-      }
-      transition={{ duration: 1.2, delay,ease: [0.22, 1, 0.36, 1], }}
-      style={{ willChange: "transform, opacity, filter" }}
-    >
+  ref={ref}
+  initial={{ opacity: 0, y: 40 }}
+  animate={
+    isVisible
+      ? { opacity: 1, y: 0 }
+      : { opacity: 0, y: 40 }
+  }
+  transition={{
+    duration: 0.7,
+    delay,
+    ease: "easeOut"
+  }}
+>
       {children}
     </motion.div>
   );
 };
-
-const CompanyInfo = () => {
-  const navigate = useNavigate();
-  const [menuOpen, setMenuOpen] = useState(false);
-  const location = useLocation();
-  const [selectedSymbol, setSelectedSymbol] = useState("TSLA"); // default Tesla
-  const [openFAQ, setOpenFAQ] = useState(null);
-  const toggleFAQ = (index) => {
-    setOpenFAQ(openFAQ === index ? null : index);
-  };
-  const [openDropdown, setOpenDropdown] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const toggleDropdown = (index) => {
-    setOpenDropdown(openDropdown === index ? null : index);
-  };
-  const [stocks, setStocks] = useState([]); // ✅ define state
-  const symbols = ["NFLX", "SPOT", "TSLA", "META", "AMZN", "GOOGL"];
-
   /* ===== Scroll Progress Bar ===== */
 const ScrollProgress = () => {
   const { scrollYProgress } = useScroll();
@@ -226,46 +221,88 @@ const itemVariants = {
   show: { opacity: 1, y: 0 }
 };
 
+const CompanyInfo = () => {
+  const navigate = useNavigate();
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [selectedSymbol, setSelectedSymbol] = useState("TSLA"); // default Tesla
+  const [openFAQ, setOpenFAQ] = useState(null);
+  const toggleFAQ = (index) => {
+    setOpenFAQ(openFAQ === index ? null : index);
+  };
+  const [openDropdown, setOpenDropdown] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const toggleDropdown = (index) => {
+    setOpenDropdown(openDropdown === index ? null : index);
+  };
+  const [stocks, setStocks] = useState([]); // ✅ define state
 
+  const allowedSymbols = ["NFLX", "SPOT", "TSLA", "META", "AMZN", "GOOGL"];
+
+  const safeSymbol = allowedSymbols.includes(selectedSymbol)
+  ? selectedSymbol
+  : "TSLA";
 
  
- useEffect(() => {
-  const fetchData = async () => {
-    console.log("🌍 Using API base:", API_BASE_URL);
-    setLoading(true);
+ const fetchData = async () => {
+  console.log("🌍 Using API base:", API_BASE_URL);
+  setLoading(true);
 
-    try {
-      const { data } = await axios.get(`${API_BASE_URL}/stocks`);
-      console.log("✅ Raw stock data:", data);
+  try {
+    const { data } = await axios.get(`${API_BASE_URL}/stocks`);
 
-      // Handle array or object just in case
-      const stocksArray = Array.isArray(data)
-        ? data
-        : Array.isArray(data.data)
-        ? data.data
-        : Object.values(data || {});
+    console.log("✅ Raw stock data:", data);
 
-      console.log("✅ Normalized stocks:", stocksArray);
-      setStocks(stocksArray);
-    } catch (error) {
-      console.error("❌ Error fetching stock data:", error.message);
-      setStocks([]); // Fallback
-    } finally {
-      setLoading(false);
+    const stocksArray = Array.isArray(data)
+      ? data
+      : Array.isArray(data.data)
+      ? data.data
+      : Object.values(data || {});
+
+    setStocks(stocksArray);
+
+  } catch (error) {
+    console.error("❌ Error fetching stock data:", error.message);
+    setStocks([]);
+  } finally {
+    setLoading(false);
+  }
+};
+
+
+
+useEffect(() => {
+  fetchData();
+
+  let interval = setInterval(fetchData, 60000);
+
+  const handleVisibility = () => {
+    if (document.hidden) {
+      clearInterval(interval);
+    } else {
+      fetchData();
+      interval = setInterval(fetchData, 60000);
     }
   };
 
-  fetchData();
-  const interval = setInterval(fetchData, 60000); // Refresh every 60s
-  return () => clearInterval(interval);
+  document.addEventListener("visibilitychange", handleVisibility);
+
+  return () => {
+    clearInterval(interval);
+    document.removeEventListener("visibilitychange", handleVisibility);
+  };
 }, []);
 
-
   useEffect(() => {
-    // lock body scroll when menu open
-    document.body.style.overflow = menuOpen ? "hidden" : "";
-    return () => { document.body.style.overflow = ""; };
-    }, [menuOpen]);
+  if (menuOpen) {
+    document.body.classList.add("menu-open");
+  } else {
+    document.body.classList.remove("menu-open");
+  }
+
+  return () => {
+    document.body.classList.remove("menu-open");
+  };
+}, [menuOpen]);
 
   useEffect(() => {
     const onKey = (e) => { if (e.key === "Escape") setMenuOpen(false); };
@@ -280,15 +317,15 @@ const itemVariants = {
   return (
   
     <Wrapper>
-    
+     <ScrollProgress />
 
       <header className="header1">
         <img src={tesla} alt="Tesla Logo" className="tesla-logo1" />
 
         <nav className={menuOpen ? "open" : ""}>
           <ul className="header-title">
-            <li onClick={() => navigate('/')}>HOME</li>
-            <li onClick={() => navigate('/about')}>ABOUT US</li>
+            <li><Link to="/">HOME</Link></li>
+            <li><Link to="/about">ABOUT US</Link></li>
             <li onClick={() => {document.getElementById("FAQ")?.scrollIntoView({ behavior: "smooth" });
               }}>FAQ</li>
             <li><Link to="/contact">CONTACT</Link></li>
@@ -386,10 +423,11 @@ const itemVariants = {
         key={stock.symbol || stock.name}
         className="invest-card"
         variants={itemVariants}
+        whileHover={{ scale: 1.03 }}
         onClick={() => setSelectedSymbol(stock.symbol)}
       >
         <img
-          src={logoMap[stock.symbol]}
+         src={logoMap[stock.symbol]}
           alt={stock.name}
           className="stock-logo"
         />
@@ -414,7 +452,7 @@ const itemVariants = {
             <div style={{ width: "100%", height: "500px" }}>
               <iframe
                 key={selectedSymbol} // 🔑 ensures iframe reloads on symbol change
-                src={`https://s.tradingview.com/widgetembed/?symbol=${selectedSymbol}&interval=D&theme=dark&style=1&locale=en`}
+                src={`https://s.tradingview.com/widgetembed/?symbol=${safeSymbol}`}
                 width="100%"
                 height="100%"
                 frameBorder="0"
@@ -462,11 +500,7 @@ const itemVariants = {
                 <p>Access a wide range of sectors and markets worldwide.</p>
               </div>
 
-              <div className="why-card">
-                <FaBuilding size={50} color="#FFD700" />
-                <h2>Global Stocks</h2>
-                <p>Thousands of stocks from NYSE, NASDAQ, LSE, and beyond.</p>
-              </div>
+        
 
               <div className="why-card">
                  <FaHeadset size={50} color="#FFD700" />
@@ -488,17 +522,24 @@ const itemVariants = {
             </div>
             </FadeInSection>
       </section>
-      
 
-      <FadeInSection delay={0.4}>
+    
       <section className='security fixed-sec' >
           <div className="sec-info">
-            <div className="security-img img"> <ParallaxImage  src={female} alt="Security Illustration" /> </div>
+
+            <FadeInSection delay={0.1}>
+            <div className="security-img img"> <img  src={female} alt="Security Illustration" /> </div>
+            </FadeInSection>
+
               <div>
+              <FadeInSection delay={0.2}>
               <div className="security-text">
                 <h1>Our Security Measures</h1>
                 <p>When placing your money with a broker, you need to make sure your broker is secure and can endure through good and bad times. Our strong capital position, conservative balance sheet and automated risk controls are designed to protect Txla Investment and our clients from large trading losses.</p>  
               </div>
+              </FadeInSection>
+
+              <FadeInSection delay={0.4}>
               <div className="equity-capital">
                           <div className="equ-cap">
                               <h1>$13.8B</h1>
@@ -517,38 +558,70 @@ const itemVariants = {
                             <p>Daily Avg Revenue Trades*</p>
                           </div>
                 </div>
+                </FadeInSection>
 
               </div>
-              
             </div>
+
+            <FadeInSection delay={0.5}>
             <div className="fca">
+             
                   <div className="fca-auth">
+                     <motion.div 
+                     animate={{ y: [0, -6, 0] }}
+                     transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                      >
                     <img src={fca} alt="" />
                     {/* <h1>FCA authorised</h1> */}
                     <p>We are authorised and regulated by the FCA.</p>
+                    </motion.div>
                   </div>
+
+
                   <div className="fca-auth">
+                  <motion.div 
+                     animate={{ y: [0, -6, 0] }}
+                     transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                      >
                     <img src={fcsc} alt="" />
                     {/* <h1>FSCS protected</h1> */}
                     <p>Your funds are protected by the FSCS scheme up to $85,000.</p>
+                    </motion.div>
                   </div>
+
+                 
+
                   <div className="fca-auth">
+                    <motion.div 
+                     animate={{ y: [0, -6, 0] }}
+                     transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                      >
                     <img src={iso} alt="" />
                     {/* <h1>Account Security Standard</h1> */}
                     <p>Password protection with Bcrypt hashing algorithm.</p>
+                    </motion.div>
                   </div>
+
+
+                  <motion.div 
+                     animate={{ y: [0, -6, 0] }}
+                     transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                      >
                   <div className="fca-auth">
+                    
                     <img src={data} alt="" />
                     
                     <p>We follow industry best practices to protect your data at all times.</p>
+
                   </div>
+                   </motion.div>
             </div>
+            </FadeInSection>
       </section>
-      </FadeInSection>
+      
 
         <section className="stats-section">
-      <motion.div 
-      className="stat-card glass"
+      <motion.div className="stat-card glass"
       animate={{ y: [0, -6, 0] }}
       transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
       >
@@ -597,7 +670,378 @@ const itemVariants = {
         </div>
 
       </section>
-       <div className ="InvestTrading" id="FAQ">
+ <section className="trustpilot-section">
+  <div className="trustpilot-header">
+    <span className="trustpilot-badge">★★★★★ Investor Reviews</span>
+
+    <h1 className="trustpilot-title">
+      Trusted by Investors Worldwide
+    </h1>
+
+    <p className="trustpilot-subtitle">
+      Discover how investors are growing their portfolios with TXLA Investment
+      while participating in our global investment conferences and networking events.
+    </p>
+  </div>
+
+  <div className="trustpilot-slider">
+    <div className="trustpilot-track">
+
+      {/* REVIEW */}
+      <div className="trust-card">
+        <div className="trust-header">
+          <img src={profile} alt="James Richardson" />
+          <div>
+            <h3>Maria Richardson</h3>
+            <span>✔ Verified Investor</span>
+          </div>
+        </div>
+
+        <div className="stars">★★★★★</div>
+
+        <p className="review-title">
+          Consistent growth and reliable withdrawals
+        </p>
+
+        <p>
+          I joined TXLA Investment in early 2024 and started with
+          a portfolio of $8,500. The platform is easy to use,
+          performance tracking is transparent, and withdrawals
+          have always been processed efficiently. It's one of the
+          most professional investment experiences I've had.
+        </p>
+
+        <small>Reviewed on August 12, 2025</small>
+      </div>
+
+      {/* REVIEW */}
+      <div className="trust-card">
+        <div className="trust-header">
+          <img src={profile4} alt="Daniel Roberts" />
+          <div>
+            <h3>Daniel Roberts</h3>
+            <span>✔ Verified Investor</span>
+          </div>
+        </div>
+
+        <div className="stars">★★★★★</div>
+
+        <p className="review-title">
+          Excellent platform for portfolio management
+        </p>
+
+        <p>
+          What stands out most is the simplicity of the dashboard.
+          Everything from deposits to monitoring performance is
+          straightforward. Customer support has been responsive,
+          and the overall experience has exceeded expectations.
+        </p>
+
+        <small>Reviewed on September 4, 2025</small>
+      </div>
+
+       {/* CONFERENCE */}
+      <div className="conference-slide">
+        <img src={conference5} alt="Investor Leadership Forum" />
+      </div>
+
+
+
+      {/* REVIEW */}
+      <div className="trust-card">
+        <div className="trust-header">
+          <img src={profile1} alt="Jennifer Cole" />
+          <div>
+            <h3>Jennifer Cole</h3>
+            <span>✔ Verified Investor</span>
+          </div>
+        </div>
+
+        <div className="stars">★★★★★</div>
+
+        <p className="review-title">
+          Perfect for new investors
+        </p>
+
+        <p>
+          I started with a modest investment and gradually built
+          confidence through the educational resources available.
+          The platform helped me understand portfolio diversification
+          and long-term investing.
+        </p>
+
+        <small>Reviewed on October 19, 2025</small>
+      </div>
+
+      {/* REVIEW */}
+      <div className="trust-card">
+        <div className="trust-header">
+          <img src={profile2} alt="Michael Adams" />
+          <div>
+            <h3>Michael Adams</h3>
+            <span>✔ Verified Investor</span>
+          </div>
+        </div>
+
+        <div className="stars">★★★★★</div>
+
+        <p className="review-title">
+          Professional support team
+        </p>
+
+        <p>
+          The customer service team deserves recognition.
+          Every question I've had has been answered promptly.
+          Combined with the investment tools available,
+          the experience has been excellent from day one.
+        </p>
+
+        <small>Reviewed on November 7, 2025</small>
+      </div>
+
+      {/* CONFERENCE */}
+      <div className="conference-slide">
+        <img src={conference2} alt="Annual Investment Summit" />
+        <div className="conference-overlay">
+          <h3>Annual Investment Summit</h3>
+          <p>Future Trends & Wealth Building</p>
+        </div>
+      </div>
+
+      {/* REVIEW */}
+      <div className="trust-card">
+        <div className="trust-header">
+          <img src={profile3} alt="Sarah Mitchell" />
+          <div>
+            <h3>Larry Quintero</h3>
+            <span>✔ Verified Investor</span>
+          </div>
+        </div>
+
+        <div className="stars">★★★★★</div>
+
+        <p className="review-title">
+          A platform I confidently recommend
+        </p>
+
+        <p>
+          I've been investing for several years and TXLA Investment
+          has become one of my preferred platforms. The user
+          experience, account security, and portfolio tools make
+          it easy to manage investments efficiently.
+        </p>
+
+        <small>Reviewed on December 3, 2025</small>
+      </div>
+
+      {/* CONFERENCE */}
+      <div className="conference-slide">
+        <img src={conference1} alt="Global Wealth Conference" />
+        <div className="conference-overlay">
+          <h3>Global Wealth Conference</h3>
+          <p>Building the Future of Investing</p>
+        </div>
+      </div>
+
+      <div className="conference-slide">
+        <img src={conference3} alt="TXLA Global Investment Summit" />
+        <div className="conference-overlay">
+          <h3>TXLA Global Investment Summit</h3>
+          <p>Dubai • Investor Networking Event</p>
+        </div>
+      </div> 
+           {/* CONFERENCE */}
+      <div className="conference-slide">
+        <img src={conference4} alt="London Investors Conference" />
+        <div className="conference-overlay">
+          <h3>London Investors Conference</h3>
+          <p>Investment Strategies & Market Insights</p>
+        </div>
+      </div>
+
+
+       {/* REVIEW */}
+      <div className="trust-card">
+        <div className="trust-header">
+          <img src={profile} alt="James Richardson" />
+          <div>
+            <h3>Maria Richardson</h3>
+            <span>✔ Verified Investor</span>
+          </div>
+        </div>
+
+        <div className="stars">★★★★★</div>
+
+        <p className="review-title">
+          Consistent growth and reliable withdrawals
+        </p>
+
+        <p>
+          I joined TXLA Investment in early 2024 and started with
+          a portfolio of $8,500. The platform is easy to use,
+          performance tracking is transparent, and withdrawals
+          have always been processed efficiently. It's one of the
+          most professional investment experiences I've had.
+        </p>
+
+        <small>Reviewed on August 12, 2025</small>
+      </div>
+
+      {/* REVIEW */}
+      <div className="trust-card">
+        <div className="trust-header">
+          <img src={profile4} alt="Daniel Roberts" />
+          <div>
+            <h3>Daniel Roberts</h3>
+            <span>✔ Verified Investor</span>
+          </div>
+        </div>
+
+        <div className="stars">★★★★★</div>
+
+        <p className="review-title">
+          Excellent platform for portfolio management
+        </p>
+
+        <p>
+          What stands out most is the simplicity of the dashboard.
+          Everything from deposits to monitoring performance is
+          straightforward. Customer support has been responsive,
+          and the overall experience has exceeded expectations.
+        </p>
+
+        <small>Reviewed on September 4, 2025</small>
+      </div>
+
+       {/* CONFERENCE */}
+      <div className="conference-slide">
+        <img src={conference5} alt="Investor Leadership Forum" />
+      </div>
+
+
+
+      {/* REVIEW */}
+      <div className="trust-card">
+        <div className="trust-header">
+          <img src={profile1} alt="Jennifer Cole" />
+          <div>
+            <h3>Jennifer Cole</h3>
+            <span>✔ Verified Investor</span>
+          </div>
+        </div>
+
+        <div className="stars">★★★★★</div>
+
+        <p className="review-title">
+          Perfect for new investors
+        </p>
+
+        <p>
+          I started with a modest investment and gradually built
+          confidence through the educational resources available.
+          The platform helped me understand portfolio diversification
+          and long-term investing.
+        </p>
+
+        <small>Reviewed on October 19, 2025</small>
+      </div>
+
+      {/* REVIEW */}
+      <div className="trust-card">
+        <div className="trust-header">
+          <img src={profile2} alt="Michael Adams" />
+          <div>
+            <h3>Michael Adams</h3>
+            <span>✔ Verified Investor</span>
+          </div>
+        </div>
+
+        <div className="stars">★★★★★</div>
+
+        <p className="review-title">
+          Professional support team
+        </p>
+
+        <p>
+          The customer service team deserves recognition.
+          Every question I've had has been answered promptly.
+          Combined with the investment tools available,
+          the experience has been excellent from day one.
+        </p>
+
+        <small>Reviewed on November 7, 2025</small>
+      </div>
+
+      {/* CONFERENCE */}
+      <div className="conference-slide">
+        <img src={conference2} alt="Annual Investment Summit" />
+        <div className="conference-overlay">
+          <h3>Annual Investment Summit</h3>
+          <p>Future Trends & Wealth Building</p>
+        </div>
+      </div>
+
+      {/* REVIEW */}
+      <div className="trust-card">
+        <div className="trust-header">
+          <img src={profile3} alt="Sarah Mitchell" />
+          <div>
+            <h3>Larry Quintero</h3>
+            <span>✔ Verified Investor</span>
+          </div>
+        </div>
+
+        <div className="stars">★★★★★</div>
+
+        <p className="review-title">
+          A platform I confidently recommend
+        </p>
+
+        <p>
+          I've been investing for several years and TXLA Investment
+          has become one of my preferred platforms. The user
+          experience, account security, and portfolio tools make
+          it easy to manage investments efficiently.
+        </p>
+
+        <small>Reviewed on December 3, 2025</small>
+      </div>
+
+      {/* CONFERENCE */}
+      <div className="conference-slide">
+        <img src={conference1} alt="Global Wealth Conference" />
+        <div className="conference-overlay">
+          <h3>Global Wealth Conference</h3>
+          <p>Building the Future of Investing</p>
+        </div>
+      </div>
+
+      <div className="conference-slide">
+        <img src={conference3} alt="TXLA Global Investment Summit" />
+        <div className="conference-overlay">
+          <h3>TXLA Global Investment Summit</h3>
+          <p>Dubai • Investor Networking Event</p>
+        </div>
+      </div> 
+           {/* CONFERENCE */}
+      <div className="conference-slide">
+        <img src={conference4} alt="London Investors Conference" />
+        <div className="conference-overlay">
+          <h3>London Investors Conference</h3>
+          <p>Investment Strategies & Market Insights</p>
+        </div>
+      </div>
+
+
+
+
+    </div>
+    
+
+  </div>
+</section>
+
+<div className ="InvestTrading" id="FAQ">
             <div className="InvestTrad">
                 <h1>Investing and Trading in Stocks</h1>
                 <p>Stock trading has been a popular financial pursuit since stocks were first introduced by the Dutch East India Company in the 17th century. This is both an efficient and effective type of investment for both families and individuals.</p>

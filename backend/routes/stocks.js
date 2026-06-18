@@ -5,6 +5,7 @@ require("dotenv").config();
 
 // ✅ Load your API key from environment
 const FINNHUB_API_KEY = process.env.FINNHUB_API_KEY;
+console.log("FINNHUB_API_KEY =", FINNHUB_API_KEY);
 const FINNHUB_API = "https://finnhub.io/api/v1";
 
 // ✅ Define your stocks
@@ -42,10 +43,19 @@ router.get("/stocks", async (req, res) => {
 
     res.json(stocks); // ✅ send as a clean array
   } catch (error) {
-    console.error("❌ Error fetching stock prices:", error.message);
-    res.status(500).json({ error: "Failed to fetch stock prices" });
-  }
+  console.error("❌ FULL ERROR:");
+  console.error(error.response?.data);
+  console.error(error.response?.status);
+  console.error(error.message);
+
+  res.status(500).json({
+    error: error.message,
+    status: error.response?.status,
+    details: error.response?.data,
+  });
+}
 });
+
 
 
 // ✅ Route: GET /api/candles/:symbol (for TradingView)

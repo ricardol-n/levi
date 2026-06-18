@@ -33,7 +33,7 @@ function Header({toggleSidebar}) {
       {/* Left: Logo */}
       <div className="header-left">
         <RiMenu4Fill className="hamburger" onClick={toggleSidebar} />
-        <img src={tesla} alt="Tesla Logo" className="tesla-logo" />
+        <img src={tesla} loading="lazy" alt="Tesla Logo" className="tesla-logo" />
       </div>
 
       {/* Right: User */}

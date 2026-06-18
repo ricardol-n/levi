@@ -6,8 +6,7 @@ import Dashboard from './Dashboard.jsx';
 import ProtectedRoute from './ProtectedRoute.jsx';
 import AdminPanel from './admin/AdminPanel.jsx';
 import ProtectedAdminRoute from "./admin/ProtectedAdminRoute.jsx";
-
-
+import Verify2FA from "./Verify2FA";
 import { InvestmentPlans, InvestLog } from './pages/Reports.jsx';
 import { Deposit, DepositLog } from './pages/Products.jsx';
 import { Withdraw, WithdrawLog } from './pages/Team.jsx';
@@ -52,6 +51,7 @@ function App() {
              {/* Login/Register with role-based redirects */}
         <Route path="/login" element={<LoginPage /> } />
         <Route path="/register"element={ <RegisterPage />}/>
+        <Route path="/verify-2fa" element={<Verify2FA />} />
            {/* Protected Routes */}
        
             <Route path="/dashboard" element={<ProtectedRoute> <Dashboard /> </ProtectedRoute>} />

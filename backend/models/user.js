@@ -2,28 +2,119 @@
 const mongoose = require("mongoose");
 
 const userSchema = new mongoose.Schema(
-  {
-    username: String,
-    email: { type: String, unique: true, required: true },
-    phone: String,
-    password: String,
-
-    role: { type: String, enum: ["user", "admin"], default: "user" },
-
-    // 🔒 WALLET (DO NOT MIX)
-    balance: { type: Number, default: 0, min: 0 },          // reusable capital
-    maturedProfit: { type: Number, default: 0, min: 0 },   // withdraw-only
-    withdrawnProfit: { type: Number, default: 0, min: 0 }, // audit
-
-    refreshToken: { type: String, default: null },
-
-    // 🤝 Referral system
-    referralCode: { type: String, unique: true },
-    referredBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
-    referralCount: { type: Number, default: 0 },
-    referralBonus: { type: Number, default: 0 }, // 👈 credit to BALANCE
+{
+  username: String,
+  email: {
+    type: String,
+    unique: true,
+    required: true
   },
-  { timestamps: true }
+  phone: String,
+  password: String,
+
+  role: {
+    type: String,
+    enum: ["user","admin"],
+    default: "user"
+  },
+
+  // NEW SECURITY FIELDS
+  isVerified: {
+    type: Boolean,
+    default: false
+  },
+
+  verificationCode: String,
+
+  verificationExpires: Date,
+
+  is2FAEnabled: {
+  type: Boolean,
+  default: false
+},
+
+twoFASecret: {
+  type: String,
+  default: null
+},
+
+failedLoginAttempts: {
+  type: Number,
+  default: 0
+},
+
+  loginAttempts: {
+    type: Number,
+    default: 0
+  },
+
+  lockUntil:{
+    type:Date,
+    default:null
+  },
+
+  lastLoginAt: {
+  type: Date
+  },
+
+  lastLoginIP: {
+    type:String
+  },
+  isEmailVerified: {
+  type: Boolean,
+  default: false
+},
+
+emailVerificationToken: {
+  type: String
+},
+
+  lastLoginAt: {
+    type:Date
+  },
+
+  refreshToken: {
+    type: String,
+    default: null
+  },
+
+  balance: {
+    type: Number,
+    default: 0
+  },
+
+  maturedProfit: {
+    type: Number,
+    default: 0
+  },
+
+  withdrawnProfit: {
+    type: Number,
+    default: 0
+  },
+
+  referralCode: {
+    type: String,
+    unique: true
+  },
+
+  referredBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    default: null
+  },
+
+  referralCount: {
+    type: Number,
+    default: 0
+  },
+
+  referralBonus: {
+    type: Number,
+    default: 0
+  },
+},
+{ timestamps: true }
 );
 
 // 🔐 HARD LOCKS

@@ -18,7 +18,7 @@ const PrivacyPolicy = () => {
     <>
       {/* Header */}
       <header className="header1 fixed-header">
-        <img src={tesla} alt="Tesla Logo" className="tesla-logo1" />
+        <img src={tesla} alt="Tesla Logo" className="tesla-logo1" loading="lazy"/>
 
         <nav className={menuOpen ? "open" : ""}>
           <ul className="header-title">
@@ -152,7 +152,7 @@ const PrivacyPolicy = () => {
         <div className="footer-container">
           {/* Logo & About */}
           <div className="footer-brand">
-            <img src={tesla} alt="Tesla Logo" className="tesla-logo1" />
+            <img src={tesla} alt="Tesla Logo" className="tesla-logo1" loading="lazy" />
             <p>
               Invest and grow your financial assets with our TXLA Investment.
             </p>

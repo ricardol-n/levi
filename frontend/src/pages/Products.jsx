@@ -128,7 +128,7 @@ export const Deposit = () => {
                 </div>
 
                 <div className="card-xrp">
-                  <img src={bitcoin} alt="Bitcoin" className="bitcoin" />
+                  <img src={bitcoin} alt="Bitcoin" className="bitcoin" loading="lazy"/>
                 </div>
 
                 <button className="pay-btn" onClick={handlePayNow}>
