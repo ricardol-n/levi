@@ -60,7 +60,7 @@ const inv = res.data.investment;
 
 
 alert(
-        `✅ Investment Successful! You invested $${inv.amount}. Expected return will be calculated automatically.`
+        `✅ Investment Successful! You invested $${inv.amount}..`
       );
 setShowConfirmModal(false);
 

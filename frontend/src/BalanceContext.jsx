@@ -114,6 +114,43 @@ export const BalanceProvider = ({ children }) => {
     return Math.max(maturedProfit - withdrawnProfit, 0);
   }, [maturedProfit, withdrawnProfit]);
 
+
+  // ===============================
+// ❌ CANCEL INVESTMENT
+// ===============================
+const cancelInvestment = async (investmentId) => {
+  try {
+    const res = await axios.post(
+      "/investments/cancel",
+      {
+        investmentId,
+      }
+    );
+
+    if (!res.data.success) {
+      throw new Error(
+        res.data.message ||
+        "Failed to cancel investment"
+      );
+    }
+
+    // Refresh wallet + investments
+    await syncFromBackend();
+
+    return res.data;
+  } catch (err) {
+    console.error(
+      "❌ Cancel Investment Error:",
+      err
+    );
+
+    throw new Error(
+      err.response?.data?.message ||
+      "Unable to cancel investment"
+    );
+  }
+};
+
   // ===============================
   // 📤 WITHDRAW PROFIT
   // ===============================
@@ -130,7 +167,11 @@ export const BalanceProvider = ({ children }) => {
       address,
     });
 
+    
+
     await syncFromBackend();
+
+    
   };
 
   // ===============================
@@ -150,6 +191,7 @@ export const BalanceProvider = ({ children }) => {
         error,
         syncFromBackend,
         requestWithdrawal,
+        cancelInvestment,
       }}
     >
       {children}

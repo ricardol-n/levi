@@ -215,6 +215,7 @@ console.log("Withdrawable Profit:", withdrawableProfit);
 
   return (
     <div className="home-container">
+      
       {notification && (
         <motion.div
           className="notification"
@@ -397,6 +398,7 @@ console.log("Withdrawable Profit:", withdrawableProfit);
           </div>
         </div>
       </div>
+
     </div>
   );
 };
