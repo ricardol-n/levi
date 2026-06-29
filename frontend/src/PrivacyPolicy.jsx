@@ -81,10 +81,10 @@ const PrivacyPolicy = () => {
 
       {/* Page Content */}
       <div className="legal-page">
-        <h1>Txla Investment – Privacy Policy</h1>
+        <h1>Txla Advisory – Privacy Policy</h1>
         <p><strong>Effective Date:</strong> 01-20-2025</p>
         <p>
-          At Txla Investment, we respect your privacy and are committed to
+          At Txla Advisory, we respect your privacy and are committed to
           protecting your personal data. This policy explains how we collect,
           use, and safeguard your information.
         </p>
@@ -118,7 +118,7 @@ const PrivacyPolicy = () => {
         <section>
           <h2>🤝 Sharing of Information</h2>
           <p>
-            Txla Investment does not sell or rent your personal information. We may
+            Txla Advisory does not sell or rent your personal information. We may
             share it with trusted third parties (e.g., payment processors or regulators) 
             strictly for service delivery and compliance purposes.
           </p>
@@ -139,8 +139,8 @@ const PrivacyPolicy = () => {
             If you have questions about this Privacy Policy, reach out anytime:
           </p>
           <p>
-            <strong>Txla Investment</strong><br />
-           📧 Email: support@txlainvestment.com <br />
+            <strong>Txla Advisory</strong><br />
+           📧 Email: support@txladvisory.com <br />
             📞 Phone: +1 (317) 618-2969<br />
             {/* 🏢 Address: [Insert Address] */}
           </p>

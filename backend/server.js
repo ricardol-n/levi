@@ -145,6 +145,7 @@ app.use("/api/phone", phoneRoutes);
 
 
 
+
 app.get("/", (req, res) => {
   res.json({ message: "🚀 Backend running successfully!" });
 });

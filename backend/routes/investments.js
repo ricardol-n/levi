@@ -4,6 +4,7 @@ const User = require("../models/user");
 const Investment = require("../models/Investment");
 const verifyToken = require("../middleware/verifyToken");
 const adminOnly = require("../middleware/adminOnly");
+const sendInvestmentCreatedEmail = require("../emails/investmentCreated");
 
 // ✅ Create a new investment
 router.post("/", verifyToken, async (req, res) => {
@@ -23,6 +24,7 @@ router.post("/", verifyToken, async (req, res) => {
     await user.save();
 
     const startDate = new Date();
+
     const endDate = new Date(startDate.getTime() + duration * 24 * 60 * 60 * 1000);
     const profitOnly = amount * (roi / 100);
 
@@ -38,6 +40,25 @@ router.post("/", verifyToken, async (req, res) => {
     });
 
     await investment.save();
+
+    try {
+      await sendInvestmentCreatedEmail({
+        email: user.email,
+        username: user.username,
+        investmentName: investment.name,
+        amount: investment.amount,
+        roi: investment.roi,
+        expectedReturn: investment.expectedReturn,
+        startDate: investment.startDate,
+        endDate: investment.endDate,
+      });
+    } catch (err) {
+      console.error(
+        "Investment email failed:",
+        err
+      );
+    }
+
     res.status(201).json({ success: true, investment, balance: user.balance });
   } catch (err) {
     console.error("❌ Investment creation error:", err.message);

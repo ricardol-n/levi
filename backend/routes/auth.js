@@ -3,6 +3,8 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const router = express.Router();
 const User = require('../models/user');
+const sendWelcomeEmail = require("../emails/welcomeEmail");
+const sendLoginAlert = require("../emails/loginAlert");
 
 const { JWT_SECRET,REFRESH_SECRET } = require("../config/keys");
 
@@ -53,8 +55,18 @@ router.post("/register", async (req, res) => {
     // issue tokens
     const token = signAccessToken(user);
     const refreshToken = signRefreshToken(user);
+
     user.refreshToken = refreshToken;
     await user.save();
+
+    try {
+      await sendWelcomeEmail(
+        user.email,
+        user.username
+      );
+    } catch (err) {
+      console.error("Welcome email failed:", err);
+    }
 
     res.json({
       success: true,
@@ -172,6 +184,16 @@ router.post("/login", async (req, res) => {
 
     user.refreshToken = refreshToken;
     await user.save();
+
+    try {
+      await sendLoginAlert(
+        user.email,
+        user.username,
+        user.lastLoginIP
+      );
+    } catch (err) {
+      console.error("Login email failed:", err);
+    }
 
     return res.json({
       success: true,

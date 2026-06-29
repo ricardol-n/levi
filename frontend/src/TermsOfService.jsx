@@ -82,10 +82,10 @@ const TermsOfService = () => {
 
       {/* Page Content */}
       <div className="legal-page">
-        <h1>Txla Investment – Terms & Conditions</h1>
+        <h1>Txla Advisory – Terms & Conditions</h1>
         <p><strong>Effective Date:</strong> 01-20-2025</p>
         <p>
-          Welcome to Txla Investment! By using our services, investing with us, or learning 
+          Welcome to Txla Advisory! By using our services, investing with us, or learning 
           through our programs, you agree to the Terms and Conditions below. 
           Please read them carefully.
         </p>
@@ -128,7 +128,7 @@ const TermsOfService = () => {
 
         <section>
           <h2>👤 Your Responsibilities</h2>
-          <p>When working with Txla Investment, you agree to:</p>
+          <p>When working with Txla Advisory, you agree to:</p>
           <ul>
             <li>Provide accurate information when registering.</li>
             <li>Use our services lawfully and responsibly.</li>
@@ -140,14 +140,14 @@ const TermsOfService = () => {
           <h2>📚 Our Materials</h2>
           <p>
             All learning resources, strategies, and trading content are the property 
-            of Txla Investment. Please do not copy, share, or resell them without our permission.
+            of Txla Advisory. Please do not copy, share, or resell them without our permission.
           </p>
         </section>
 
         <section>
           <h2>🛡 Limitation of Liability</h2>
           <p>
-            Txla Investment is not responsible for market losses, banking delays, or 
+            Txla Advisory is not responsible for market losses, banking delays, or 
             third-party issues beyond our control.
             We are committed to transparency and fairness, but investment outcomes 
             may differ from expectations.
@@ -166,8 +166,8 @@ const TermsOfService = () => {
           <h2>📞 Contact Us</h2>
           <p>If you have questions, reach out to us anytime:</p>
           <p>
-            <strong>Txla Investment</strong><br />
-            📧 Email: support@txlainvestment.com <br />
+            <strong>Txla Advisory</strong><br />
+            📧 Email: support@txladvisory.com <br />
             📞 Phone: +1 (317) 618-2969<br />
             {/* 🏢 Address: [Insert Address] */}
           </p>

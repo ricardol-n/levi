@@ -5,6 +5,7 @@ const mongoose = require("mongoose");
 const User = require("../models/user");
 const Deposit = require("../models/Deposit");
 const WebhookLog = require("../models/WebhookLog");
+const sendDepositApprovedEmail = require("../emails/depositApproved");
 
 
 const router = express.Router();
@@ -94,35 +95,93 @@ router.post("/btcpay", async (req, res) => {
 
       if (event.type === "InvoiceSettled" || event.type === "InvoiceCompleted") {
       // 🔁 Prevent duplicate deposits
-      const existing = await Deposit.findOne({ txId });
-      if (existing) {
-        console.log("🔁 Duplicate invoice ignored:", txId);
-        await WebhookLog.findOneAndUpdate(
-          { invoiceId: invoice.id },
-          { status: "ignored", message: "Duplicate invoice ignored" }
-        );
-        return res.status(200).json({ success: true, message: "Already processed" });
-      }
 
-      // ✅ Save deposit
-      const newDeposit = new Deposit({
-        userId,
-        address: invoice.address,
-        amount: amountUsd,
-        currency: "USD",
-        txId,
-        status: "confirmed",
-        source: "btcpay",
-      });
-      await newDeposit.save();
+ // ==========================================
+// FIND THE EXISTING PENDING DEPOSIT
+// ==========================================
 
+const deposit = await Deposit.findOne({
+    txId,
+    userId,
+});
 
+if (!deposit) {
 
-      // ✅ Update balance
-      await User.findByIdAndUpdate(userId, { $inc: { balance: amountUsd } });
+    console.error("Pending deposit not found:", txId);
 
-      console.log(`✅ Deposit credited: $${amountUsd} USD → user ${userId}`);
+    return res.status(404).json({
+        success:false,
+        message:"Deposit record not found",
+    });
 
+}
+
+// Already processed
+
+if (deposit.status === "confirmed") {
+
+    console.log("Duplicate webhook ignored:", txId);
+
+    return res.status(200).json({
+        success:true,
+        message:"Already processed",
+    });
+
+}
+
+// ==========================================
+// CONFIRM THE DEPOSIT
+// ==========================================
+
+deposit.status = "confirmed";
+
+deposit.address = invoice.address || deposit.address;
+
+await deposit.save();
+
+// ==========================================
+// CREDIT USER BALANCE
+// ==========================================
+
+const user = await User.findByIdAndUpdate(
+
+    userId,
+
+    {
+        $inc:{
+            balance: amountUsd,
+        },
+    },
+
+    {
+        new:true,
+    }
+
+);
+
+// ==========================================
+// 📧 SEND DEPOSIT APPROVED EMAIL
+// ==========================================
+
+try {
+  await sendDepositApprovedEmail({
+    email: user.email,
+    username: user.username,
+    amount: amountUsd,
+    currency: "USD",
+    method: "Bitcoin",
+    balance: user.balance,
+  });
+
+  console.log(
+    `📧 Deposit approval email sent to ${user.email}`
+  );
+} catch (err) {
+  console.error(
+    "❌ Failed to send deposit approval email:",
+    err
+  );
+}
       // ==========================================
 // 🎁 REFERRAL BONUS SYSTEM
 // ==========================================
@@ -137,20 +196,21 @@ if (depositedUser?.referredBy) {
   if (referrer) {
 
     // 🛡 Check if already rewarded for this deposit
-    if (!newDeposit.referralRewardProcessed) {
+    if (!deposit.referralRewardProcessed) {
 
-      const BONUS_AMOUNT = 10; // 🔥 change anytime
+    const BONUS_AMOUNT = 10;
 
-      referrer.balance += BONUS_AMOUNT;
-      referrer.referralBonus += BONUS_AMOUNT;
+    referrer.balance += BONUS_AMOUNT;
 
-      await referrer.save();
+    referrer.referralBonus += BONUS_AMOUNT;
 
-      newDeposit.referralRewardProcessed = true;
-      await newDeposit.save();
+    await referrer.save();
 
-      console.log(`🎁 $${BONUS_AMOUNT} referral bonus credited to ${referrer._id}`);
-    }
+    deposit.referralRewardProcessed = true;
+
+    await deposit.save();
+
+}
   }
 }
       
