@@ -1,5 +1,5 @@
 const sendEmail = require("../utils/sendEmail");
-const layout=require("./layout");
+const layout = require("./layout");
 
 const sendDepositApprovedEmail = async ({
   email,
@@ -11,105 +11,146 @@ const sendDepositApprovedEmail = async ({
 }) => {
   const subject = "Deposit Approved • TXLA Advisory";
 
-  const html = `
-  <div style="font-family:Arial,sans-serif;background:#f4f7fb;padding:40px;">
-    <div style="max-width:650px;margin:auto;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,.08);">
+  const content = `
+    <p>
+      Hello <strong style="color:#ffffff;">${username}</strong>,
+    </p>
 
-      <div style="background:#0f172a;padding:30px;text-align:center;">
-        <h1 style="margin:0;color:#ffffff;">
-          TXLA Advisory
-        </h1>
+    <p>
+      Your recent deposit has been successfully reviewed and approved.
+      The funds have now been credited to your TXLA Advisory wallet.
+    </p>
 
-        <p style="margin-top:8px;color:#cbd5e1;">
-          Wealth Management & Investment Solutions
-        </p>
-      </div>
+    <table
+      width="100%"
+      cellpadding="0"
+      cellspacing="0"
+      style="
+        width:100%;
+        margin:30px 0;
+        border-collapse:collapse;
+        background:#0f172a;
+        border:1px solid #1e293b;
+        border-radius:10px;
+      "
+    >
 
-      <div style="padding:40px;">
+      <tr>
+        <td
+          style="
+            padding:14px;
+            border-bottom:1px solid #1e293b;
+            color:#94a3b8;
+          "
+        >
+          Deposit Amount
+        </td>
 
-        <h2 style="margin-top:0;color:#111827;">
-          Deposit Approved
-        </h2>
+        <td
+          style="
+            padding:14px;
+            border-bottom:1px solid #1e293b;
+            color:#F7D774;
+            font-weight:bold;
+            text-align:right;
+          "
+        >
+          ${currency} ${Number(amount).toLocaleString()}
+        </td>
+      </tr>
 
-        <p style="color:#475569;font-size:15px;">
-          Hello <strong>${username}</strong>,
-        </p>
+      <tr>
+        <td
+          style="
+            padding:14px;
+            border-bottom:1px solid #1e293b;
+            color:#94a3b8;
+          "
+        >
+          Payment Method
+        </td>
 
-        <p style="color:#475569;font-size:15px;line-height:1.8;">
-          Your recent deposit has been successfully reviewed and approved.
-          The funds have now been credited to your TXLA Advisory wallet.
-        </p>
+        <td
+          style="
+            padding:14px;
+            border-bottom:1px solid #1e293b;
+            color:#ffffff;
+            text-align:right;
+          "
+        >
+          ${method}
+        </td>
+      </tr>
 
-        <table style="width:100%;margin:30px 0;border-collapse:collapse;">
-          <tr>
-            <td style="padding:12px;border-bottom:1px solid #e5e7eb;">
-              Deposit Amount
-            </td>
+      <tr>
+        <td
+          style="
+            padding:14px;
+            color:#94a3b8;
+          "
+        >
+          Available Balance
+        </td>
 
-            <td style="padding:12px;border-bottom:1px solid #e5e7eb;font-weight:600;text-align:right;">
-              ${currency} ${Number(amount).toLocaleString()}
-            </td>
-          </tr>
+        <td
+          style="
+            padding:14px;
+            color:#22c55e;
+            font-weight:bold;
+            text-align:right;
+          "
+        >
+          ${currency} ${Number(balance).toLocaleString()}
+        </td>
+      </tr>
 
-          <tr>
-            <td style="padding:12px;border-bottom:1px solid #e5e7eb;">
-              Payment Method
-            </td>
+    </table>
 
-            <td style="padding:12px;border-bottom:1px solid #e5e7eb;text-align:right;">
-              ${method}
-            </td>
-          </tr>
+    <p style="text-align:center;margin-top:40px;">
 
-          <tr>
-            <td style="padding:12px;">
-              Available Balance
-            </td>
+      <a
+        href="https://txlaadvisory.com/dashboard"
+        style="
+          display:inline-block;
+          padding:16px 36px;
+          background:linear-gradient(
+            135deg,
+            #22c55e,
+            #16a34a
+          );
+          color:#ffffff;
+          text-decoration:none;
+          border-radius:10px;
+          font-weight:700;
+          font-size:15px;
+          box-shadow:0 8px 25px rgba(34,197,94,.25);
+        "
+      >
+        View Dashboard
+      </a>
 
-            <td style="padding:12px;font-weight:bold;color:#16a34a;text-align:right;">
-              ${currency} ${Number(balance).toLocaleString()}
-            </td>
-          </tr>
-        </table>
+    </p>
 
-        <div style="margin-top:30px;text-align:center;">
-
-          <a href="https://txlaadvisory.com/dashboard"
-             style="
-               display:inline-block;
-               padding:14px 28px;
-               background:#2563eb;
-               color:#ffffff;
-               text-decoration:none;
-               border-radius:8px;
-               font-weight:600;
-             ">
-             View Dashboard
-          </a>
-
-        </div>
-
-        <p style="margin-top:35px;color:#64748b;font-size:14px;line-height:1.8;">
-          Thank you for choosing TXLA Advisory.
-          We appreciate your confidence in our investment platform.
-        </p>
-
-      </div>
-
-      <div style="
-        background:#f8fafc;
-        padding:24px;
-        text-align:center;
-        font-size:13px;
+    <p
+      style="
+        margin-top:35px;
         color:#94a3b8;
-      ">
-        © ${new Date().getFullYear()} TXLA Advisory.
-        All Rights Reserved.
-      </div>
-
-    </div>
-  </div>
+        font-size:14px;
+        line-height:1.8;
+      "
+    >
+      Thank you for choosing TXLA Advisory.
+      We appreciate your confidence in our investment platform.
+    </p>
   `;
+
+  const html = layout({
+    title: subject,
+    heading: "Deposit Approved",
+    content,
+    buttonText: null,
+    buttonUrl: null,
+  });
 
   await sendEmail(email, subject, html);
 };

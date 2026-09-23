@@ -3,7 +3,7 @@ const mongoose = require("mongoose");
 const depositSchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
   amount: { type: Number, required: true },
-  currency: { type: String, default: "BTC" },
+  currency: { type: String, default: "USD" },
   txId: { type: String, required: true },
   checkoutUrl: { type: String }, // ✅ add this
   status: { type: String, enum: ["pending", "confirmed", "failed"], default: "pending" },

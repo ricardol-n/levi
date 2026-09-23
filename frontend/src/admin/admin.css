@@ -1,0 +1,2099 @@
+/* =========================================================
+   FINOVA PREMIUM ADMIN
+   Responsive fintech admin console
+   ========================================================= */
+
+:root {
+  --finova-bg: #07111f;
+  --finova-sidebar: #091827;
+  --finova-sidebar-deep: #06121f;
+  --finova-card: #0d1d30;
+
+  --finova-blue: #36a9ff;
+  --finova-blue-light: #69c5ff;
+  --finova-green: #35d49b;
+  --finova-warning: #f4b860;
+  --finova-danger: #ff7185;
+
+  --finova-text: #f4f8fc;
+  --finova-text-soft: #dbe7f1;
+  --finova-muted: #71869b;
+  --finova-muted-dark: #536a82;
+
+  --finova-border: rgba(255, 255, 255, 0.07);
+
+  --finova-radius-sm: 10px;
+  --finova-radius-md: 14px;
+  --finova-radius-lg: 18px;
+
+  --finova-shadow:
+    0 20px 55px rgba(0, 0, 0, 0.14);
+
+  --finova-sidebar-width: 250px;
+}
+
+/* =========================================================
+   GLOBAL
+   ========================================================= */
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  min-height: 100%;
+}
+
+body {
+  font-family:
+    Inter,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+
+  color: var(--finova-text);
+
+  background:
+    radial-gradient(
+      circle at 15% 10%,
+      rgba(54, 169, 255, 0.09),
+      transparent 30%
+    ),
+    radial-gradient(
+      circle at 90% 90%,
+      rgba(65, 91, 210, 0.08),
+      transparent 30%
+    ),
+    var(--finova-bg);
+}
+
+#root {
+  width: 100%;
+  min-height: 100vh;
+}
+
+/* =========================================================
+   REACT ADMIN LAYOUT
+   IMPORTANT:
+   Do NOT use width: 100% on content/main here.
+   React Admin must be allowed to calculate the remaining
+   space after the sidebar.
+   ========================================================= */
+
+.RaLayout-root {
+  width: 100%;
+  min-width: 0;
+  min-height: 100vh;
+
+  background:
+    radial-gradient(
+      circle at 20% 0%,
+      rgba(54, 169, 255, 0.07),
+      transparent 30%
+    ),
+    var(--finova-bg) !important;
+
+  overflow-x: hidden;
+}
+
+.RaLayout-content {
+  min-width: 0 !important;
+  width: auto !important;
+  max-width: none !important;
+
+  flex: 1 1 auto !important;
+
+  background: transparent !important;
+
+  box-sizing: border-box;
+  overflow-x: hidden;
+}
+
+.RaLayout-main {
+  min-width: 0 !important;
+  width: auto !important;
+  max-width: 100% !important;
+
+  flex: 1 1 auto !important;
+
+  background: transparent !important;
+
+  box-sizing: border-box;
+  overflow-x: hidden;
+}
+
+/* =========================================================
+   SIDEBAR
+   ========================================================= */
+
+.RaSidebar-root {
+  background: var(--finova-sidebar) !important;
+
+  border-right:
+    1px solid var(--finova-border) !important;
+
+  box-shadow:
+    15px 0 50px rgba(0, 0, 0, 0.18);
+
+  box-sizing: border-box;
+}
+
+.RaSidebar-drawerPaper {
+  background:
+    linear-gradient(
+      180deg,
+      #0a1929 0%,
+      #071522 100%
+    ) !important;
+
+  border: none !important;
+}
+
+/* =========================================================
+   PREMIUM MENU
+   ========================================================= */
+
+.premium-menu-wrapper {
+  min-height: 100vh;
+  height: 100%;
+
+  box-sizing: border-box;
+
+  display: flex;
+  flex-direction: column;
+
+  padding: 22px 13px;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(10, 25, 41, 0.98),
+      rgba(5, 16, 28, 0.98)
+    );
+}
+
+/* =========================================================
+   BRAND
+   ========================================================= */
+
+.premium-brand {
+  display: flex;
+  align-items: center;
+
+  gap: 12px;
+
+  padding:
+    5px
+    9px
+    25px;
+}
+
+.premium-logo {
+  width: 42px;
+  height: 42px;
+
+  flex-shrink: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 13px;
+
+  color: white;
+
+  font-size: 20px;
+  font-weight: 800;
+
+  background:
+    linear-gradient(
+      135deg,
+      #69c5ff,
+      #1689dc
+    );
+
+  box-shadow:
+    0 9px 28px
+    rgba(54, 169, 255, 0.25);
+}
+
+.premium-brand-text {
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 2px;
+}
+
+.premium-brand-text strong {
+  color: white;
+
+  font-size: 17px;
+  font-weight: 800;
+
+  letter-spacing: 1.5px;
+}
+
+.premium-brand-text span {
+  color: #61758c;
+
+  font-size: 8px;
+
+  letter-spacing: 1.7px;
+}
+
+/* =========================================================
+   PROFILE
+   ========================================================= */
+
+.premium-profile {
+  display: flex;
+  align-items: center;
+
+  gap: 10px;
+
+  margin:
+    0
+    4px
+    25px;
+
+  padding: 12px;
+
+  border:
+    1px solid var(--finova-border);
+
+  border-radius: 15px;
+
+  background:
+    rgba(255, 255, 255, 0.025);
+
+  box-sizing: border-box;
+}
+
+.premium-avatar {
+  width: 37px;
+  height: 37px;
+
+  flex-shrink: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 11px;
+
+  color: var(--finova-blue-light);
+
+  background:
+    rgba(54, 169, 255, 0.11);
+
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.premium-profile-text {
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 3px;
+}
+
+.premium-profile-text strong {
+  max-width: 135px;
+
+  overflow: hidden;
+
+  color: #edf5fb;
+
+  font-size: 12px;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.premium-profile-text span {
+  color: #657b91;
+  font-size: 9px;
+}
+
+.premium-online {
+  width: 7px;
+  height: 7px;
+
+  flex-shrink: 0;
+
+  margin-left: auto;
+
+  border-radius: 50%;
+
+  background: var(--finova-green);
+
+  box-shadow:
+    0 0 0 4px
+      rgba(53, 212, 155, 0.07),
+    0 0 12px
+      rgba(53, 212, 155, 0.4);
+}
+
+/* =========================================================
+   SECTION LABELS
+   ========================================================= */
+
+.premium-section-title {
+  padding:
+    0
+    12px
+    9px;
+
+  color: var(--finova-muted-dark);
+
+  font-size: 8px;
+  font-weight: 800;
+
+  letter-spacing: 1.7px;
+}
+
+.premium-admin-section {
+  margin-top: 22px;
+}
+
+/* =========================================================
+   MENU LINKS
+   ========================================================= */
+
+.premium-menu-wrapper
+  .MuiListItemButton-root {
+  min-height: 46px;
+
+  margin: 3px 0;
+
+  padding:
+    0
+    13px;
+
+  box-sizing: border-box;
+
+  border-radius: 12px;
+
+  color: #8ea2b7;
+
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.premium-menu-wrapper
+  .MuiListItemButton-root:hover {
+  color: white;
+
+  background:
+    rgba(54, 169, 255, 0.065);
+}
+
+.premium-menu-wrapper
+  .MuiListItemButton-root.Mui-selected {
+  color: white;
+
+  background:
+    linear-gradient(
+      90deg,
+      rgba(54, 169, 255, 0.17),
+      rgba(54, 169, 255, 0.035)
+    );
+
+  box-shadow:
+    inset
+    3px
+    0
+    0
+    var(--finova-blue);
+}
+
+.premium-menu-wrapper
+  .MuiListItemButton-root:active {
+  transform: scale(0.985);
+}
+
+.premium-menu-wrapper
+  .MuiListItemIcon-root {
+  min-width: 39px;
+
+  color: inherit;
+}
+
+/* =========================================================
+   SECURITY CARD
+   ========================================================= */
+
+.premium-security {
+  margin-top: auto;
+
+  display: flex;
+  align-items: center;
+
+  gap: 9px;
+
+  padding: 12px;
+
+  border-radius: 14px;
+
+  border:
+    1px solid
+    rgba(53, 212, 155, 0.09);
+
+  background:
+    rgba(53, 212, 155, 0.035);
+}
+
+.premium-security-icon {
+  width: 30px;
+  height: 30px;
+
+  flex-shrink: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 9px;
+
+  color: var(--finova-green);
+
+  background:
+    rgba(53, 212, 155, 0.08);
+
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.premium-security div:last-child {
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 2px;
+}
+
+.premium-security strong {
+  color: #dceaf4;
+  font-size: 9px;
+}
+
+.premium-security span {
+  color: #60758b;
+
+  font-size: 7px;
+
+  line-height: 1.4;
+}
+
+/* =========================================================
+   APP BAR
+   ========================================================= */
+
+.RaAppBar-root {
+  min-height: 70px !important;
+
+  padding:
+    10px
+    22px !important;
+
+  background: transparent !important;
+
+  box-shadow: none !important;
+
+  box-sizing: border-box;
+}
+
+.RaAppBar-toolbar {
+  min-height: 52px !important;
+
+  padding:
+    0
+    16px !important;
+
+  border:
+    1px solid var(--finova-border);
+
+  border-radius: 15px;
+
+  background:
+    rgba(10, 25, 41, 0.72);
+
+  backdrop-filter: blur(20px);
+
+  box-sizing: border-box;
+}
+
+/* =========================================================
+   APP BAR RIGHT
+   ========================================================= */
+
+.premium-appbar-right {
+  display: flex;
+  align-items: center;
+
+  gap: 18px;
+
+  margin-left: auto;
+
+  min-width: 0;
+}
+
+.premium-system-status {
+  display: flex;
+  align-items: center;
+
+  gap: 7px;
+
+  color: #71869b;
+
+  font-size: 10px;
+
+  white-space: nowrap;
+}
+
+.premium-system-status span {
+  width: 6px;
+  height: 6px;
+
+  flex-shrink: 0;
+
+  border-radius: 50%;
+
+  background: var(--finova-green);
+
+  box-shadow:
+    0 0 10px
+    rgba(53, 212, 155, 0.55);
+}
+
+/* =========================================================
+   ADMIN CARDS
+   ========================================================= */
+
+.RaLayout-root .MuiPaper-root {
+  color: var(--finova-text) !important;
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(15, 32, 51, 0.88),
+      rgba(9, 22, 37, 0.88)
+    ) !important;
+
+  border:
+    1px solid var(--finova-border);
+
+  border-radius:
+    var(--finova-radius-lg) !important;
+
+  box-shadow:
+    var(--finova-shadow) !important;
+}
+
+/* =========================================================
+   DASHBOARD
+   ========================================================= */
+
+.admin-dashboard {
+  width: 100%;
+  max-width: 1500px;
+
+  min-width: 0;
+
+  margin: 0 auto;
+
+  padding:
+    20px
+    32px
+    40px;
+
+  box-sizing: border-box;
+
+  overflow-x: hidden;
+}
+
+/* =========================================================
+   DASHBOARD HEADER
+   ========================================================= */
+
+.admin-dashboard-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 20px;
+
+  width: 100%;
+  min-width: 0;
+
+  margin-bottom: 26px;
+}
+
+.admin-dashboard-heading {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.admin-dashboard-title {
+  margin: 0 !important;
+
+  color: var(--finova-text) !important;
+
+  font-size: 30px !important;
+  font-weight: 800 !important;
+
+  line-height: 1.15 !important;
+
+  letter-spacing: -0.5px !important;
+}
+
+.admin-dashboard-subtitle {
+  margin-top: 8px !important;
+
+  color: var(--finova-muted) !important;
+
+  font-size: 12px !important;
+
+  line-height: 1.5 !important;
+}
+
+/* =========================================================
+   DASHBOARD GRID
+   ========================================================= */
+
+.admin-stat-grid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(4, minmax(0, 1fr));
+
+  gap: 20px;
+
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+
+  margin: 0;
+
+  box-sizing: border-box;
+}
+
+/* =========================================================
+   STAT CARDS
+   ========================================================= */
+
+.admin-stat-card {
+  position: relative;
+
+  width: 100%;
+  min-width: 0;
+
+  min-height: 150px;
+
+  overflow: hidden;
+
+  box-sizing: border-box;
+
+  border:
+    1px solid
+    rgba(255, 255, 255, 0.07) !important;
+
+  border-radius:
+    var(--finova-radius-lg) !important;
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(15, 32, 51, 0.97),
+      rgba(8, 20, 34, 0.97)
+    ) !important;
+
+  box-shadow:
+    0 18px 45px
+    rgba(0, 0, 0, 0.16) !important;
+
+  transition:
+    transform 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.admin-stat-card::before {
+  content: "";
+
+  position: absolute;
+
+  top: 0;
+  left: 0;
+
+  width: 100%;
+  height: 2px;
+
+  background:
+    linear-gradient(
+      90deg,
+      rgba(54, 169, 255, 0.8),
+      transparent
+    );
+
+  pointer-events: none;
+}
+
+.admin-stat-card::after {
+  content: "";
+
+  position: absolute;
+
+  width: 170px;
+  height: 170px;
+
+  right: -90px;
+  bottom: -100px;
+
+  border-radius: 50%;
+
+  background:
+    rgba(54, 169, 255, 0.055);
+
+  pointer-events: none;
+}
+
+.admin-stat-card:hover {
+  transform: translateY(-3px);
+
+  border-color:
+    rgba(54, 169, 255, 0.17) !important;
+
+  box-shadow:
+    0 24px 55px
+    rgba(0, 0, 0, 0.23) !important;
+}
+
+/* =========================================================
+   STAT CARD CONTENT
+   ========================================================= */
+
+.admin-stat-card .MuiCardContent-root {
+  position: relative;
+  z-index: 2;
+
+  height: 100%;
+
+  box-sizing: border-box;
+
+  padding: 22px !important;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.admin-stat-label {
+  margin: 0 !important;
+
+  color: var(--finova-muted) !important;
+
+  font-size: 10px !important;
+  font-weight: 700 !important;
+
+  letter-spacing: 1px !important;
+
+  line-height: 1.3 !important;
+
+  text-transform: uppercase;
+}
+
+.admin-stat-value {
+  margin-top: 10px !important;
+
+  color: var(--finova-text) !important;
+
+  font-size: 31px !important;
+  font-weight: 800 !important;
+
+  letter-spacing: -0.8px !important;
+
+  line-height: 1 !important;
+
+  max-width: 100%;
+
+  overflow: hidden;
+
+  text-overflow: ellipsis;
+
+  white-space: nowrap;
+}
+
+/* =========================================================
+   STAT ICON
+   ========================================================= */
+
+.admin-stat-icon {
+  position: absolute;
+
+  top: 20px;
+  right: 20px;
+
+  width: 36px;
+  height: 36px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 11px;
+
+  color: var(--finova-blue-light);
+
+  background:
+    rgba(54, 169, 255, 0.09);
+
+  border:
+    1px solid
+    rgba(54, 169, 255, 0.10);
+
+  font-size: 13px;
+  font-weight: 800;
+}
+
+/* =========================================================
+   CARD ACCENTS
+   ========================================================= */
+
+.admin-stat-card.users::before {
+  background:
+    linear-gradient(
+      90deg,
+      #36a9ff,
+      transparent
+    );
+}
+
+.admin-stat-card.withdrawals::before {
+  background:
+    linear-gradient(
+      90deg,
+      #8b9cff,
+      transparent
+    );
+}
+
+.admin-stat-card.pending::before {
+  background:
+    linear-gradient(
+      90deg,
+      #f4b860,
+      transparent
+    );
+}
+
+.admin-stat-card.investments::before {
+  background:
+    linear-gradient(
+      90deg,
+      #35d49b,
+      transparent
+    );
+}
+
+/* =========================================================
+   ALERT
+   ========================================================= */
+
+.admin-dashboard-alert {
+  width: 100%;
+
+  margin-bottom: 22px !important;
+
+  border-radius: 14px !important;
+
+  font-size: 12px !important;
+
+  box-sizing: border-box;
+}
+
+/* =========================================================
+   LOADING
+   ========================================================= */
+
+.admin-dashboard-loading {
+  width: 100%;
+
+  min-height: 320px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 30px;
+
+  box-sizing: border-box;
+}
+
+/* =========================================================
+   TABLES
+   ========================================================= */
+
+.RaDatagrid-root {
+  width: 100%;
+
+  max-width: 100%;
+
+  overflow-x: auto;
+
+  -webkit-overflow-scrolling: touch;
+}
+
+.RaDatagrid-table {
+  min-width: 900px;
+}
+
+.RaDatagrid-headerCell {
+  color: #71869d !important;
+
+  background:
+    rgba(255, 255, 255, 0.018) !important;
+
+  font-size: 9px !important;
+  font-weight: 800 !important;
+
+  letter-spacing: 0.8px;
+
+  text-transform: uppercase;
+
+  white-space: nowrap;
+}
+
+.RaDatagrid-rowCell {
+  color: var(--finova-text-soft) !important;
+
+  border-bottom:
+    1px solid
+    rgba(255, 255, 255, 0.045) !important;
+
+  font-size: 12px;
+
+  white-space: nowrap;
+}
+
+.RaDatagrid-row:hover {
+  background:
+    rgba(54, 169, 255, 0.035) !important;
+}
+
+/* =========================================================
+   LIST PAGES
+   ========================================================= */
+
+.RaList-main {
+  min-width: 0;
+
+  box-sizing: border-box;
+}
+
+.RaList-content {
+  min-width: 0;
+
+  max-width: 100%;
+
+  box-sizing: border-box;
+}
+
+.RaList-actions {
+  display: flex;
+
+  flex-wrap: wrap;
+
+  gap: 8px;
+}
+
+/* =========================================================
+   INPUTS
+   ========================================================= */
+
+.RaLayout-root
+  .MuiOutlinedInput-root {
+  color: white !important;
+
+  background:
+    rgba(255, 255, 255, 0.025) !important;
+
+  border-radius:
+    var(--finova-radius-sm) !important;
+}
+
+.RaLayout-root
+  .MuiOutlinedInput-notchedOutline {
+  border-color:
+    rgba(255, 255, 255, 0.08) !important;
+}
+
+.RaLayout-root
+  .MuiOutlinedInput-root:hover
+  .MuiOutlinedInput-notchedOutline {
+  border-color:
+    rgba(54, 169, 255, 0.25) !important;
+}
+
+.RaLayout-root
+  .MuiOutlinedInput-root.Mui-focused
+  .MuiOutlinedInput-notchedOutline {
+  border-color:
+    var(--finova-blue) !important;
+}
+
+/* =========================================================
+   BUTTONS
+   ========================================================= */
+
+.RaLayout-root
+  .MuiButton-root {
+  min-height: 38px;
+
+  border-radius:
+    var(--finova-radius-sm) !important;
+
+  text-transform: none !important;
+
+  font-weight: 600 !important;
+}
+
+.RaLayout-root
+  .MuiButton-containedPrimary {
+  color: white !important;
+
+  background:
+    linear-gradient(
+      135deg,
+      #69c5ff,
+      #1689dc
+    ) !important;
+
+  box-shadow:
+    0 8px 22px
+    rgba(54, 169, 255, 0.18) !important;
+}
+
+/* =========================================================
+   CHIPS
+   ========================================================= */
+
+.RaLayout-root
+  .MuiChip-root {
+  border-radius: 8px !important;
+
+  color:
+    var(--finova-blue-light) !important;
+
+  background:
+    rgba(54, 169, 255, 0.08) !important;
+
+  border:
+    1px solid
+    rgba(54, 169, 255, 0.12);
+}
+
+/* =========================================================
+   USER TOP-UP
+   ========================================================= */
+
+.user-topup {
+  display: flex;
+  align-items: center;
+
+  gap: 6px;
+
+  flex-wrap: nowrap;
+}
+
+.premium-amount-input {
+  width: 85px;
+  height: 34px;
+
+  box-sizing: border-box;
+
+  padding:
+    0
+    9px;
+
+  border:
+    1px solid
+    rgba(255, 255, 255, 0.08);
+
+  border-radius: 9px;
+
+  outline: none;
+
+  background:
+    rgba(255, 255, 255, 0.035);
+
+  color: white;
+
+  font-size: 11px;
+}
+
+.premium-amount-input:focus {
+  border-color:
+    rgba(54, 169, 255, 0.5);
+
+  box-shadow:
+    0 0 0 3px
+    rgba(54, 169, 255, 0.07);
+}
+
+.premium-amount-input::placeholder {
+  color: #60758b;
+}
+
+/* =========================================================
+   ADMIN ASSIGNMENT
+   ========================================================= */
+
+.assign-admin-control {
+  display: flex;
+  align-items: center;
+
+  gap: 6px;
+
+  flex-wrap: nowrap;
+}
+
+.premium-select {
+  min-width: 125px;
+  height: 35px;
+
+  box-sizing: border-box;
+
+  padding:
+    0
+    8px;
+
+  border:
+    1px solid
+    rgba(255, 255, 255, 0.08);
+
+  border-radius: 9px;
+
+  outline: none;
+
+  color: #eaf4fc;
+
+  background: #0d1d30;
+
+  font-size: 10px;
+
+  cursor: pointer;
+}
+
+.premium-select:focus {
+  border-color:
+    rgba(54, 169, 255, 0.5);
+}
+
+/* =========================================================
+   ASSIGNMENT STATUS
+   ========================================================= */
+
+.premium-assigned {
+  display: inline-flex;
+  align-items: center;
+
+  padding:
+    5px
+    9px;
+
+  border-radius: 7px;
+
+  color: #75c9ff;
+
+  background:
+    rgba(54, 169, 255, 0.08);
+
+  border:
+    1px solid
+    rgba(54, 169, 255, 0.1);
+
+  font-size: 10px;
+
+  white-space: nowrap;
+}
+
+.premium-unassigned {
+  color: #62778d;
+
+  font-size: 10px;
+
+  white-space: nowrap;
+}
+
+.premium-muted {
+  color: #596d82;
+}
+
+/* =========================================================
+   SCROLLBAR
+   ========================================================= */
+
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1c3046;
+
+  border-radius: 20px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #2a4865;
+}
+
+/* =========================================================
+   LARGE TABLET / LAPTOP
+   ========================================================= */
+
+@media (max-width: 1100px) {
+  .admin-dashboard {
+    padding:
+      20px
+      24px
+      32px;
+  }
+
+  .admin-dashboard-title {
+    font-size: 27px !important;
+  }
+
+  .admin-stat-grid {
+    gap: 16px;
+  }
+
+  .admin-stat-card {
+    min-height: 140px;
+  }
+
+  .admin-stat-card .MuiCardContent-root {
+    padding: 19px !important;
+  }
+
+  .admin-stat-value {
+    font-size: 28px !important;
+  }
+
+  .RaList-main {
+    padding:
+      10px
+      12px !important;
+  }
+
+  .RaDatagrid-table {
+    min-width: 820px;
+  }
+}
+
+/* =========================================================
+   TABLET
+   ========================================================= */
+
+@media (max-width: 900px) {
+  .admin-dashboard {
+    padding:
+      20px
+      20px
+      30px;
+  }
+
+  .admin-stat-grid {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+
+    gap: 16px;
+  }
+
+  .admin-dashboard-header {
+    margin-bottom: 22px;
+  }
+}
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 700px) {
+  .admin-dashboard {
+    width: 100%;
+
+    padding:
+      18px
+      14px
+      28px;
+  }
+
+  .admin-dashboard-header {
+    align-items: flex-start;
+
+    flex-direction: column;
+
+    gap: 4px;
+
+    margin-bottom: 18px;
+  }
+
+  .admin-dashboard-title {
+    font-size: 24px !important;
+
+    letter-spacing:
+      -0.3px !important;
+  }
+
+  .admin-dashboard-subtitle {
+    font-size: 10px !important;
+  }
+
+  .admin-stat-grid {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+
+    gap: 12px;
+  }
+
+  .admin-stat-card {
+    min-height: 125px;
+
+    border-radius:
+      15px !important;
+  }
+
+  .admin-stat-card .MuiCardContent-root {
+    padding: 18px !important;
+  }
+
+  .admin-stat-label {
+    font-size: 9px !important;
+
+    letter-spacing:
+      0.8px !important;
+  }
+
+  .admin-stat-value {
+    margin-top: 8px !important;
+
+    font-size: 26px !important;
+  }
+
+  .admin-stat-icon {
+    top: 17px;
+    right: 17px;
+
+    width: 32px;
+    height: 32px;
+
+    border-radius: 9px;
+
+    font-size: 12px;
+  }
+
+  .admin-dashboard-alert {
+    margin-bottom: 16px !important;
+
+    border-radius: 12px !important;
+
+    font-size: 10px !important;
+  }
+
+  /* APP BAR */
+
+  .premium-system-status {
+    display: none;
+  }
+
+  .RaAppBar-root {
+    min-height: 60px !important;
+
+    padding:
+      7px
+      8px !important;
+  }
+
+  .RaAppBar-toolbar {
+    min-height: 46px !important;
+
+    padding:
+      0
+      10px !important;
+
+    border-radius: 12px;
+  }
+
+  .premium-appbar-right {
+    gap: 8px;
+  }
+
+  /* LIST */
+
+  .RaList-main {
+    width: 100%;
+
+    box-sizing: border-box;
+
+    padding: 8px !important;
+  }
+
+  /* TABLE */
+
+  .RaDatagrid-root {
+    width: 100%;
+
+    max-width: 100%;
+
+    overflow-x: auto;
+
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .RaDatagrid-table {
+    min-width: 760px;
+  }
+
+  .RaDatagrid-rowCell {
+    font-size: 11px;
+  }
+
+  .RaDatagrid-headerCell {
+    font-size: 8px !important;
+  }
+
+  /* FORMS */
+
+  .user-topup,
+  .assign-admin-control {
+    flex-direction: column;
+
+    align-items: stretch;
+
+    gap: 6px;
+  }
+
+  .premium-amount-input {
+    width: 78px;
+  }
+
+  .premium-select {
+    min-width: 120px;
+  }
+
+  /* CARDS */
+
+  .RaLayout-root
+    .MuiPaper-root {
+    border-radius:
+      14px !important;
+  }
+}
+
+/* =========================================================
+   SMALL PHONES
+   ========================================================= */
+
+@media (max-width: 480px) {
+  .admin-dashboard {
+    padding:
+      15px
+      10px
+      24px;
+  }
+
+  .admin-dashboard-title {
+    font-size: 21px !important;
+  }
+
+  .admin-dashboard-subtitle {
+    font-size: 9px !important;
+  }
+
+  .admin-stat-grid {
+    gap: 10px;
+  }
+
+  .admin-stat-card {
+    min-height: 112px;
+
+    border-radius:
+      13px !important;
+  }
+
+  .admin-stat-card .MuiCardContent-root {
+    padding: 15px !important;
+  }
+
+  .admin-stat-label {
+    font-size: 8px !important;
+  }
+
+  .admin-stat-value {
+    font-size: 23px !important;
+  }
+
+  .admin-stat-icon {
+    top: 14px;
+    right: 14px;
+
+    width: 29px;
+    height: 29px;
+
+    border-radius: 8px;
+
+    font-size: 11px;
+  }
+
+  /* SIDEBAR */
+
+  .premium-brand-text {
+    display: none;
+  }
+
+  .premium-brand {
+    justify-content: center;
+  }
+
+  .premium-profile-text {
+    display: none;
+  }
+
+  .premium-profile {
+    justify-content: center;
+  }
+
+  .premium-online {
+    display: none;
+  }
+
+  .premium-menu-wrapper {
+    padding:
+      15px
+      8px;
+  }
+
+  .premium-section-title {
+    padding-left: 9px;
+
+    font-size: 7px;
+  }
+
+  .premium-menu-wrapper
+    .MuiListItemButton-root {
+    min-height: 43px;
+
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+
+  /* APP BAR */
+
+  .RaAppBar-toolbar {
+    padding:
+      0
+      8px !important;
+  }
+}
+
+/* =========================================================
+   VERY SMALL PHONES
+   ========================================================= */
+
+@media (max-width: 360px) {
+  .admin-dashboard {
+    padding:
+      12px
+      8px
+      20px;
+  }
+
+  .admin-stat-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-dashboard-title {
+    font-size: 19px !important;
+  }
+
+  .admin-stat-card {
+    min-height: 105px;
+  }
+
+  .admin-stat-value {
+    font-size: 21px !important;
+  }
+
+  .admin-stat-label {
+    max-width: 130px;
+  }
+
+  .admin-stat-icon {
+    width: 26px;
+    height: 26px;
+
+    top: 12px;
+    right: 12px;
+  }
+
+  .premium-logo {
+    width: 38px;
+    height: 38px;
+  }
+}
+
+/* =========================================================
+   TOUCH DEVICES
+   ========================================================= */
+
+@media (hover: none) {
+  .premium-menu-wrapper
+    .MuiListItemButton-root:hover {
+    background: transparent;
+  }
+
+  .premium-menu-wrapper
+    .MuiListItemButton-root:active {
+    background:
+      rgba(54, 169, 255, 0.1);
+  }
+
+  .admin-stat-card:hover {
+    transform: none;
+
+    border-color:
+      rgba(255, 255, 255, 0.07) !important;
+
+    box-shadow:
+      0 18px 45px
+      rgba(0, 0, 0, 0.16) !important;
+  }
+}
+
+/* =========================================================
+   REDUCE MOTION
+   ========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration:
+      0.01ms !important;
+
+    animation-iteration-count:
+      1 !important;
+
+    transition-duration:
+      0.01ms !important;
+
+    scroll-behavior:
+      auto !important;
+  }
+
+  .admin-stat-card:hover {
+    transform: none;
+  }
+}
+
+/* =========================================================
+   RESPONSIVE USER / ADMIN / WITHDRAWAL LISTS
+   ========================================================= */
+
+/* ---------------------------------------------------------
+   SHARED LIST CONTAINER
+   --------------------------------------------------------- */
+
+.admin-users-list,
+.admin-admins-list,
+.admin-withdrawals-list {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+/* React Admin content must stay inside available width */
+.admin-users-list .RaList-main,
+.admin-admins-list .RaList-main,
+.admin-withdrawals-list .RaList-main {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+/* Paper/card surrounding the table */
+.admin-users-list .MuiPaper-root,
+.admin-admins-list .MuiPaper-root,
+.admin-withdrawals-list .MuiPaper-root {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+/* ---------------------------------------------------------
+   TABLE SCROLL AREA
+   --------------------------------------------------------- */
+
+.admin-users-list .MuiTableContainer-root,
+.admin-admins-list .MuiTableContainer-root,
+.admin-withdrawals-list .MuiTableContainer-root {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+
+  overflow-x: auto !important;
+  overflow-y: hidden;
+
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+
+/* ---------------------------------------------------------
+   USERS TABLE
+   --------------------------------------------------------- */
+
+.admin-users-list table {
+  width: 100%;
+  min-width: 1050px;
+  table-layout: auto;
+}
+
+.admin-users-list th,
+.admin-users-list td {
+  white-space: nowrap;
+}
+
+.admin-users-list td {
+  max-width: 280px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Top-up controls */
+.admin-users-list .user-topup {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 150px;
+}
+
+.admin-users-list .premium-amount-input {
+  width: 85px;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.admin-users-list .assign-admin-control {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 190px;
+}
+
+.admin-users-list .premium-select {
+  width: 130px;
+  min-width: 0;
+  max-width: 130px;
+}
+
+/* ---------------------------------------------------------
+   ADMINS TABLE
+   --------------------------------------------------------- */
+
+.admin-admins-list table {
+  width: 100%;
+  min-width: 650px;
+}
+
+.admin-admins-list th,
+.admin-admins-list td {
+  white-space: nowrap;
+}
+
+/* ---------------------------------------------------------
+   WITHDRAWALS TABLE
+   --------------------------------------------------------- */
+
+.admin-withdrawals-list table {
+  width: 100%;
+  min-width: 700px;
+}
+
+.admin-withdrawals-list th,
+.admin-withdrawals-list td {
+  white-space: nowrap;
+}
+
+/* Keep action buttons on one line */
+.admin-withdrawals-list .MuiButton-root {
+  white-space: nowrap;
+}
+
+/* ---------------------------------------------------------
+   TABLE CELLS
+   --------------------------------------------------------- */
+
+.admin-users-list .MuiTableCell-root,
+.admin-admins-list .MuiTableCell-root,
+.admin-withdrawals-list .MuiTableCell-root {
+  box-sizing: border-box;
+}
+
+/* ---------------------------------------------------------
+   TABLET
+   --------------------------------------------------------- */
+
+@media (max-width: 1100px) {
+
+  .admin-users-list table {
+    min-width: 1000px;
+  }
+
+  .admin-admins-list table {
+    min-width: 620px;
+  }
+
+  .admin-withdrawals-list table {
+    min-width: 680px;
+  }
+
+  .admin-users-list th,
+  .admin-users-list td,
+  .admin-admins-list th,
+  .admin-admins-list td,
+  .admin-withdrawals-list th,
+  .admin-withdrawals-list td {
+    padding: 9px 10px !important;
+    font-size: 13px;
+  }
+}
+
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 700px) {
+
+  /* Never allow the list itself to push the layout */
+  .admin-users-list,
+  .admin-admins-list,
+  .admin-withdrawals-list {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  .admin-users-list .MuiPaper-root,
+  .admin-admins-list .MuiPaper-root,
+  .admin-withdrawals-list .MuiPaper-root {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  /* -------------------------------------------------------
+     USERS
+     ------------------------------------------------------- */
+
+  .admin-users-list .MuiTableContainer-root {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto !important;
+  }
+
+  .admin-users-list table {
+    min-width: 950px;
+  }
+
+  .admin-users-list th,
+  .admin-users-list td {
+    padding: 8px 9px !important;
+    font-size: 12px;
+  }
+
+  .admin-users-list .user-topup {
+    min-width: 145px;
+  }
+
+  .admin-users-list .assign-admin-control {
+    min-width: 175px;
+  }
+
+  .admin-users-list .premium-select {
+    width: 115px;
+    max-width: 115px;
+  }
+
+
+  /* -------------------------------------------------------
+     ADMINS
+     ------------------------------------------------------- */
+
+  .admin-admins-list .MuiTableContainer-root {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto !important;
+  }
+
+  .admin-admins-list table {
+    min-width: 600px;
+  }
+
+  .admin-admins-list th,
+  .admin-admins-list td {
+    padding: 9px !important;
+    font-size: 12px;
+  }
+
+
+  /* -------------------------------------------------------
+     WITHDRAWALS
+     ------------------------------------------------------- */
+
+  .admin-withdrawals-list .MuiTableContainer-root {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto !important;
+  }
+
+  .admin-withdrawals-list table {
+    min-width: 650px;
+  }
+
+  .admin-withdrawals-list th,
+  .admin-withdrawals-list td {
+    padding: 9px !important;
+    font-size: 12px;
+  }
+
+  .admin-withdrawals-list .MuiButton-root {
+    min-width: max-content;
+    white-space: nowrap;
+    font-size: 12px;
+  }
+}
+
+
+/* =========================================================
+   SMALL PHONES
+   ========================================================= */
+
+@media (max-width: 480px) {
+
+  .admin-users-list table {
+    min-width: 900px;
+  }
+
+  .admin-admins-list table {
+    min-width: 560px;
+  }
+
+  .admin-withdrawals-list table {
+    min-width: 620px;
+  }
+
+  .admin-users-list th,
+  .admin-users-list td,
+  .admin-admins-list th,
+  .admin-admins-list td,
+  .admin-withdrawals-list th,
+  .admin-withdrawals-list td {
+    padding: 7px 8px !important;
+    font-size: 11px;
+  }
+
+  .admin-users-list .premium-select {
+    width: 105px;
+    max-width: 105px;
+    font-size: 11px;
+  }
+
+  .admin-users-list .premium-amount-input {
+    width: 75px;
+    font-size: 11px;
+  }
+}
+
+
+/* =========================================================
+   VERY SMALL PHONES
+   ========================================================= */
+
+@media (max-width: 360px) {
+
+  .admin-users-list table {
+    min-width: 850px;
+  }
+
+  .admin-admins-list table {
+    min-width: 530px;
+  }
+
+  .admin-withdrawals-list table {
+    min-width: 590px;
+  }
+
+  .admin-users-list th,
+  .admin-users-list td,
+  .admin-admins-list th,
+  .admin-admins-list td,
+  .admin-withdrawals-list th,
+  .admin-withdrawals-list td {
+    padding: 6px 7px !important;
+    font-size: 10.5px;
+  }
+}
+
+
+/* =========================================================
+   CRITICAL SIDEBAR / CONTENT FIX
+   ========================================================= */
+
+/*
+   DO NOT use width:100% on .RaLayout-content.
+   The sidebar already occupies part of the flex row.
+*/
+
+.RaLayout-root .RaLayout-content {
+  flex: 1 1 auto !important;
+  width: auto !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  box-sizing: border-box;
+  overflow-x: hidden !important;
+}
+
+.RaLayout-root .RaLayout-main {
+  flex: 1 1 auto !important;
+  width: auto !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  box-sizing: border-box;
+  overflow-x: hidden !important;
+}
+
+/* Prevent children from forcing the content wider */
+.RaLayout-root .RaLayout-content > * {
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}

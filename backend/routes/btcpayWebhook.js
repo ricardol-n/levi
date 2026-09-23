@@ -31,8 +31,6 @@ router.post("/btcpay", async (req, res) => {
       "sha256=" + crypto.createHmac("sha256", secret).update(rawBody).digest("hex");
 
     console.log("📩 BTCPay webhook received");
-    console.log("🔑 Received:", signature);
-    console.log("🔑 Computed:", computed);
 
     // ✅ Only log mismatch if actually mismatched
     if (signature !== computed) {
@@ -82,7 +80,7 @@ router.post("/btcpay", async (req, res) => {
     console.log("📩 BTCPay event type:", event?.type);
 
     const txId = invoice.id;
-    const amountUsd = Number(invoice.metadata?.amount || 0);
+    
     const userIdRaw = invoice?.metadata?.userId;
 
     if (!userIdRaw || !mongoose.Types.ObjectId.isValid(userIdRaw)) {
@@ -93,137 +91,201 @@ router.post("/btcpay", async (req, res) => {
       const userId = new mongoose.Types.ObjectId(userIdRaw);
 
 
-      if (event.type === "InvoiceSettled" || event.type === "InvoiceCompleted") {
-      // 🔁 Prevent duplicate deposits
+  if (
+  event.type === "InvoiceSettled" ||
+  event.type === "InvoiceCompleted"
+) {
 
- // ==========================================
-// FIND THE EXISTING PENDING DEPOSIT
-// ==========================================
+  // Validate amount first
+  if (!Number.isFinite(amountUsd) || amountUsd <= 0) {
+    console.error("❌ Invalid deposit amount:", amountUsd);
 
-const deposit = await Deposit.findOne({
+    return res.status(400).json({
+      success: false,
+      message: "Invalid deposit amount",
+    });
+  }
+
+  const session = await mongoose.startSession();
+
+  let user;
+
+  try {
+
+    session.startTransaction();
+
+  const deposit = await Deposit.findOneAndUpdate(
+  {
     txId,
     userId,
-});
-
-if (!deposit) {
-
-    console.error("Pending deposit not found:", txId);
-
-    return res.status(404).json({
-        success:false,
-        message:"Deposit record not found",
-    });
-
-}
-
-// Already processed
-
-if (deposit.status === "confirmed") {
-
-    console.log("Duplicate webhook ignored:", txId);
-
-    return res.status(200).json({
-        success:true,
-        message:"Already processed",
-    });
-
-}
-
-// ==========================================
-// CONFIRM THE DEPOSIT
-// ==========================================
-
-deposit.status = "confirmed";
-
-deposit.address = invoice.address || deposit.address;
-
-await deposit.save();
-
-// ==========================================
-// CREDIT USER BALANCE
-// ==========================================
-
-const user = await User.findByIdAndUpdate(
-
-    userId,
-
-    {
-        $inc:{
-            balance: amountUsd,
-        },
+    status: "pending",
+  },
+  {
+    $set: {
+      status: "confirmed",
+      address: invoice.address || undefined,
     },
-
-    {
-        new:true,
-    }
-
+  },
+  {
+    new: true,
+    session,
+  }
 );
 
-// ==========================================
-// 📧 SEND DEPOSIT APPROVED EMAIL
-// ==========================================
+if (!deposit) {
+  await session.abortTransaction();
+  
+  console.log(`🔁 Duplicate webhook ignored: ${txId}`);
 
-try {
-  await sendDepositApprovedEmail({
-    email: user.email,
-    username: user.username,
-    amount: amountUsd,
-    currency: "USD",
-    method: "Bitcoin",
-    balance: user.balance,
+  return res.status(200).json({
+    success: true,
+    message: "Already processed",
   });
-
-  console.log(
-    `📧 Deposit approval email sent to ${user.email}`
-  );
-} catch (err) {
-  console.error(
-    "❌ Failed to send deposit approval email:",
-    err
-  );
 }
-      // ==========================================
-// 🎁 REFERRAL BONUS SYSTEM
-// ==========================================
 
-// Get full user document
-const depositedUser = await User.findById(userId);
+// Use the amount already stored in your database
+const amountUsd = Number(deposit.amount);
 
-if (depositedUser?.referredBy) {
-
-  const referrer = await User.findById(depositedUser.referredBy);
-
-  if (referrer) {
-
-    // 🛡 Check if already rewarded for this deposit
-    if (!deposit.referralRewardProcessed) {
-
-    const BONUS_AMOUNT = 10;
-
-    referrer.balance += BONUS_AMOUNT;
-
-    referrer.referralBonus += BONUS_AMOUNT;
-
-    await referrer.save();
-
-    deposit.referralRewardProcessed = true;
-
-    await deposit.save();
-
+if (!Number.isFinite(amountUsd) || amountUsd <= 0) {
+  throw new Error(`Invalid deposit amount: ${deposit.amount}`);
 }
-  }
-}
-      
-   // 🟢 Mark webhook as processed
-      await WebhookLog.findOneAndUpdate(
-        { invoiceId: invoice.id },
-        {
-          status: "processed",
-          message: `Deposit of $${amountUsd} credited successfully`,
-          signatureVerified: true,
-        }
+
+    // ==========================================
+    // CREDIT USER BALANCE
+    // ==========================================
+
+    user = await User.findByIdAndUpdate(
+      userId,
+      {
+        $inc: {
+          balance: amountUsd,
+        },
+      },
+      {
+        new: true,
+        session,
+      }
+    );
+
+    if (!user) {
+      throw new Error(
+        `User not found: ${userId}`
       );
     }
+
+    // ==========================================
+    // REFERRAL BONUS
+    // ==========================================
+
+    const depositedUser = await User.findById(
+      userId
+    ).session(session);
+
+    if (depositedUser?.referredBy) {
+
+      const referrer = await User.findById(
+        depositedUser.referredBy
+      ).session(session);
+
+      if (
+        referrer &&
+        !deposit.referralRewardProcessed
+      ) {
+
+        const BONUS_AMOUNT = 10;
+
+        await User.findByIdAndUpdate(
+          referrer._id,
+          {
+            $inc: {
+              balance: BONUS_AMOUNT,
+              referralBonus: BONUS_AMOUNT,
+            },
+          },
+          {
+            session,
+          }
+        );
+
+        deposit.referralRewardProcessed = true;
+
+        await deposit.save({
+          session,
+        });
+
+        console.log(
+          `🎁 $${BONUS_AMOUNT} referral bonus credited`
+        );
+      }
+    }
+
+    // ==========================================
+    // COMMIT FINANCIAL CHANGES
+    // ==========================================
+
+    await session.commitTransaction();
+
+    console.log(
+      `✅ Deposit credited: $${amountUsd} → ${user.email}`
+    );
+
+  } catch (err) {
+
+    await session.abortTransaction();
+
+    console.error(
+      "❌ Deposit transaction failed:",
+      err
+    );
+
+    throw err;
+
+  } finally {
+
+    await session.endSession();
+  }
+
+  // ==========================================
+  // 📧 SEND EMAIL AFTER COMMIT
+  // ==========================================
+
+  try {
+
+    await sendDepositApprovedEmail({
+      email: user.email,
+      username: user.username,
+      amount: amountUsd,
+      currency: "USD",
+      method: "Bitcoin",
+      balance: user.balance,
+    });
+
+    console.log(
+      `📧 Deposit email sent to ${user.email}`
+    );
+
+  } catch (emailError) {
+
+    console.error(
+      "❌ Deposit email failed:",
+      emailError.message
+    );
+  }
+
+  // ==========================================
+  // MARK WEBHOOK PROCESSED
+  // ==========================================
+
+  await WebhookLog.findOneAndUpdate(
+    { invoiceId: invoice.id },
+    {
+      status: "processed",
+      message:
+        `Deposit of $${amountUsd} credited successfully`,
+      signatureVerified: true,
+    }
+  );
+}
     // ❕ Other BTCPay event types — log but don’t process
     else {
       await WebhookLog.findOneAndUpdate(

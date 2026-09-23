@@ -1,23 +1,45 @@
 const jwt = require("jsonwebtoken");
 const { JWT_SECRET } = require("../config/keys");
 
-function verifyAdmin(req, res, next) {
+module.exports = (req, res, next) => {
   const authHeader = req.headers.authorization;
-  if (!authHeader?.startsWith("Bearer ")) {
-    return res.status(403).json({ message: "No token provided" });
+
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return res.status(401).json({
+      success: false,
+      message: "Authentication required",
+    });
   }
 
   const token = authHeader.split(" ")[1];
-  jwt.verify(token, JWT_SECRET, (err, decoded) => {
-    if (err) return res.status(401).json({ message: "Invalid token" });
 
-    if (decoded.role !== "admin") {
-      return res.status(403).json({ message: "Access denied: Admins only" });
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+
+    if (!["admin", "superadmin"].includes(decoded.role)) {
+      return res.status(403).json({
+        success: false,
+        message: "Admin access required",
+      });
     }
 
-    req.user = { _id: decoded._id, role: decoded.role };
-    next();
-  });
-}
+    req.user = {
+      _id: decoded._id,
+      role: decoded.role,
+    };
 
-module.exports = verifyAdmin;
+    next();
+  } catch (err) {
+    if (err.name === "TokenExpiredError") {
+      return res.status(401).json({
+        success: false,
+        message: "Admin session expired",
+      });
+    }
+
+    return res.status(401).json({
+      success: false,
+      message: "Invalid authentication token",
+    });
+  }
+};

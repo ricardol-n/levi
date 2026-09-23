@@ -96,7 +96,7 @@ export const SidebarData = [
         ]
     },
     {
-        title: 'Refferal Log',
+        title: '',
         path: '/refferallog',
         icons:<FaIcons.FaUsers/>,
     },
@@ -106,7 +106,7 @@ export const SidebarData = [
         icons:<TbAuth2Fa/>,
     },
     {
-        title: 'Setting',
+        title: '',
         icons:<AiIcons.AiOutlineSetting/>,
         subNav:[
             {

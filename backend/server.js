@@ -22,7 +22,6 @@ const depositRoutes = require("./routes/deposit");
 const webhookRoutes = require("./routes/btcpayWebhook");
 const candlesRoute = require("./routes/stocks");
 const adminAuthRoutes = require("./routes/adminAuth");
-const adminWithdrawalsRoutes = require("./routes/admin");
 const twoFARoutes = require("./routes/2fa");
 const phoneRoutes = require("./routes/phone");
 
@@ -36,9 +35,6 @@ const app = express();
 // ✅ Log env vars
 console.log("ENV FRONTEND_URL:", process.env.FRONTEND_URL);
 console.log("ENV FRONTEND_URLS:", process.env.FRONTEND_URLS);
-
-console.log("JWT_SECRET:", process.env.JWT_SECRET);
-
 
 
 // ✅ CORS — Safe for production (Vercel + Render + Localhost)
@@ -135,8 +131,6 @@ console.log("Mounting /api (candles)");
 app.use("/api", candlesRoute);
 
 app.use("/api/admin/auth",adminAuthRoutes);
-
-app.use("/api/admin/action", verifyAdmin, adminWithdrawalsRoutes);
 
 app.use("/api/2fa", twoFARoutes);
 

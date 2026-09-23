@@ -37,7 +37,8 @@ import Counter from './Counter';
 import { FaFacebookF, FaTwitter, FaLinkedinIn, FaInstagram } from "react-icons/fa";
 import { motion,useScroll, useTransform, useReducedMotion } from "framer-motion";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL;
+const API_BASE_URL =
+  import.meta.env.VITE_API_URL || "https://admin-backend-qyhk.onrender.com/api";
 
 
 
@@ -456,7 +457,6 @@ useEffect(() => {
                 width="100%"
                 height="100%"
                 frameBorder="0"
-                allowTransparency={true}
                 scrolling="no"
               ></iframe>
             </div>

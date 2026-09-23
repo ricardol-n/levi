@@ -1,21 +1,20 @@
-import React , { StrictMode } from 'react';
-import { createRoot } from 'react-dom/client';
+import React, { StrictMode } from "react";
+import { createRoot } from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
-import App from './App.jsx';
-import { AuthProvider } from './context/AuthContext.jsx';
-import { BalanceProvider } from './BalanceContext.jsx';
 
+import App from "./App.jsx";
 
-createRoot(document.getElementById('root')).render(
+import { AuthProvider } from "./context/AuthContext.jsx";
+import { BalanceProvider } from "./BalanceContext.jsx";
+
+createRoot(document.getElementById("root")).render(
   <StrictMode>
-    
-      <AuthProvider>
-        <BrowserRouter>
+    <AuthProvider>
+      <BrowserRouter>
         <BalanceProvider>
-           <App/>
+          <App />
         </BalanceProvider>
-        </BrowserRouter>
-      </AuthProvider>
-    
+      </BrowserRouter>
+    </AuthProvider>
   </StrictMode>
-)
+);

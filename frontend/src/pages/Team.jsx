@@ -28,47 +28,78 @@ export const Withdraw = () => {
 }, [syncFromBackend]);
 
   // ✅ Handle submission
-  const onSubmit = async () => {
-    setMessage({ type: "", text: "" });
-    try {
-      if (!user?._id) throw new Error("User not logged in");
-      if (!selectedMethod || !address || !amount)
-        throw new Error("Please fill all fields.");
+const onSubmit = async () => {
+  setMessage({ type: "", text: "" });
 
-      if (Number(amount) > withdrawableProfit) {
-        throw new Error(
-          `You can only withdraw up to your matured profit of $${withdrawableProfit.toFixed(2)}.`
-        );
-      }
-
-      const res = await requestWithdrawal({
-        method: selectedMethod,
-        amount: Number(amount),
-        address,
-      });
-
-      setMessage({
-  type: "success",
-  text:
-    res?.message ||
-    "Your withdrawal is pending. Please wait for admin confirmation within 24 hours.",
-});
-
-
-      // Reset fields
-      setAmount("");
-      setAddress("");
-      setSelectedMethod("");
-    } catch (err) {
-      setMessage({
-        type: "error",
-        text:
-          err?.response?.data?.message ||
-          err?.message ||
-          "Failed to submit withdrawal.",
-      });
+  try {
+    if (!user?._id) {
+      throw new Error("User not logged in.");
     }
-  };
+
+    if (!selectedMethod) {
+      throw new Error("Please select a withdrawal method.");
+    }
+
+    const cleanAddress = address.trim();
+
+    if (!cleanAddress) {
+      throw new Error("Please enter your wallet address.");
+    }
+
+    const numericAmount = Number(amount);
+
+    if (!Number.isFinite(numericAmount) || numericAmount <= 0) {
+      throw new Error("Please enter a valid withdrawal amount.");
+    }
+
+    // Frontend validation only.
+    // Backend MUST enforce this again.
+    const MIN_WITHDRAWAL = 5000;
+
+    if (numericAmount < MIN_WITHDRAWAL) {
+      throw new Error(
+        `Minimum withdrawal amount is $${MIN_WITHDRAWAL.toLocaleString()}.`
+      );
+    }
+
+    if (numericAmount > Number(withdrawableProfit || 0)) {
+      throw new Error(
+        `You can only withdraw up to your matured profit of $${Number(
+          withdrawableProfit || 0
+        ).toFixed(2)}.`
+      );
+    }
+
+    const res = await requestWithdrawal({
+      method: selectedMethod,
+      amount: numericAmount,
+      address: cleanAddress,
+    });
+
+    setMessage({
+      type: "success",
+      text:
+        res?.message ||
+        "Your withdrawal request has been submitted and is pending admin review.",
+    });
+
+    setAmount("");
+    setAddress("");
+    setSelectedMethod("");
+
+    // Refresh balance/withdrawals after successful request
+    await syncFromBackend();
+
+  } catch (err) {
+    setMessage({
+      type: "error",
+      text:
+        err?.response?.data?.message ||
+        err?.message ||
+        "Failed to submit withdrawal.",
+    });
+  }
+};
 
   return (
     <div className="dashboard-container">
@@ -122,24 +153,31 @@ export const Withdraw = () => {
                       </div>
 
                       <div className="form-group">
-                        <label htmlFor="amount">Amount ($) — Min $100</label>
+                        <label htmlFor="amount">Amount ($) — Min $5,000</label>
                         <input
                           id="amount"
                           type="number"
                           className="withdraw-input"
                           value={amount}
                           onChange={(e) => setAmount(e.target.value)}
-                          placeholder="e.g. 250"
-                          min="100"
+                          placeholder="e.g. 5000"
+                          min="5000"
                         />
                       </div>
 
                       <button
                         onClick={onSubmit}
                         className="withdraw-button"
-                        disabled={loading || Number(amount) > withdrawableProfit}
-                      >
-                        {loading ? "Submitting..." : "Confirm Withdrawal"}
+                        disabled={
+                          loading ||
+                          !selectedMethod ||
+                          !address.trim() ||
+                          !Number.isFinite(Number(amount)) ||
+                          Number(amount) < 5000 ||
+                          Number(amount) > Number(withdrawableProfit || 0)
+                        }
+                        >
+                          {loading ? "Submitting..." : "Confirm Withdrawal"}
                       </button>
                     </>
                   )}
@@ -170,7 +208,7 @@ export const Withdraw = () => {
               <h3>📌 Important</h3>
               <ul>
                 <li>Only matured profit can be withdrawn</li>
-                <li>Minimum withdrawal: $100</li>
+                <li>Minimum withdrawal: $5,000</li>
                 <li>Processing time: up to 24 hours</li>
                 <li>Incorrect addresses may cause permanent loss</li>
               </ul>

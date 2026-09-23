@@ -115,8 +115,8 @@ const Button = styled.button`
   height: 54px;
   border: none;
   border-radius: 12px;
-  background: #22c55e;
-  color: white;
+  background: #0860289e;
+  color: #c9a227;
   font-size: 15px;
   font-weight: 600;
   cursor: pointer;
@@ -319,6 +319,34 @@ const CompanyTagline = styled.div`
   margin-top: 4px;
 `;
 
+const BackButton = styled.button`
+  background: #7a060697;
+  color: #fff;
+  border:none;
+  padding: 0.6rem 1.2rem;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-bottom: 2rem;
+  font-size: 1rem;
+  transition: background 0.3s ease;
+
+`;
+const Backbutton =styled.button`
+
+  border: none;
+
+  background: none;
+
+  color: #c9a227;
+
+  font-size: 10px;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition: color 0.2s ease;
+`;
+
 // ✅ API Base: Use full URL in production (VITE_API_URL) or fallback to proxy (/api)
 const API_BASE = import.meta.env.VITE_API_URL || "/api";
 
@@ -485,6 +513,7 @@ const handleSubmit = async (e) => {
     <RegisterContainer>
 
 
+
   <LeftPanel>
     <HeroImage src={bg1} alt="Investment Platform" />
 
@@ -523,8 +552,16 @@ const handleSubmit = async (e) => {
   </LeftPanel>
 
   <RightPanel> 
+    
 
+      <BackButton
+        type="button"
+        onClick={() => navigate("/")}
+      >
+        ⬅
+      </BackButton>
       <FormWrapper>
+        
 
       <LogoSection>
         <Logo
@@ -650,6 +687,18 @@ const handleSubmit = async (e) => {
         })
       }
     />
+
+    <div className="forgot-password">
+
+
+  <Backbutton
+    type="button"
+    onClick={() => navigate("/forgot-password")}
+  >
+    Forgot Password?
+  </Backbutton>
+ </div>
+
   </>
 ) : (
   <>

@@ -111,8 +111,8 @@ export const BalanceProvider = ({ children }) => {
   // 📊 DERIVED VALUES
   // ===============================
   const withdrawableProfit = useMemo(() => {
-    return Math.max(maturedProfit - withdrawnProfit, 0);
-  }, [maturedProfit, withdrawnProfit]);
+  return Math.max(maturedProfit, 0);
+}, [maturedProfit]);
 
 
   // ===============================
@@ -154,25 +154,59 @@ const cancelInvestment = async (investmentId) => {
   // ===============================
   // 📤 WITHDRAW PROFIT
   // ===============================
-  const requestWithdrawal = async ({ amount, method, address }) => {
-    amount = toNumber(amount);
+const requestWithdrawal = async ({ amount, method, address }) => {
+  const numericAmount = toNumber(amount);
+  const MIN_WITHDRAWAL = 5000;
 
-    if (amount <= 0) throw new Error("Invalid amount");
-    if (amount > withdrawableProfit)
-      throw new Error("Insufficient matured profit");
+  if (!method) {
+    throw new Error("Please select a withdrawal method.");
+  }
 
-    await axios.post("/withdrawals", {
-      amount,
+  const cleanAddress = String(address || "").trim();
+
+  if (!cleanAddress) {
+    throw new Error("Please enter your wallet address.");
+  }
+
+  if (!Number.isFinite(numericAmount) || numericAmount <= 0) {
+    throw new Error("Invalid withdrawal amount.");
+  }
+
+  if (numericAmount < MIN_WITHDRAWAL) {
+    throw new Error("Minimum withdrawal amount is $5,000.");
+  }
+
+  if (numericAmount > withdrawableProfit) {
+    throw new Error(
+      `Insufficient matured profit. Available: $${withdrawableProfit.toFixed(2)}`
+    );
+  }
+
+  try {
+    const res = await axios.post("/withdrawals", {
+      amount: numericAmount,
       method,
-      address,
+      address: cleanAddress,
     });
 
-    
+    console.log("✅ Withdrawal created:", res.data);
 
+    // Refresh withdrawal history
     await syncFromBackend();
 
-    
-  };
+    return res.data;
+  } catch (err) {
+    console.error(
+      "❌ Withdrawal request failed:",
+      err.response?.data || err
+    );
+
+    throw new Error(
+      err.response?.data?.message ||
+      "Unable to submit withdrawal request."
+    );
+  }
+};
 
   // ===============================
   // 📦 CONTEXT VALUE

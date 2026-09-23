@@ -4,8 +4,6 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import ScrollToTop from './ScrollToTop.jsx';
 import Dashboard from './Dashboard.jsx';
 import ProtectedRoute from './ProtectedRoute.jsx';
-import AdminPanel from './admin/AdminPanel.jsx';
-import ProtectedAdminRoute from "./admin/ProtectedAdminRoute.jsx";
 import Verify2FA from "./Verify2FA";
 import { InvestmentPlans, InvestLog } from './pages/Reports.jsx';
 import { Deposit, DepositLog } from './pages/Products.jsx';
@@ -25,6 +23,9 @@ import RegisterPage from './Register.jsx';
 import TermsOfService from "./TermsOfService";
 import PrivacyPolicy from "./PrivacyPolicy";
 import AdminLogin from "./admin/AdminLogin.jsx";
+import ForgotPassword from "./ForgotPassword";
+import ResetPassword from "./ResetPassword";
+import AdminApp from "./admin/AdminApp.jsx";
 
 
 function App() {
@@ -52,6 +53,8 @@ function App() {
         <Route path="/login" element={<LoginPage /> } />
         <Route path="/register"element={ <RegisterPage />}/>
         <Route path="/verify-2fa" element={<Verify2FA />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />}/>
            {/* Protected Routes */}
        
             <Route path="/dashboard" element={<ProtectedRoute> <Dashboard /> </ProtectedRoute>} />
@@ -72,9 +75,16 @@ function App() {
 
         {/* Admin routes */}
 
-        <Route path="/admin/login" element={ <AdminLogin />} />
+  <Route
+  path="/admin/login"
+  element={<AdminLogin />}
+/>
 
-        <Route path="/admin/*" element={ <ProtectedAdminRoute> <AdminPanel />  </ProtectedAdminRoute>} />
+<Route
+  path="/admin/*"
+  element={<AdminApp />}
+/>
+      
 
         {/* Fallback */}
         <Route path="*" element={<Navigate to="/" replace />} />

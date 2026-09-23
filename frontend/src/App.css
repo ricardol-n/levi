@@ -3758,6 +3758,396 @@ button:hover {
   );
 }
 
+/* =========================================================
+   TXLA ADVISORY - AUTH / PASSWORD RESET
+   ========================================================= */
+
+:root {
+  --txla-navy: #07111f;
+  --txla-navy-light: #0d1b2e;
+  --txla-gold: #c9a227;
+  --txla-gold-light: #e4c766;
+  --txla-white: #ffffff;
+  --txla-text: #172033;
+  --txla-muted: #718096;
+  --txla-border: #e5e7eb;
+  --txla-bg: #f4f6f9;
+  --txla-danger: #dc2626;
+  --txla-success: #15803d;
+}
+
+/* =========================================================
+   PAGE
+   ========================================================= */
+
+.forgot-password-page,
+.reset-password-page {
+  min-height: 100vh;
+  width: 100%;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  padding: 40px 20px;
+  box-sizing: border-box;
+
+  background:
+    radial-gradient(
+      circle at top right,
+      rgba(201, 162, 39, 0.12),
+      transparent 35%
+    ),
+    radial-gradient(
+      circle at bottom left,
+      rgba(7, 17, 31, 0.08),
+      transparent 35%
+    ),
+    var(--txla-bg);
+
+  font-family:
+    Inter,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Arial,
+    sans-serif;
+
+  color: var(--txla-text);
+}
+
+
+/* =========================================================
+   CARD
+   ========================================================= */
+
+.forgot-password-page > *,
+.reset-password-page > * {
+  position: relative;
+}
+
+.forgot-password-page form,
+.reset-password-page form {
+  width: 100%;
+  max-width: 440px;
+
+  background: rgba(255, 255, 255, 0.96);
+
+  border: 1px solid rgba(255, 255, 255, 0.8);
+
+  border-radius: 18px;
+
+  padding: 38px;
+
+  box-sizing: border-box;
+
+  box-shadow:
+    0 25px 60px rgba(7, 17, 31, 0.12),
+    0 4px 12px rgba(7, 17, 31, 0.05);
+}
+
+
+/* =========================================================
+   LOGO / BRAND AREA
+   ========================================================= */
+
+.forgot-password-page::before,
+.reset-password-page::before {
+  content: "TXLA ADVISORY";
+
+  display: block;
+
+  margin-bottom: 28px;
+
+  color: var(--txla-navy);
+
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 4px;
+}
+
+
+/* =========================================================
+   GOLD ACCENT
+   ========================================================= */
+
+.forgot-password-page::after,
+.reset-password-page::after {
+  content: "";
+
+  position: absolute;
+
+  width: 55px;
+  height: 3px;
+
+  margin-top: -105px;
+
+  background: linear-gradient(
+    90deg,
+    var(--txla-gold),
+    var(--txla-gold-light)
+  );
+
+  border-radius: 10px;
+}
+
+
+/* =========================================================
+   HEADINGS
+   ========================================================= */
+
+.forgot-password-page h1,
+.reset-password-page h1 {
+  margin: 0 0 10px;
+
+  color: var(--txla-navy);
+
+  font-size: 30px;
+  font-weight: 700;
+
+  letter-spacing: -0.5px;
+
+  text-align: center;
+}
+
+.forgot-password-page h1 + p {
+  width: 100%;
+  max-width: 440px;
+
+  margin: 0 0 25px;
+
+  color: var(--txla-muted);
+
+  font-size: 14px;
+  line-height: 1.7;
+
+  text-align: center;
+}
+
+
+/* =========================================================
+   FORM
+   ========================================================= */
+
+.forgot-password-page form,
+.reset-password-page form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+
+/* =========================================================
+   INPUTS
+   ========================================================= */
+
+.forgot-password-page input,
+.reset-password-page input {
+  width: 100%;
+
+  box-sizing: border-box;
+
+  padding: 15px 16px;
+
+  border: 1px solid var(--txla-border);
+
+  border-radius: 10px;
+
+  background: #fbfcfe;
+
+  color: var(--txla-text);
+
+  font-size: 15px;
+
+  outline: none;
+
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease;
+}
+
+.forgot-password-page input::placeholder,
+.reset-password-page input::placeholder {
+  color: #9aa4b2;
+}
+
+.forgot-password-page input:hover,
+.reset-password-page input:hover {
+  border-color: #cbd5e1;
+}
+
+.forgot-password-page input:focus,
+.reset-password-page input:focus {
+  background: #ffffff;
+
+  border-color: var(--txla-gold);
+
+  box-shadow:
+    0 0 0 3px rgba(201, 162, 39, 0.12);
+}
+
+
+/* =========================================================
+   PRIMARY BUTTON
+   ========================================================= */
+
+.forgot-password-page form button,
+.reset-password-page form button {
+  width: 100%;
+
+  margin-top: 5px;
+
+  padding: 15px 20px;
+
+  border: none;
+  border-radius: 10px;
+
+  background: linear-gradient(
+    135deg,
+    var(--txla-gold),
+    #b38b16
+  );
+
+  color: #ffffff;
+
+  font-size: 15px;
+  font-weight: 700;
+
+  cursor: pointer;
+
+  box-shadow:
+    0 8px 20px rgba(201, 162, 39, 0.22);
+
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    filter 0.2s ease;
+}
+
+.forgot-password-page form button:hover,
+.reset-password-page form button:hover {
+  transform: translateY(-1px);
+
+  filter: brightness(1.05);
+
+  box-shadow:
+    0 12px 26px rgba(201, 162, 39, 0.30);
+}
+
+.forgot-password-page form button:active,
+.reset-password-page form button:active {
+  transform: translateY(0);
+}
+
+.forgot-password-page form button:disabled,
+.reset-password-page form button:disabled {
+  opacity: 0.65;
+
+  cursor: not-allowed;
+
+  transform: none;
+
+  box-shadow: none;
+}
+
+
+/* =========================================================
+   BACK TO LOGIN
+   ========================================================= */
+
+.forgot-password-page > button {
+  margin-top: 20px;
+
+  border: none;
+
+  background: transparent;
+
+  color: var(--txla-navy);
+
+  font-size: 14px;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition: color 0.2s ease;
+}
+
+.forgot-password-page > button:hover {
+  color: var(--txla-gold);
+}
+
+
+/* =========================================================
+   MESSAGES
+   ========================================================= */
+
+.forgot-password-page .success,
+.reset-password-page p {
+  width: 100%;
+  max-width: 440px;
+
+  box-sizing: border-box;
+
+  margin: 18px 0 0;
+
+  padding: 12px 15px;
+
+  border-radius: 9px;
+
+  font-size: 14px;
+
+  line-height: 1.5;
+
+  text-align: center;
+}
+
+.forgot-password-page .success {
+  background: rgba(21, 128, 61, 0.08);
+
+  border: 1px solid rgba(21, 128, 61, 0.15);
+
+  color: var(--txla-success);
+}
+
+.forgot-password-page .error,
+.reset-password-page .error {
+  width: 100%;
+  max-width: 440px;
+
+  box-sizing: border-box;
+
+  margin: 18px 0 0;
+
+  padding: 12px 15px;
+
+  border-radius: 9px;
+
+  background: rgba(220, 38, 38, 0.07);
+
+  border: 1px solid rgba(220, 38, 38, 0.15);
+
+  color: var(--txla-danger);
+
+  font-size: 14px;
+
+  text-align: center;
+}
+
+.reset-password-page .auth-subtitle {
+  width: 100%;
+  max-width: 440px;
+
+  margin: 0 0 25px;
+
+  color: var(--txla-muted);
+
+  font-size: 14px;
+  line-height: 1.7;
+
+  text-align: center;
+}
 
 
 
@@ -3922,43 +4312,7 @@ button:hover {
   }
 }
 
-/* @media (max-width: 900px) {
-  .home-container-content {
-    grid-template-columns: repeat(2, 1fr);
-  }
-} */
 
-/* @media (max-width: 992px) {
-  .trust-card {
-    width: 340px;
-  }
-
-  .conference-slide {
-    width: 500px;
-    height: 320px;
-  }
-} */
-
-
-/* Responsive */
-/* @media (min-width: 768px) {
-  .settings-page {
-    width: 90%;
-    padding: 1.5rem;
-  }
-  
-  .footer-column ul {
-    display: block !important; 
-    
-  }
-
-  .footer-column h3 span {
-    display: none;
-  }
-  .sidebar {
-    transform: translateX(0);
-  }
-} */
 /* RESPONSIVE MENU *//* Mobile Responsive */
 @media screen and (max-width: 768px) {
 
@@ -4375,80 +4729,43 @@ button:hover {
   .scroll-bar {
     height: 2px;
   }
-
-}
-
-/* @media screen and (max-width: 767px) {
-
-  .deposit-container{
-    margin: 60px;
-    height: auto;
-    padding: 40px 10px;
-  }
-  .deposit-card{
-    max-width: 90%;
-  }
-  .pay-btn{
-    padding: 20px;
-    width: 50%;
-  }
-  .dashboard-body, .dashboard-contents,.main-content{
-    min-height: auto;
+   .forgot-password-page,
+  .reset-password-page {
+    padding: 25px 16px;
   }
 
-  .investment-grid {
-    grid-template-columns: 1fr;
+  .forgot-password-page::before,
+  .reset-password-page::before {
+    margin-bottom: 22px;
+
+    font-size: 12px;
+
+    letter-spacing: 3px;
   }
 
-  .investment-container {
-    padding: 15px;
+  .forgot-password-page h1,
+  .reset-password-page h1 {
+    font-size: 25px;
   }
-  .sidebar{
-    transform: translateX(-100%);
-  }
-  .sidebar.active{
-    transform: translateX(0);
-  }
-  
-  .sidebar a {
-  display: block;
-  padding: 15px;
-  color: #e1e9fc;
-  text-decoration: none;
-  font-size: 14px;
-}
 
-.sidebar a:hover {
-  background: #252831;
-  border-left: 4px solid red;
+  .forgot-password-page form,
+  .reset-password-page form {
+    padding: 26px 20px;
+
+    border-radius: 15px;
+  }
+
+  .forgot-password-page input,
+  .reset-password-page input {
+    padding: 14px;
+  }
+
+  .forgot-password-page form button,
+  .reset-password-page form button {
+    padding: 14px;
+  }
+
 }
-.close-icon {
-  font-size: 1.5rem;
-  color: #fff;
-  cursor: pointer;
-  margin: 10px;
-  display: block;
-}
-.main-content{
-  padding: 10px;
-}
-.investment-card {
-  padding: 18px;
-}
-.modal {
-  max-width: 90%;
-  padding: 20px;
-}
-.main-content{
-  margin-top: -2vh;
-}
-.withdraw-card,.withdraw-info{
-  width: 100%;
-}
-.transaction-table{
-  font-size: 12px;
-}
-} */
 
 
 @media (max-width: 480px) {
@@ -4697,5 +5014,20 @@ button:hover {
   .trust-header img {
     width: 55px;
     height: 55px;
+  }
+  
+  .forgot-password-page,
+  .reset-password-page {
+    padding: 20px 12px;
+  }
+
+  .forgot-password-page form,
+  .reset-password-page form {
+    padding: 22px 16px;
+  }
+
+  .forgot-password-page h1,
+  .reset-password-page h1 {
+    font-size: 23px;
   }
 }

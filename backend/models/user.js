@@ -14,7 +14,7 @@ const userSchema = new mongoose.Schema(
 
   role: {
     type: String,
-    enum: ["user","admin"],
+    enum: ["user","admin","superadmin"],
     default: "user"
   },
 
@@ -53,9 +53,6 @@ failedLoginAttempts: {
     default:null
   },
 
-  lastLoginAt: {
-  type: Date
-  },
 
   lastLoginIP: {
     type:String
@@ -67,6 +64,15 @@ failedLoginAttempts: {
 
 emailVerificationToken: {
   type: String
+},
+  passwordResetToken: {
+    type: String,
+    default: null
+  },
+
+  passwordResetExpires: {
+  type: Date,
+  default: null
 },
 
   lastLoginAt: {
@@ -109,10 +115,19 @@ emailVerificationToken: {
     default: 0
   },
 
+
   referralBonus: {
     type: Number,
     default: 0
   },
+
+  assignedAdmin: {
+  type: mongoose.Schema.Types.ObjectId,
+  ref: "User",
+  default: null,
+},
+
+
 },
 { timestamps: true }
 );

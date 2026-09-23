@@ -7,7 +7,7 @@ function Contact() {
 
   return (
     <ContactSection>
-      <BackButton onClick={() => navigate("/")}>⬅ Back to Home</BackButton>
+      <BackButton onClick={() => navigate("/")}>⬅ </BackButton>
 
       <h1>Contact Us</h1>
       <p>We’d love to hear from you! Reach out using the details below:</p>
