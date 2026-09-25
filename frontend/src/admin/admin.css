@@ -9,8 +9,8 @@
   --finova-sidebar-deep: #06121f;
   --finova-card: #0d1d30;
 
-  --finova-blue: #36a9ff;
-  --finova-blue-light: #69c5ff;
+  --finova-blue: #ff3690;
+  --finova-blue-light: #ff6969;
   --finova-green: #35d49b;
   --finova-warning: #f4b860;
   --finova-danger: #ff7185;
@@ -138,7 +138,9 @@ body {
 
   box-sizing: border-box;
 }
-
+TopUpButton{
+    background-color: red;
+}
 .RaSidebar-drawerPaper {
   background:
     linear-gradient(
@@ -148,6 +150,9 @@ body {
     ) !important;
 
   border: none !important;
+}
+.red{
+    background-color: red;
 }
 
 /* =========================================================
@@ -1073,8 +1078,8 @@ body {
   background:
     linear-gradient(
       135deg,
-      #69c5ff,
-      #1689dc
+      #ff699e,
+      #dc163e
     ) !important;
 
   box-shadow:
@@ -1485,6 +1490,10 @@ body {
     align-items: stretch;
 
     gap: 6px;
+  }
+
+  .buttonv{
+    background-color: red;
   }
 
   .premium-amount-input {

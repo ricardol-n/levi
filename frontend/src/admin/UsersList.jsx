@@ -237,6 +237,7 @@ const AssignAdminButton = ({
         disabled={saving}
         variant="contained"
       />
+
     </div>
   );
 };
@@ -464,7 +465,7 @@ const UsersList = () => {
           />
         )}
 
-        <TopUpButton />
+        <TopUpButton className="red" />
 
         {/* CLIENT-SIDE USER VIEW */}
         <ShowButton
