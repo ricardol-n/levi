@@ -13,6 +13,8 @@ const RegisterContainer = styled.div`
   min-height: 100vh;
   display:grid;
   grid-template-columns: 1.2fr 500px;
+  border: 1px solid rgba(201, 162, 39, 0.35);
+  border-radius:5px;
 
  background:
     radial-gradient(
@@ -41,19 +43,14 @@ const FormWrapper = styled.div`
   width: 100%;
   max-width: 460px;
 
-  background:
-    rgba(15,23,42,.88);
+  box-sizing: border-box;
 
-  backdrop-filter:
-    blur(14px);
+  background: rgba(15, 23, 42, 0.88);
 
-  border:
-    1px solid rgba(
-      255,
-      255,
-      255,
-      0.08
-    );
+  backdrop-filter: blur(14px);
+
+  
+  border: 1px solid rgba(201, 162, 39, 0.35);
 
   border-radius: 24px;
 
@@ -61,7 +58,27 @@ const FormWrapper = styled.div`
 
   box-shadow:
     0 20px 60px
-    rgba(0,0,0,.35);
+    rgba(0, 0, 0, 0.35);
+
+  @media (max-width: 425px) {
+    max-width: 100%;
+
+    padding: 28px 20px;
+
+    border-radius: 18px;
+  }
+
+  @media (max-width: 375px) {
+    padding: 24px 16px;
+
+    border-radius: 16px;
+  }
+
+  @media (max-width: 320px) {
+    padding: 22px 12px;
+
+    border-radius: 14px;
+  }
 `;
 
 const Title = styled.h2`
@@ -90,23 +107,43 @@ const Subtitle = styled.p`
 const Input = styled.input`
   width: 100%;
   height: 54px;
+
+  box-sizing: border-box;
+
   border-radius: 12px;
   border: 1px solid #334155;
+
   background: #111827;
   color: #fff;
+
   padding: 0 16px;
+
   font-size: 15px;
+
   margin-bottom: 16px;
-  transition: all .25s ease;
+
+  transition: all 0.25s ease;
 
   &:focus {
     outline: none;
     border-color: #2563eb;
-    box-shadow: 0 0 0 3px rgba(37,99,235,.15);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
   }
 
   &::placeholder {
     color: #64748b;
+  }
+
+  @media (max-width: 375px) {
+    height: 50px;
+    font-size: 14px;
+    padding: 0 12px;
+  }
+
+  @media (max-width: 320px) {
+    height: 48px;
+    font-size: 13px;
+    padding: 0 10px;
   }
 `;
 
@@ -253,13 +290,30 @@ const FeatureCard = styled.div`
   font-weight: 500;
 `;
 const RightPanel = styled.div`
+  position: relative;
+  
   display: flex;
-
   justify-content: center;
-
   align-items: center;
 
+  width: 100%;
+  min-width: 0;
+
+  box-sizing: border-box;
+
   padding: 40px;
+
+  @media (max-width: 425px) {
+    padding: 60px 12px 24px;
+  }
+
+  @media (max-width: 375px) {
+    padding: 56px 10px 20px;
+  }
+
+  @media (max-width: 320px) {
+    padding: 52px 8px 16px;
+  }
 `;
 const SecurityBar = styled.div`
   display: flex;
@@ -320,16 +374,93 @@ const CompanyTagline = styled.div`
 `;
 
 const BackButton = styled.button`
-  background: #7a060697;
-  color: #fff;
-  border:none;
-  padding: 0.6rem 1.2rem;
-  border-radius: 6px;
-  cursor: pointer;
-  margin-bottom: 2rem;
-  font-size: 1rem;
-  transition: background 0.3s ease;
+  position: absolute;
+  top: 24px;
+  left: 24px;
+  z-index: 10;
 
+  width: 46px;
+  height: 46px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 1px solid rgba(201, 162, 39, 0.35);
+  border-radius: 14px;
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(255, 255, 255, 0.08),
+      rgba(255, 255, 255, 0.02)
+    ),
+    rgba(15, 23, 42, 0.72);
+
+  color: #c9a227;
+
+  font-size: 20px;
+  font-weight: 500;
+  line-height: 1;
+
+  cursor: pointer;
+
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+
+  box-shadow:
+    0 8px 24px rgba(0, 0, 0, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+
+  transition:
+    all 0.25s ease;
+
+  &:hover {
+    color: #f5d76e;
+
+    border-color: rgba(201, 162, 39, 0.7);
+
+    background:
+      linear-gradient(
+        145deg,
+        rgba(201, 162, 39, 0.16),
+        rgba(255, 255, 255, 0.04)
+      ),
+      rgba(15, 23, 42, 0.88);
+
+    box-shadow:
+      0 10px 30px rgba(0, 0, 0, 0.35),
+      0 0 18px rgba(201, 162, 39, 0.12),
+      inset 0 1px 0 rgba(255, 255, 255, 0.1);
+
+    transform: translateY(-2px);
+  }
+
+  &:active {
+    transform: translateY(0) scale(0.96);
+  }
+
+  @media (max-width: 425px) {
+    top: 12px;
+    left: 12px;
+
+    width: 40px;
+    height: 40px;
+
+    border-radius: 12px;
+    font-size: 18px;
+  }
+
+  @media (max-width: 320px) {
+    top: 8px;
+    left: 8px;
+
+    width: 36px;
+    height: 36px;
+
+    border-radius: 10px;
+    font-size: 16px;
+  }
 `;
 const Backbutton =styled.button`
 

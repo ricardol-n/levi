@@ -5,11 +5,14 @@ import {
   Menu,
   AppBar,
   TitlePortal,
-  UserMenu,
-  Logout,
+  useLogout,
 } from "react-admin";
 
 import "./admin.css";
+
+/* =========================================================
+   GET CURRENT ADMIN
+========================================================= */
 
 const getAdminUser = () => {
   try {
@@ -26,6 +29,47 @@ const getAdminUser = () => {
   }
 };
 
+/* =========================================================
+   SIDEBAR LOGOUT
+========================================================= */
+
+const SidebarLogout = () => {
+  const logout = useLogout();
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch (error) {
+      console.error("Logout failed:", error);
+
+      // Fallback cleanup
+      localStorage.removeItem("adminToken");
+      localStorage.removeItem("adminRefreshToken");
+      localStorage.removeItem("adminUser");
+
+      window.location.href = "/admin/login";
+    }
+  };
+
+  return (
+    <button
+      type="button"
+      className="premium-sidebar-logout"
+      onClick={handleLogout}
+    >
+      <span className="premium-sidebar-logout-icon">
+        ↪
+      </span>
+
+      <span>Logout</span>
+    </button>
+  );
+};
+
+/* =========================================================
+   SIDEBAR MENU
+========================================================= */
+
 const PremiumMenu = () => {
   const [user, setUser] = useState(() => getAdminUser());
 
@@ -34,20 +78,33 @@ const PremiumMenu = () => {
       setUser(getAdminUser());
     };
 
-    window.addEventListener("storage", handleStorageChange);
+    window.addEventListener(
+      "storage",
+      handleStorageChange
+    );
 
     return () => {
-      window.removeEventListener("storage", handleStorageChange);
+      window.removeEventListener(
+        "storage",
+        handleStorageChange
+      );
     };
   }, []);
 
-  const isSuperadmin = user?.role === "superadmin";
+  const isSuperadmin =
+    user?.role === "superadmin";
 
   return (
     <div className="premium-menu-wrapper">
-      {/* BRAND */}
+
+      {/* ============================================
+          BRAND
+      ============================================ */}
+
       <div className="premium-brand">
-        <div className="premium-logo">TXLA</div>
+        <div className="premium-logo">
+          TXLA
+        </div>
 
         <div className="premium-brand-text">
           <strong>txla</strong>
@@ -55,27 +112,44 @@ const PremiumMenu = () => {
         </div>
       </div>
 
-      {/* PROFILE */}
+      {/* ============================================
+          PROFILE
+      ============================================ */}
+
       <div className="premium-profile">
+
         <div className="premium-avatar">
-          {user?.username?.charAt(0)?.toUpperCase() || "A"}
+          {user?.username
+            ?.charAt(0)
+            ?.toUpperCase() || "A"}
         </div>
 
         <div className="premium-profile-text">
-          <strong>{user?.username || "Administrator"}</strong>
+          <strong>
+            {user?.username || "Administrator"}
+          </strong>
 
           <span>
-            {isSuperadmin ? "Super Administrator" : "Administrator"}
+            {isSuperadmin
+              ? "Super Administrator"
+              : "Administrator"}
           </span>
         </div>
 
         <span className="premium-online" />
+
       </div>
 
-      {/* NAVIGATION */}
-      <div className="premium-section-title">MANAGEMENT</div>
+      {/* ============================================
+          NAVIGATION
+      ============================================ */}
+
+      <div className="premium-section-title">
+        MANAGEMENT
+      </div>
 
       <Menu>
+
         <Menu.DashboardItem />
 
         <Menu.ResourceItem name="users" />
@@ -91,21 +165,44 @@ const PremiumMenu = () => {
             <Menu.ResourceItem name="admins" />
           </>
         )}
+
       </Menu>
 
-      {/* SECURITY */}
+      {/* ============================================
+          SECURITY
+      ============================================ */}
+
       <div className="premium-security">
-        <div className="premium-security-icon">✓</div>
+
+        <div className="premium-security-icon">
+          ✓
+        </div>
 
         <div>
           <strong>Secure Console</strong>
 
-          <span>Protected administrator access</span>
+          <span>
+            Protected administrator access
+          </span>
         </div>
+
       </div>
+
+      {/* ============================================
+          LOGOUT
+      ============================================ */}
+
+      <div className="premium-sidebar-bottom">
+        <SidebarLogout />
+      </div>
+
     </div>
   );
 };
+
+/* =========================================================
+   TOP APP BAR
+========================================================= */
 
 const PremiumAppBar = () => {
   return (
@@ -117,18 +214,20 @@ const PremiumAppBar = () => {
       <TitlePortal />
 
       <div className="premium-appbar-right">
+
         <div className="premium-system-status">
           <span />
           System Online
         </div>
 
-        <UserMenu>
-          <Logout />
-        </UserMenu>
       </div>
     </AppBar>
   );
 };
+
+/* =========================================================
+   ADMIN LAYOUT
+========================================================= */
 
 const AdminLayout = (props) => {
   return (
@@ -136,6 +235,42 @@ const AdminLayout = (props) => {
       {...props}
       appBar={PremiumAppBar}
       menu={PremiumMenu}
+      sx={{
+        "& .RaLayout-root": {
+          width: "100%",
+          minWidth: 0,
+          overflowX: "hidden",
+        },
+
+        "& .RaLayout-appFrame": {
+          width: "100%",
+          minWidth: 0,
+        },
+
+        "& .RaLayout-contentWithSidebar": {
+          width: "100%",
+          minWidth: 0,
+          display: "flex",
+        },
+
+        "& .RaLayout-content": {
+          flex: "1 1 auto",
+          width: "auto",
+          minWidth: 0,
+          maxWidth: "100%",
+          overflowX: "hidden",
+          boxSizing: "border-box",
+        },
+
+        "& .RaLayout-main": {
+          flex: "1 1 auto",
+          width: "auto",
+          minWidth: 0,
+          maxWidth: "100%",
+          overflowX: "hidden",
+          boxSizing: "border-box",
+        },
+      }}
     />
   );
 };

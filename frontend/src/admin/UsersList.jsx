@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 
 import {
@@ -12,14 +11,10 @@ import {
   useRecordContext,
   useNotify,
   useRefresh,
-  useShowController,
-  Show,
-  SimpleShowLayout,
   ShowButton,
 } from "react-admin";
 
-const API_BASE =
-  import.meta.env.VITE_API_URL || "/api";
+const API_BASE = import.meta.env.VITE_API_URL || "/api";
 
 /* =========================================================
    TOP UP
@@ -48,8 +43,7 @@ const TopUpButton = () => {
     try {
       setLoading(true);
 
-      const token =
-        localStorage.getItem("adminToken");
+      const token = localStorage.getItem("adminToken");
 
       const response = await fetch(
         `${API_BASE}/users/${record.id}/topup`,
@@ -69,9 +63,7 @@ const TopUpButton = () => {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(
-          data?.message || "Top up failed"
-        );
+        throw new Error(data?.message || "Top up failed");
       }
 
       notify("User balance updated", {
@@ -81,29 +73,24 @@ const TopUpButton = () => {
       setAmount("");
       refresh();
     } catch (error) {
-      notify(
-        error.message || "Top up failed",
-        {
-          type: "error",
-        }
-      );
+      notify(error.message || "Top up failed", {
+        type: "error",
+      });
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="user-topup">
+    <div className="users-table-topup">
       <input
-        className="premium-amount-input"
+        className="users-table-topup-input"
         type="number"
         min="0"
         step="0.01"
         placeholder="Amount"
         value={amount}
-        onChange={(event) =>
-          setAmount(event.target.value)
-        }
+        onChange={(event) => setAmount(event.target.value)}
       />
 
       <Button
@@ -111,6 +98,7 @@ const TopUpButton = () => {
         onClick={handleTopUp}
         disabled={loading}
         variant="contained"
+        className="users-table-topup-button"
       />
     </div>
   );
@@ -120,18 +108,12 @@ const TopUpButton = () => {
    ASSIGN ADMIN
    ========================================================= */
 
-const AssignAdminButton = ({
-  record,
-  admins,
-}) => {
+const AssignAdminButton = ({ record, admins }) => {
   const notify = useNotify();
   const refresh = useRefresh();
 
-  const [selectedAdmin, setSelectedAdmin] =
-    useState("");
-
-  const [saving, setSaving] =
-    useState(false);
+  const [selectedAdmin, setSelectedAdmin] = useState("");
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     setSelectedAdmin(
@@ -144,7 +126,7 @@ const AssignAdminButton = ({
 
   if (!record || record.role !== "user") {
     return (
-      <span className="premium-muted">
+      <span className="users-table-muted">
         —
       </span>
     );
@@ -154,8 +136,7 @@ const AssignAdminButton = ({
     try {
       setSaving(true);
 
-      const token =
-        localStorage.getItem("adminToken");
+      const token = localStorage.getItem("adminToken");
 
       const response = await fetch(
         `${API_BASE}/users/${record.id}/assign-admin`,
@@ -166,8 +147,7 @@ const AssignAdminButton = ({
             Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({
-            adminId:
-              selectedAdmin || null,
+            adminId: selectedAdmin || null,
           }),
         }
       );
@@ -176,8 +156,7 @@ const AssignAdminButton = ({
 
       if (!response.ok) {
         throw new Error(
-          data?.message ||
-            "Assignment failed"
+          data?.message || "Assignment failed"
         );
       }
 
@@ -193,8 +172,7 @@ const AssignAdminButton = ({
       refresh();
     } catch (error) {
       notify(
-        error.message ||
-          "Could not assign user",
+        error.message || "Could not assign user",
         {
           type: "error",
         }
@@ -205,28 +183,23 @@ const AssignAdminButton = ({
   };
 
   return (
-    <div className="assign-admin-control">
+    <div className="users-table-assign">
       <select
         value={selectedAdmin}
         onChange={(event) =>
-          setSelectedAdmin(
-            event.target.value
-          )
+          setSelectedAdmin(event.target.value)
         }
         disabled={saving}
-        className="premium-select"
+        className="users-table-admin-select"
       >
-        <option value="">
-          Unassigned
-        </option>
+        <option value="">Unassigned</option>
 
         {admins.map((admin) => (
           <option
             key={admin.id || admin._id}
             value={admin.id || admin._id}
           >
-            {admin.username ||
-              admin.email}
+            {admin.username || admin.email}
           </option>
         ))}
       </select>
@@ -236,62 +209,36 @@ const AssignAdminButton = ({
         onClick={handleAssign}
         disabled={saving}
         variant="contained"
+        className="users-table-save-button"
       />
-
     </div>
   );
 };
 
 /* =========================================================
-   ASSIGNED ADMIN DISPLAY
+   ASSIGNED ADMIN
    ========================================================= */
 
-const AssignedAdminField = ({
-  record,
-}) => {
+const AssignedAdminField = ({ record }) => {
   if (!record) return null;
 
-  const assigned =
-    record.assignedAdmin;
+  const assigned = record.assignedAdmin;
 
   if (!assigned) {
     return (
-      <span className="premium-unassigned">
+      <span className="users-table-unassigned">
         Unassigned
       </span>
     );
   }
 
   return (
-    <span className="premium-assigned">
+    <span className="users-table-assigned">
       {assigned.username ||
         assigned.email ||
         assigned._id ||
         "Assigned"}
     </span>
-  );
-};
-
-/* =========================================================
-   ASSIGNMENT COLUMN
-   ========================================================= */
-
-const AssignmentColumn = ({
-  isSuperadmin,
-  admins,
-}) => {
-  const record =
-    useRecordContext();
-
-  if (!isSuperadmin || !record) {
-    return null;
-  }
-
-  return (
-    <AssignAdminButton
-      record={record}
-      admins={admins}
-    />
   );
 };
 
@@ -302,26 +249,15 @@ const AssignmentColumn = ({
 const UsersList = () => {
   const notify = useNotify();
 
-  const [adminUser, setAdminUser] =
-    useState(null);
-
-  const [admins, setAdmins] =
-    useState([]);
-
-  const [loadingAdmins, setLoadingAdmins] =
-    useState(false);
+  const [adminUser, setAdminUser] = useState(null);
+  const [admins, setAdmins] = useState([]);
 
   useEffect(() => {
     try {
-      const stored =
-        localStorage.getItem(
-          "adminUser"
-        );
+      const stored = localStorage.getItem("adminUser");
 
       if (stored) {
-        setAdminUser(
-          JSON.parse(stored)
-        );
+        setAdminUser(JSON.parse(stored));
       }
     } catch (error) {
       console.error(
@@ -332,33 +268,30 @@ const UsersList = () => {
   }, []);
 
   const isSuperadmin =
-    adminUser?.role ===
-    "superadmin";
+    adminUser?.role === "superadmin";
+
+  /* =======================================================
+     LOAD ADMINS
+     ======================================================= */
 
   useEffect(() => {
     if (!isSuperadmin) return;
 
     const loadAdmins = async () => {
       try {
-        setLoadingAdmins(true);
-
         const token =
-          localStorage.getItem(
-            "adminToken"
-          );
+          localStorage.getItem("adminToken");
 
         const response = await fetch(
           `${API_BASE}/users/admins`,
           {
             headers: {
-              Authorization:
-                `Bearer ${token}`,
+              Authorization: `Bearer ${token}`,
             },
           }
         );
 
-        const data =
-          await response.json();
+        const data = await response.json();
 
         if (!response.ok) {
           throw new Error(
@@ -367,17 +300,14 @@ const UsersList = () => {
           );
         }
 
-        const adminList =
-          Array.isArray(data)
-            ? data
-            : data?.data || [];
+        const adminList = Array.isArray(data)
+          ? data
+          : data?.data || [];
 
         setAdmins(
           adminList.map((admin) => ({
             ...admin,
-            id:
-              admin.id ||
-              admin._id,
+            id: admin.id || admin._id,
           }))
         );
       } catch (error) {
@@ -388,8 +318,6 @@ const UsersList = () => {
             type: "error",
           }
         );
-      } finally {
-        setLoadingAdmins(false);
       }
     };
 
@@ -397,19 +325,21 @@ const UsersList = () => {
   }, [isSuperadmin, notify]);
 
   return (
-    <List className="admin-users-list"
+    <List
+      className="admin-users-list"
       title="Users"
       sort={{
         field: "username",
         order: "ASC",
       }}
-      perPage={15}
+      
     >
       <Datagrid
+        className="users-table"
         rowClick={false}
         bulkActionButtons={false}
+        optimized
       >
-
         <TextField
           source="id"
           label="ID"
@@ -454,24 +384,26 @@ const UsersList = () => {
         {isSuperadmin && (
           <FunctionField
             label="Assign User"
-            render={() => (
-              <AssignmentColumn
-                isSuperadmin={
-                  isSuperadmin
-                }
+            render={(record) => (
+              <AssignAdminButton
+                record={record}
                 admins={admins}
               />
             )}
           />
         )}
 
-        <TopUpButton className="red" />
-
-        {/* CLIENT-SIDE USER VIEW */}
+        {/* VIEW BEFORE TOP UP */}
         <ShowButton
           label="View"
+          className="users-table-view-button"
         />
 
+        {/* TOP UP MUST BE LAST */}
+        <FunctionField
+          label="Top Up"
+          render={() => <TopUpButton />}
+        />
       </Datagrid>
     </List>
   );
