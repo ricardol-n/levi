@@ -24,6 +24,7 @@ const candlesRoute = require("./routes/stocks");
 const adminAuthRoutes = require("./routes/adminAuth");
 const twoFARoutes = require("./routes/2fa");
 const phoneRoutes = require("./routes/phone");
+const marketRoutes = require("./routes/market");
 
 
 
@@ -135,6 +136,9 @@ app.use("/api/admin/auth",adminAuthRoutes);
 app.use("/api/2fa", twoFARoutes);
 
 app.use("/api/phone", phoneRoutes);
+
+app.use("/api/market", marketRoutes);
+
 
 
 
