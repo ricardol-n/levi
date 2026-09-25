@@ -4,27 +4,32 @@ import styled from "styled-components";
 import bg1 from "./assets/world.jpg";
 import logo from "./assets/tesla.png";
 import { AuthContext } from "./context/AuthContext";
+import MarketBackground from "./MarketBackground";
 
 
 
 
 // ----- Background Slideshow -----
 const RegisterContainer = styled.div`
-  min-height: 100vh;
-  display:grid;
-  grid-template-columns: 1.2fr 500px;
-  border: 1px solid rgba(201, 162, 39, 0.35);
-  border-radius:5px;
+  position: relative;
 
- background:
+  min-height: 100vh;
+  width: 100%;
+
+  overflow: hidden;
+
+  display: grid;
+  grid-template-columns: 1.2fr 500px;
+
+  background:
     radial-gradient(
       1200px 600px at 10% 10%,
-      rgba(34,197,94,.08),
+      rgba(34, 197, 94, 0.08),
       transparent 60%
     ),
     radial-gradient(
       900px 500px at 90% 20%,
-      rgba(59,130,246,.08),
+      rgba(59, 130, 246, 0.08),
       transparent 60%
     ),
     linear-gradient(
@@ -291,7 +296,8 @@ const FeatureCard = styled.div`
 `;
 const RightPanel = styled.div`
   position: relative;
-  
+  z-index:2;
+
   display: flex;
   justify-content: center;
   align-items: center;
@@ -643,7 +649,7 @@ const handleSubmit = async (e) => {
   return (
     <RegisterContainer>
 
-
+    <MarketBackground />
 
   <LeftPanel>
     <HeroImage src={bg1} alt="Investment Platform" />
