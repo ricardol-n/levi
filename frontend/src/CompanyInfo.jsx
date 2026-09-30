@@ -58,7 +58,7 @@ const logoMap = {
 const Wrapper = styled.div`
   min-height: 100vh;
   display: block;
-  overflow:hidden;
+  overflow-x: hidden;
   background:
     radial-gradient(
       1200px 600px at 10% 10%,
@@ -293,17 +293,7 @@ useEffect(() => {
   };
 }, []);
 
-  useEffect(() => {
-  if (menuOpen) {
-    document.body.classList.add("menu-open");
-  } else {
-    document.body.classList.remove("menu-open");
-  }
 
-  return () => {
-    document.body.classList.remove("menu-open");
-  };
-}, [menuOpen]);
 
   useEffect(() => {
     const onKey = (e) => { if (e.key === "Escape") setMenuOpen(false); };
@@ -321,66 +311,359 @@ useEffect(() => {
      <ScrollProgress />
 
       <header className="header1">
-        <img src={tesla} alt="Tesla Logo" className="tesla-logo1" />
+  {/* LOGO */}
+  <Link
+    to="/"
+    className="header-brand"
+    onClick={() => setMenuOpen(false)}
+  >
+    <img
+      src={tesla}
+      alt="TXLA Investment"
+      className="tesla-logo1"
+    />
 
-        <nav className={menuOpen ? "open" : ""}>
-          <ul className="header-title">
-            <li><Link to="/">HOME</Link></li>
-            <li><Link to="/about">ABOUT US</Link></li>
-            <li onClick={() => {document.getElementById("FAQ")?.scrollIntoView({ behavior: "smooth" });
-              }}>FAQ</li>
-            <li><Link to="/contact">CONTACT</Link></li>
-          </ul>
-        </nav>
-        
+    <div className="brand-text">
+      <span>TXLA</span>
+      <small>INVESTMENT</small>
+    </div>
+  </Link>
 
-        <div className="icons">
-          <PiUserCircleDashedThin
-            className="piuser"
-            size={28}
-            onClick={() => navigate('/login')}
-            title="User Login"
-          />
-            {/* Mobile Menu Toggle */}
-          <div className="mobile-menu-icon" onClick={() => setMenuOpen(prev => !prev)} aria-label="Toggle menu" role="button" tabIndex={0}>
-            {menuOpen ? <FiX size={28} /> : <FiMenu size={28} />}
-          </div>
-        </div>
 
-        {/* overlay (click outside to close) */}
-        <div
-          className={`mobile-overlay ${menuOpen ? "active" : ""}`}
-          onClick={() => setMenuOpen(false)}
-          aria-hidden={!menuOpen}/>
+  {/* DESKTOP NAV */}
+  <nav className="desktop-nav">
+    <ul className="header-title">
+      <li>
+        <Link to="/">HOME</Link>
+      </li>
 
-          
+      <li>
+        <Link to="/about">ABOUT US</Link>
+      </li>
+
+      <li>
+        <Link to="/company-info#FAQ">FAQ</Link>
+      </li>
+
+      <li>
+        <Link to="/contact">CONTACT</Link>
+      </li>
+    </ul>
+  </nav>
+
+
+  {/* RIGHT SIDE */}
+  <div className="icons">
+
+    {/* LOGIN */}
+    <button
+      className="header-user-button"
+      onClick={() => navigate('/login')}
+      aria-label="Open login"
+    >
+      <PiUserCircleDashedThin
+        className="piuser"
+        size={26}
+      />
+
+      <span>Login</span>
+    </button>
+
+
+    {/* MOBILE MENU BUTTON */}
+    <button
+      className={`mobile-menu-icon ${
+        menuOpen ? "is-open" : ""
+      }`}
+      onClick={() =>
+        setMenuOpen(prev => !prev)
+      }
+      aria-label={
+        menuOpen
+          ? "Close navigation menu"
+          : "Open navigation menu"
+      }
+      aria-expanded={menuOpen}
+    >
+      {menuOpen ? (
+        <FiX size={25} />
+      ) : (
+        <FiMenu size={25} />
+      )}
+    </button>
+
+  </div>
+
+
+  {/* MOBILE OVERLAY */}
+  <div
+    className={`mobile-overlay ${
+      menuOpen ? "active" : ""
+    }`}
+    onClick={() => setMenuOpen(false)}
+    aria-hidden={!menuOpen}
+  />
+
+
+  {/* MOBILE MENU */}
+  <aside
+    className={`mobile-menu-panel ${
+      menuOpen ? "open" : ""
+    }`}
+    aria-hidden={!menuOpen}
+  >
+
+    {/* PANEL HEADER */}
+    <div className="mobile-menu-header">
+  <div className="mobile-menu-brand">
+    <img
+      src={tesla}
+      alt="TXLA Investment"
+    />
+
+    <div>
+      <strong>TXLA</strong>
+      <span>INVESTMENT</span>
+    </div>
+  </div>
+</div>
+
+
+    {/* PANEL INTRO */}
+    <div className="mobile-menu-intro">
+      <span className="mobile-menu-eyebrow">
+        TXLA INVESTMENT
+      </span>
+
+      <h3>
+        Navigate your
+        <br />
+        investment journey.
+      </h3>
+
+      <p>
+        Explore our platform, markets,
+        resources and investor tools.
+      </p>
+    </div>
+
+
+    {/* NAVIGATION */}
+    <nav className="mobile-navigation">
+
+      <Link
+        to="/"
+        onClick={() => setMenuOpen(false)}
+      >
+        <span className="mobile-nav-number">
+          01
+        </span>
+
+        <span className="mobile-nav-content">
+          <strong>Home</strong>
+          <small>TXLA Investment</small>
+        </span>
+
+        <span className="mobile-nav-arrow">
+          →
+        </span>
+      </Link>
+
+
+      <Link
+        to="/about"
+        onClick={() => setMenuOpen(false)}
+      >
+        <span className="mobile-nav-number">
+          02
+        </span>
+
+        <span className="mobile-nav-content">
+          <strong>About Us</strong>
+          <small>Our company & mission</small>
+        </span>
+
+        <span className="mobile-nav-arrow">
+          →
+        </span>
+      </Link>
+
+
+      <Link
+        to="/company-info#FAQ"
+        onClick={() => setMenuOpen(false)}
+      >
+        <span className="mobile-nav-number">
+          03
+        </span>
+
+        <span className="mobile-nav-content">
+          <strong>FAQ</strong>
+          <small>Investment knowledge</small>
+        </span>
+
+        <span className="mobile-nav-arrow">
+          →
+        </span>
+      </Link>
+
+
+      <Link
+        to="/contact"
+        onClick={() => setMenuOpen(false)}
+      >
+        <span className="mobile-nav-number">
+          04
+        </span>
+
+        <span className="mobile-nav-content">
+          <strong>Contact</strong>
+          <small>We're here to help</small>
+        </span>
+
+        <span className="mobile-nav-arrow">
+          →
+        </span>
+      </Link>
+
+    </nav>
+
+
+    {/* MENU FOOTER */}
+    <div className="mobile-menu-footer">
+
+      <button
+        className="mobile-login-card"
+        onClick={() => {
+          setMenuOpen(false)
+          navigate('/login')
+        }}
+      >
+        <span className="mobile-login-icon">
+          <PiUserCircleDashedThin size={23} />
+        </span>
+
+        <span>
+          <strong>Investor Login</strong>
+          <small>Access your account</small>
+        </span>
+
+        <span className="mobile-login-arrow">
+          →
+        </span>
+      </button>
+
+
+      <div className="mobile-menu-status">
+        <span className="status-dot" />
+        Markets & platform online
+      </div>
+
+    </div>
+
+  </aside>
+
       </header>
      <FadeInSection delay={0.4}>
-      <section className="tesla">
-        <div className="tesla-text">
-        <motion.h1
-          className="gradient-text"
-          initial={{ backgroundPosition: "0%" }}
-          animate={{ backgroundPosition: "100%" }}
-          transition={{ duration: 1.8, ease: [0.22, 1, 0.36, 1] }}
-        >
-          Trade CFDs on FX, Stocks and more with a leading global broker
-        </motion.h1>
+     <section className="tesla">
+  <motion.div
+    className="tesla-text"
+    initial={{ opacity: 0, x: -45 }}
+    whileInView={{ opacity: 1, x: 0 }}
+    viewport={{ once: true, amount: 0.35 }}
+    transition={{
+      duration: 0.85,
+      ease: [0.22, 1, 0.36, 1],
+    }}
+  >
+    <motion.span
+      className="tesla-eyebrow"
+      initial={{ opacity: 0, y: 12 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.6, delay: 0.1 }}
+    >
+      GLOBAL MARKETS • ONE PLATFORM
+    </motion.span>
 
-          <h4>Discover over 5,800 stocks, ETFs and REITs on one brokerage</h4>
-          <p>
-            More investment options. More opportunities to grow.
-            Trade stocks or make long-term investments on the same platform.
-          </p>
-          <MagneticButton onClick={() => navigate('/register')}>
-            Create An Account
-          </MagneticButton>
+    <motion.h1
+      className="gradient-text"
+      initial={{
+        opacity: 0,
+        y: 25,
+        backgroundPosition: "0%",
+      }}
+      whileInView={{
+        opacity: 1,
+        y: 0,
+        backgroundPosition: "100%",
+      }}
+      viewport={{ once: true }}
+      transition={{
+        opacity: { duration: 0.7 },
+        y: { duration: 0.7 },
+        backgroundPosition: {
+          duration: 1.8,
+          ease: [0.22, 1, 0.36, 1],
+          delay: 0.15,
+        },
+      }}
+    >
+      Trade CFDs on FX, Stocks and more with a leading global broker
+    </motion.h1>
 
-        </div>
-        <div className="tesla-img">
-          <img src={bg4} alt="Tesla" />
-        </div>
-      </section>
+    <motion.h4
+      initial={{ opacity: 0, y: 18 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.65, delay: 0.25 }}
+    >
+      Discover over 5,800 stocks, ETFs and REITs on one brokerage
+    </motion.h4>
+
+    <motion.p
+      initial={{ opacity: 0, y: 18 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.65, delay: 0.35 }}
+    >
+      More investment options. More opportunities to grow.
+      Trade stocks or make long-term investments on the same platform.
+    </motion.p>
+
+    <motion.div
+      initial={{ opacity: 0, y: 18 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.65, delay: 0.45 }}
+    >
+      <MagneticButton onClick={() => navigate('/register')}>
+        Create An Account
+      </MagneticButton>
+    </motion.div>
+  </motion.div>
+
+  <motion.div
+    className="tesla-img"
+    initial={{ opacity: 0, x: 45, scale: 0.94 }}
+    whileInView={{ opacity: 1, x: 0, scale: 1 }}
+    viewport={{ once: true, amount: 0.3 }}
+    transition={{
+      duration: 1,
+      delay: 0.15,
+      ease: [0.22, 1, 0.36, 1],
+    }}
+  >
+    <motion.img
+      src={bg4}
+      alt="Tesla"
+      whileHover={{ scale: 1.025 }}
+      transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+    />
+
+    <div className="tesla-img-glow" />
+  </motion.div>
+</section>
 
       <section className='tesla1'>
         <div className="tesla-img1">
@@ -403,6 +686,7 @@ useEffect(() => {
         </div>
         </div>
       </section>
+      
       </FadeInSection>
       
        <section className='tesla2'>

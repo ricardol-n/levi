@@ -235,18 +235,97 @@ body.menu-open {
   color: rgba(106, 93, 19, 0.902);
   font-size: 21px;
 }
+
 .header-title {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 0 20px;
+  gap: 7px;
+
+  margin: 0;
+  padding: 0;
+
+  list-style: none;
 }
-.header-title li{
+
+.header-title li {
+  list-style: none;
+}
+
+.header-title a {
+  position: relative;
+
   display: flex;
-  padding: 50px;
-  color: rgb(197, 7, 7);
-  font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
-  
+  align-items: center;
+
+  height: 42px;
+
+  padding: 0 17px;
+
+  color:
+    rgba(226, 232, 240, 0.58);
+
+  text-decoration: none;
+
+  font-family:
+    Inter,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+
+  font-size: 11px;
+  font-weight: 650;
+
+  letter-spacing: 0.13em;
+
+  border-radius: 10px;
+
+  transition:
+    color 0.25s ease,
+    background 0.25s ease;
+}
+
+.header-title a::after {
+  content: "";
+
+  position: absolute;
+
+  left: 50%;
+  bottom: 4px;
+
+  width: 0;
+  height: 2px;
+
+  border-radius: 10px;
+
+  background:
+    linear-gradient(
+      90deg,
+      #8b5cf6,
+      #6366f1
+    );
+
+  box-shadow:
+    0 0 10px
+    rgba(139, 92, 246, 0.6);
+
+  transform:
+    translateX(-50%);
+
+  transition:
+    width 0.25s ease;
+}
+
+.header-title a:hover {
+  color: #ffffff;
+
+  background:
+    rgba(255, 255, 255, 0.045);
+}
+
+.header-title a:hover::after {
+  width: 18px;
+
 }
 .home-container-content {
   display: grid;
@@ -304,15 +383,48 @@ body.menu-open {
 }
 
 .header1 {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1rem 2rem;
   position: relative;
   z-index: 1000;
-  background: #15171c;
-  height: 60px;
-  box-shadow: 0 7px 8px -1px #15171c;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  width: 100%;
+  height: 82px;
+
+  padding: 0 5%;
+
+  box-sizing: border-box;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(2, 6, 23, 0.88),
+      rgba(2, 6, 23, 0.58)
+    );
+
+  border-bottom:
+    1px solid
+    rgba(255, 255, 255, 0.055);
+
+  backdrop-filter: blur(22px);
+  -webkit-backdrop-filter: blur(22px);
+
+  box-shadow:
+    0 10px 40px
+    rgba(0, 0, 0, 0.16);
+}
+
+.header-brand {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+
+  color: white;
+  text-decoration: none;
+
+  flex-shrink: 0;
 }
 /* Navbar */
 .navbar {
@@ -333,19 +445,37 @@ body.menu-open {
 }
 
 .mobile-overlay {
-  display: none;
   position: fixed;
+
   inset: 0;
-  background: rgba(0,0,0,0);
-  z-index: 1001;
+
+  z-index: 998;
+
+  background:
+    rgba(0, 0, 0, 0.58);
+
   opacity: 0;
-  transition: background 0.25s ease, opacity 0.25s ease;
+
+  visibility: hidden;
+
+  pointer-events: none;
+
+  backdrop-filter: blur(0px);
+
+  transition:
+    opacity 0.35s ease,
+    visibility 0.35s ease,
+    backdrop-filter 0.35s ease;
 }
 
 .mobile-overlay.active {
-  display: block;
-  background: rgba(0,0,0,0.45);
   opacity: 1;
+
+  visibility: visible;
+
+  pointer-events: auto;
+
+  backdrop-filter: blur(5px);
 }
 /* ---------- Mobile sidebar ---------- */
 .mobile-sidebar {
@@ -394,10 +524,50 @@ body.menu-open {
 
 /* Hamburger icon visibility (override earlier display:none) */
 .mobile-menu-icon {
-  display: none; /* default hidden on large screens */
+  display: none;
+
+  align-items: center;
+  justify-content: center;
+
+  width: 44px;
+  height: 44px;
+
+  padding: 0;
+
+  color: #ffffff;
+
+  background:
+    rgba(255, 255, 255, 0.045);
+
+  border:
+    1px solid
+    rgba(255, 255, 255, 0.08);
+
+  border-radius: 12px;
+
   cursor: pointer;
-  z-index: 1200;
+
+  transition:
+    background 0.25s ease,
+    border-color 0.25s ease,
+    transform 0.25s ease;
 }
+
+.mobile-menu-icon:hover,
+.mobile-menu-icon.is-open {
+  background:
+    rgba(139, 92, 246, 0.12);
+
+  border-color:
+    rgba(139, 92, 246, 0.28);
+
+  color: #ffffff;
+}
+
+.mobile-menu-icon:active {
+  transform: scale(0.94);
+}
+
 
 
 /* Hamburger menu */
@@ -422,8 +592,52 @@ body.menu-open {
 
 
 .tesla-logo1 {
-  height: 91px;
-  width: auto;
+  width: 42px;
+  height: 42px;
+
+  object-fit: contain;
+
+  filter:
+    drop-shadow(
+      0 0 12px
+      rgba(255, 255, 255, 0.08)
+    );
+}
+.brand-text {
+  display: flex;
+  flex-direction: column;
+
+  line-height: 1;
+}
+
+.brand-text span {
+  color: #ffffff;
+
+  font-size: 14px;
+  font-weight: 800;
+
+  letter-spacing: 0.12em;
+}
+
+.brand-text small {
+  margin-top: 5px;
+
+  color:
+    rgba(255, 255, 255, 0.42);
+
+  font-size: 7px;
+  font-weight: 600;
+
+  letter-spacing: 0.25em;
+}
+.desktop-nav {
+  position: absolute;
+
+  left: 50%;
+  top: 50%;
+
+  transform:
+    translate(-50%, -50%);
 }
 
 nav ul {
@@ -442,9 +656,181 @@ nav ul li {
 .icons {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 10px;
+}
+.header-user-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  height: 42px;
+
+  padding: 0 13px;
+
+  border:
+    1px solid
+    rgba(255, 255, 255, 0.08);
+
+  border-radius: 11px;
+
+  color:
+    rgba(226, 232, 240, 0.72);
+
+  background:
+    rgba(255, 255, 255, 0.035);
+
+  cursor: pointer;
+
+  font-family:
+    Inter,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+
+  font-size: 12px;
+  font-weight: 600;
+
+  transition:
+    color 0.25s ease,
+    background 0.25s ease,
+    border-color 0.25s ease,
+    transform 0.25s ease;
 }
 
+.header-user-button:hover {
+  color: #ffffff;
+
+  background:
+    rgba(139, 92, 246, 0.1);
+
+  border-color:
+    rgba(139, 92, 246, 0.25);
+
+  transform: translateY(-1px);
+}
+
+.header-user-button svg {
+  color:
+    rgba(167, 139, 250, 0.8);
+}
+.mobile-menu-panel {
+  position: fixed;
+
+  top: 0;
+  right: 0;
+
+  z-index: 999;
+
+  display: flex;
+  flex-direction: column;
+
+  width: min(430px, 92vw);
+  height: 100dvh;
+
+  padding:
+    max(20px, env(safe-area-inset-top))
+    22px
+    max(20px, env(safe-area-inset-bottom));
+
+  box-sizing: border-box;
+
+  overflow-y: auto;
+  overflow-x: hidden;
+
+  background:
+    radial-gradient(
+      500px 300px at 100% 0%,
+      rgba(99, 102, 241, 0.13),
+      transparent 70%
+    ),
+    radial-gradient(
+      450px 350px at 0% 70%,
+      rgba(34, 197, 94, 0.06),
+      transparent 70%
+    ),
+    linear-gradient(
+      145deg,
+      #0b1020,
+      #070b16 60%,
+      #020617
+    );
+
+  border-left:
+    1px solid
+    rgba(255, 255, 255, 0.09);
+
+  box-shadow:
+    -30px 0 90px
+    rgba(0, 0, 0, 0.45);
+
+  transform:
+    translateX(105%);
+
+  visibility: hidden;
+
+  transition:
+    transform 0.55s
+      cubic-bezier(0.22, 1, 0.36, 1),
+    visibility 0.55s;
+
+  -webkit-overflow-scrolling: touch;
+}
+
+.mobile-menu-panel.open {
+  transform: translateX(0);
+
+  visibility: visible;
+}
+
+.mobile-menu-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  flex-shrink: 0;
+
+  padding-bottom: 22px;
+
+  border-bottom:
+    1px solid
+    rgba(255, 255, 255, 0.07);
+}
+
+.mobile-menu-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.mobile-menu-brand img {
+  width: 38px;
+  height: 38px;
+
+  object-fit: contain;
+}
+
+.mobile-menu-brand div {
+  display: flex;
+  flex-direction: column;
+}
+
+.mobile-menu-brand strong {
+  color: #ffffff;
+
+  font-size: 13px;
+  letter-spacing: 0.14em;
+}
+
+.mobile-menu-brand span {
+  margin-top: 4px;
+
+  color:
+    rgba(255, 255, 255, 0.4);
+
+  font-size: 7px;
+  letter-spacing: 0.23em;
+}
 .menu-toggle {
   display: none;
   font-size: 1.8rem;
@@ -453,12 +839,389 @@ nav ul li {
 
 
 
-/* TESLA SECTION */
-.tesla{
-  position: relative;
-  top: 60px;
-  display: flex;
+.mobile-menu-intro {
+  padding:
+    32px 3px 25px;
 }
+
+.mobile-menu-eyebrow {
+  color:
+    rgba(167, 139, 250, 0.8);
+
+  font-size: 9px;
+  font-weight: 700;
+
+  letter-spacing: 0.18em;
+}
+
+.mobile-menu-intro h3 {
+  margin: 10px 0 10px;
+
+  color: #ffffff;
+
+  font-size: 27px;
+  line-height: 1.15;
+
+  letter-spacing: -0.035em;
+}
+
+.mobile-menu-intro p {
+  max-width: 330px;
+
+  margin: 0;
+
+  color:
+    rgba(203, 213, 225, 0.48);
+
+  font-size: 13px;
+  line-height: 1.65;
+}
+
+.mobile-navigation {
+  display: flex;
+  flex-direction: column;
+
+  gap: 7px;
+
+  flex: 1;
+}
+
+.mobile-navigation a {
+  position: relative;
+
+  display: flex;
+  align-items: center;
+
+  min-height: 70px;
+
+  padding: 0 15px;
+
+  box-sizing: border-box;
+
+  color: #ffffff;
+
+  text-decoration: none;
+
+  background:
+    rgba(255, 255, 255, 0.025);
+
+  border:
+    1px solid
+    rgba(255, 255, 255, 0.055);
+
+  border-radius: 15px;
+
+  overflow: hidden;
+
+  transition:
+    background 0.25s ease,
+    border-color 0.25s ease,
+    transform 0.25s ease;
+}
+
+.mobile-navigation a::before {
+  content: "";
+
+  position: absolute;
+
+  left: 0;
+  top: 0;
+  bottom: 0;
+
+  width: 3px;
+
+  background:
+    linear-gradient(
+      180deg,
+      #8b5cf6,
+      #6366f1
+    );
+
+  opacity: 0;
+
+  transition:
+    opacity 0.25s ease;
+}
+
+.mobile-navigation a:hover,
+.mobile-navigation a:active {
+  background:
+    linear-gradient(
+      100deg,
+      rgba(139, 92, 246, 0.1),
+      rgba(255, 255, 255, 0.025)
+    );
+
+  border-color:
+    rgba(139, 92, 246, 0.18);
+
+  transform: translateX(2px);
+}
+
+.mobile-navigation a:hover::before {
+  opacity: 1;
+}
+
+.mobile-nav-number {
+  width: 35px;
+
+  color:
+    rgba(167, 139, 250, 0.65);
+
+  font-size: 10px;
+  font-weight: 700;
+
+  letter-spacing: 0.08em;
+}
+
+.mobile-nav-content {
+  display: flex;
+  flex-direction: column;
+
+  gap: 5px;
+
+  flex: 1;
+}
+
+.mobile-nav-content strong {
+  color: #ffffff;
+
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.mobile-nav-content small {
+  color:
+    rgba(203, 213, 225, 0.4);
+
+  font-size: 11px;
+}
+
+.mobile-nav-arrow {
+  color:
+    rgba(255, 255, 255, 0.28);
+
+  font-size: 18px;
+
+  transition:
+    color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.mobile-navigation a:hover
+.mobile-nav-arrow {
+  color: #a78bfa;
+
+  transform: translateX(4px);
+}
+
+.mobile-menu-footer {
+  flex-shrink: 0;
+
+  margin-top: 25px;
+  padding-top: 18px;
+
+  border-top:
+    1px solid
+    rgba(255, 255, 255, 0.07);
+}
+
+.mobile-login-card {
+  display: flex;
+  align-items: center;
+
+  width: 100%;
+  min-height: 64px;
+
+  padding: 10px 12px;
+
+  color: white;
+
+  text-align: left;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(139, 92, 246, 0.12),
+      rgba(99, 102, 241, 0.045)
+    );
+
+  border:
+    1px solid
+    rgba(139, 92, 246, 0.17);
+
+  border-radius: 14px;
+
+  cursor: pointer;
+
+  transition:
+    transform 0.25s ease,
+    border-color 0.25s ease,
+    background 0.25s ease;
+}
+
+.mobile-login-card:hover {
+  transform: translateY(-2px);
+
+  border-color:
+    rgba(139, 92, 246, 0.3);
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(139, 92, 246, 0.17),
+      rgba(99, 102, 241, 0.07)
+    );
+}
+
+.mobile-login-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 42px;
+  height: 42px;
+
+  margin-right: 11px;
+
+  color: #a78bfa;
+
+  background:
+    rgba(139, 92, 246, 0.1);
+
+  border-radius: 11px;
+}
+
+.mobile-login-card > span:nth-child(2) {
+  display: flex;
+  flex-direction: column;
+
+  flex: 1;
+
+  gap: 4px;
+}
+
+.mobile-login-card strong {
+  font-size: 13px;
+}
+
+.mobile-login-card small {
+  color:
+    rgba(203, 213, 225, 0.43);
+
+  font-size: 10px;
+}
+
+.mobile-login-arrow {
+  color:
+    rgba(167, 139, 250, 0.7);
+
+  font-size: 18px;
+}
+
+.mobile-menu-status {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+
+  margin-top: 16px;
+
+  color:
+    rgba(203, 213, 225, 0.32);
+
+  font-size: 9px;
+
+  letter-spacing: 0.05em;
+}
+
+.status-dot {
+  width: 6px;
+  height: 6px;
+
+  border-radius: 50%;
+
+  background: #22c55e;
+
+  box-shadow:
+    0 0 10px
+    rgba(34, 197, 94, 0.75);
+}
+
+
+/* TESLA SECTION */
+.tesla {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(420px, 0.9fr);
+  align-items: center;
+  gap: 70px;
+  min-height: 620px;
+  padding: 70px 4%;
+  /* overflow: hidden; */
+  isolation: isolate;
+}
+
+.tesla::before {
+  content: "";
+  position: absolute;
+  width: 520px;
+  height: 520px;
+  left: -180px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: radial-gradient(
+    circle,
+    rgba(34, 197, 94, 0.12),
+    transparent 70%
+  );
+  filter: blur(20px);
+  pointer-events: none;
+  z-index: -1;
+}
+
+.tesla::after {
+  content: "";
+  position: absolute;
+  width: 460px;
+  height: 460px;
+  right: -160px;
+  bottom: -180px;
+  background: radial-gradient(
+    circle,
+    rgba(59, 130, 246, 0.12),
+    transparent 70%
+  );
+  filter: blur(25px);
+  pointer-events: none;
+  z-index: -1;
+}
+
+.tesla-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 22px;
+  padding: 8px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.045);
+  color: rgba(255, 255, 255, 0.68);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  backdrop-filter: blur(14px);
+}
+
+.tesla-eyebrow::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #22c55e;
+  box-shadow: 0 0 12px rgba(34, 197, 94, 0.8);
+}
+
+
 
 
 .tesla-text ,.edu-res{
@@ -467,6 +1230,32 @@ nav ul li {
   padding: 50px;
   line-height: 1.6;
   max-width: 700px;
+  position: relative;
+  z-index: 2;
+  max-width: 700px;
+}
+
+.tesla h1 {
+  margin: 0;
+  font-size: clamp(42px, 5vw, 72px);
+  line-height: 1.04;
+  letter-spacing: -0.045em;
+}
+
+.tesla h4 {
+  max-width: 610px;
+  margin: 28px 0 14px;
+  color: rgba(255, 255, 255, 0.92);
+  font-size: clamp(19px, 2vw, 25px);
+  line-height: 1.35;
+  font-weight: 600;
+}
+.tesla p {
+  max-width: 590px;
+  margin: 0 0 32px;
+  color: rgba(255, 255, 255, 0.58);
+  font-size: 16px;
+  line-height: 1.8;
 }
 .edu-res{
   font-family: 'Poppins', 'Inter', 'Roboto', sans-serif;
@@ -606,23 +1395,60 @@ nav ul li {
 
 .tesla-img {
   position: relative;
-  max-width: 600px;
+  z-index: 1;
+  min-height: 480px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 30px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.035);
+  box-shadow:
+    0 35px 90px rgba(0, 0, 0, 0.42),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(16px);
 }
+
+.tesla-img::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.1),
+      transparent 35%,
+      transparent 65%,
+      rgba(59, 130, 246, 0.08)
+    );
+  pointer-events: none;
+  z-index: 2;
+}
+
 .tesla-img img {
   width: 100%;
-  height: auto;
-  display: block;
+  height: 100%;
+  min-height: 480px;
   object-fit: cover;
-  filter: brightness(1.05) contrast(1.05);
-  
-  /* Smooth fade at bottom */
-  -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 85%, rgba(0,0,0,0) 100%);
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-size: 100% 100%;
-  mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 85%, rgba(0,0,0,0) 100%);
-  mask-repeat: no-repeat;
-  mask-size: 100% 100%;
+  display: block;
+  opacity: 0.9;
+  filter: saturate(1.05) contrast(1.04);
 }
+
+.tesla-img-glow {
+  position: absolute;
+  width: 220px;
+  height: 220px;
+  right: -70px;
+  top: -70px;
+  border-radius: 50%;
+  background: rgba(34, 197, 94, 0.16);
+  filter: blur(70px);
+  pointer-events: none;
+  z-index: 1;
+}
+
 .tesla-img1 img{
   width: 39%;
   height: auto;
@@ -1014,11 +1840,8 @@ html {
   box-shadow: 0 2px 5px rgba(0,0,0,0.3);
 }
 
-.about-wrapper {
-  position: relative;
-  top: 20px;
-  padding-top: 0px; /* adjust if your header height is different */
-}
+
+
 .security img{
   height: auto;
   display: block;
@@ -3581,7 +4404,7 @@ button:hover {
 
 .trustpilot-slider {
   width: 100%;
-  overflow: hidden;
+  overflow-y: hidden;
   position: relative;
 }
 
@@ -3616,7 +4439,7 @@ button:hover {
   min-height: 500px;
   height: auto;
   flex-shrink: 0;
-
+  
   display: flex;
   flex-direction: column;
   background: rgba(255, 255, 255, 0.04);
@@ -4154,6 +4977,11 @@ button:hover {
 
 /* Tablet adjustments */
 @media (max-width: 1024px) {
+  .tesla {
+    grid-template-columns: 1fr;
+    gap: 45px;
+    padding: 80px 6%;
+  }
     .sidebar {
     position: fixed;
     top: 0;
@@ -4225,10 +5053,21 @@ button:hover {
   .home-container-content2 {
     grid-template-columns: repeat(2, 1fr);
   }
+  .tesla-text {
+    max-width: 760px;
+  }
+  .tesla-img {
+    min-height: 420px;
+  }
+
+  .tesla-img img {
+    min-height: 420px;
+  }
   
 }
 
 @media screen and (min-width: 1024px) {
+
 .deposit-log-container {
   margin-left: 220px; /* same as sidebar width */
 }
@@ -4315,6 +5154,156 @@ button:hover {
 
 /* RESPONSIVE MENU *//* Mobile Responsive */
 @media screen and (max-width: 768px) {
+  .header1 .desktop-nav {
+    display: none !important;
+  }
+
+  /* The actual mobile drawer */
+  .header1 .mobile-menu-panel {
+    position: fixed;
+    top: 0;
+    right: 0;
+
+    width: min(88vw, 380px);
+    height: 100dvh;
+
+    display: flex;
+    flex-direction: column;
+
+    overflow-y: auto;
+    overflow-x: hidden;
+
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+
+    z-index: 2005;
+
+    transform: translateX(100%);
+    transition: transform 0.35s cubic-bezier(.22,1,.36,1);
+
+    box-sizing: border-box;
+  }
+
+  .header1 .mobile-menu-panel.open {
+    transform: translateX(0);
+  }
+
+  /* Navigation inside the drawer must NOT become
+     another fixed drawer */
+  .header1 .mobile-navigation {
+    position: static;
+    width: 100%;
+    height: auto;
+
+    display: flex;
+    flex-direction: column;
+
+    overflow: visible;
+    transform: none;
+
+    padding: 0;
+    margin: 0;
+  }
+
+  /* Prevent the old global nav rules from affecting it */
+  .header1 .mobile-navigation a {
+    position: relative;
+  }
+
+  /* Only ONE close button inside the panel */
+  .header1 .mobile-close {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    flex-shrink: 0;
+  }
+
+  /* Overlay sits underneath the panel */
+  .header1 .mobile-overlay {
+    z-index: 2000;
+  }
+
+  /* Header controls remain clickable */
+  .header1 .icons {
+    position: relative;
+    z-index: 2010;
+  }
+
+  .header1 .mobile-menu-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    position: relative;
+    z-index: 2015;
+
+    cursor: pointer;
+  }
+
+  .desktop-nav {
+    display: none !important;
+  }
+
+  .header-user-button {
+    width: 42px;
+    padding: 0;
+
+    justify-content: center;
+  }
+
+  .header-user-button span {
+    display: none;
+  }
+
+  .mobile-menu-icon {
+    display: flex;
+    position: relative;
+    z-index: 1005;
+  }
+  
+
+  .brand-text {
+    display: none;
+  }
+
+  .tesla-logo1 {
+    width: 39px;
+    height: 39px;
+  }
+  .tesla {
+    gap: 32px;
+    min-height: auto;
+    padding: 65px 20px;
+  }
+
+  .tesla-eyebrow {
+    font-size: 9px;
+    letter-spacing: 0.13em;
+  }
+
+  .tesla h1 {
+    font-size: clamp(36px, 11vw, 52px);
+  }
+
+  .tesla h4 {
+    margin-top: 22px;
+    font-size: 18px;
+  }
+
+  .tesla p {
+    font-size: 15px;
+    line-height: 1.7;
+  }
+
+  .tesla-img {
+    min-height: 330px;
+    border-radius: 22px;
+  }
+
+  .tesla-img img {
+    min-height: 330px;
+  }
 
 .sec-info {
   flex-direction: column;
@@ -4424,7 +5413,7 @@ button:hover {
     align-items: center;
   }
 
-  nav {
+  /* nav {
     position: fixed;
     top: 0;
     right: 0;
@@ -4452,12 +5441,12 @@ button:hover {
     gap: 1.5rem;
     padding-left: 1.5rem;
   }
-  /* Animation for each nav link */
+  
   nav ul li {
     opacity: 0;
     transform: translateX(20px);
     animation: fadeInRight 0.4s ease forwards;
-  }
+  } */
 
 
   @keyframes fadeInRight {
@@ -4536,9 +5525,7 @@ button:hover {
    .invest {
     grid-template-columns: repeat(2, 1fr);
   }
-  .about-wrapper{
-    overflow: hidden;
-  }
+  
   .why-choose-grid{
     grid-template-columns: repeat(2, 1fr);
   }
@@ -4765,7 +5752,20 @@ button:hover {
     padding: 14px;
   }
 
+   .mobile-menu-panel {
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
+  .mobile-navigation {
+    overflow: visible;
+  }
+
 }
+
 
 
 @media (max-width: 480px) {
@@ -4783,6 +5783,43 @@ button:hover {
   .referral h2,
   .transaction-log h2 {
     font-size: 1.4rem;
+  }
+
+  .header1 {
+    height: 68px;
+
+    padding:
+      0 14px;
+  }
+
+  .icons {
+    gap: 7px;
+  }
+
+  .header-user-button,
+  .mobile-menu-icon {
+    width: 40px;
+    height: 40px;
+  }
+
+  .mobile-menu-panel {
+    width: 100vw;
+
+    padding-left: 18px;
+    padding-right: 18px;
+  }
+
+  .mobile-menu-intro {
+    padding-top: 27px;
+    padding-bottom: 20px;
+  }
+
+  .mobile-menu-intro h3 {
+    font-size: 25px;
+  }
+
+  .mobile-navigation a {
+    min-height: 66px;
   }
 
   button {
@@ -5029,5 +6066,17 @@ button:hover {
   .forgot-password-page h1,
   .reset-password-page h1 {
     font-size: 23px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tesla-img img {
+    transform: none !important;
+  }
+
+  .mobile-menu-panel,
+  .mobile-overlay,
+  .mobile-navigation a,
+  .mobile-login-card {
+    transition: none;
   }
 }

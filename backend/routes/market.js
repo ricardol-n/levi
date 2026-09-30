@@ -1,83 +1,169 @@
 const express = require("express");
 const WebSocket = require("ws");
+require("dotenv").config();
 
 const router = express.Router();
 
-require("dotenv").config();
-
 const FINNHUB_API_KEY = process.env.FINNHUB_API_KEY;
-
 const DEFAULT_SYMBOL = "TSLA";
-const CANDLE_INTERVAL_MS = 60 * 1000;
 
+const MAX_CANDLES = 120;
 const clients = new Set();
 
 let finnhubSocket = null;
 let reconnectTimer = null;
 let reconnectAttempt = 0;
 
+let candleHistory = [];
 let currentCandle = null;
 
-if (!FINNHUB_API_KEY) {
-  console.error("❌ FINNHUB_API_KEY is missing.");
-} else {
-  console.log("✅ FINNHUB_API_KEY loaded for market stream.");
-}
+/* -------------------------------------------------------
+   Helpers
+------------------------------------------------------- */
 
-/* =========================================================
-   HELPERS
-========================================================= */
+const getCandleStart = (timestamp) => {
+  const milliseconds = Number(timestamp);
 
-function getCandleStart(timestamp) {
-  const date = new Date(timestamp);
+  if (!Number.isFinite(milliseconds)) {
+    return null;
+  }
+
+  const date = new Date(milliseconds);
+
+  if (Number.isNaN(date.getTime())) {
+    return null;
+  }
 
   date.setUTCSeconds(0, 0);
 
-  return date.getTime();
-}
+  return Math.floor(date.getTime() / 1000);
+};
 
-function createCandle(price, timestamp) {
-  const candleTime = getCandleStart(timestamp);
+const createCandle = (price, timestamp) => {
+  const numericPrice = Number(price);
+  const time = getCandleStart(timestamp);
+
+  if (!Number.isFinite(numericPrice) || !time) {
+    return null;
+  }
 
   return {
-    time: Math.floor(candleTime / 1000),
-    open: price,
-    high: price,
-    low: price,
-    close: price,
+    time,
+    open: numericPrice,
+    high: numericPrice,
+    low: numericPrice,
+    close: numericPrice,
   };
-}
+};
 
-function updateCandle(price, timestamp) {
+const sendSSE = (res, payload) => {
+  try {
+    res.write(`data: ${JSON.stringify(payload)}\n\n`);
+  } catch (error) {
+    // Client probably disconnected.
+  }
+};
+
+const broadcast = (payload) => {
+  for (const client of clients) {
+    sendSSE(client, payload);
+  }
+};
+
+const broadcastCandle = (candle) => {
+  if (!candle) return;
+
+  broadcast({
+    type: "candle",
+    symbol: DEFAULT_SYMBOL,
+    interval: "1m",
+    candle,
+  });
+};
+
+const broadcastStatus = (status) => {
+  broadcast({
+    type: "status",
+    symbol: DEFAULT_SYMBOL,
+    status,
+  });
+};
+
+/* -------------------------------------------------------
+   Candle history
+------------------------------------------------------- */
+
+const addCandleToHistory = (candle) => {
+  if (!candle) return;
+
+  const existingIndex = candleHistory.findIndex(
+    (item) => item.time === candle.time
+  );
+
+  if (existingIndex !== -1) {
+    candleHistory[existingIndex] = candle;
+  } else {
+    candleHistory.push(candle);
+  }
+
+  candleHistory.sort((a, b) => a.time - b.time);
+
+  if (candleHistory.length > MAX_CANDLES) {
+    candleHistory = candleHistory.slice(-MAX_CANDLES);
+  }
+};
+
+const updateCandle = (price, timestamp) => {
+  const numericPrice = Number(price);
   const candleTime = getCandleStart(timestamp);
 
+  if (!Number.isFinite(numericPrice) || !candleTime) {
+    return;
+  }
+
   /*
-   * No candle exists yet.
+   * First trade received.
    */
   if (!currentCandle) {
-    currentCandle = createCandle(price, timestamp);
+    currentCandle = createCandle(numericPrice, timestamp);
 
+    if (!currentCandle) {
+      return;
+    }
+
+    addCandleToHistory(currentCandle);
     broadcastCandle(currentCandle);
 
     return;
   }
 
-  const currentTimeMs = currentCandle.time * 1000;
+  /*
+   * Older trade.
+   */
+  if (candleTime < currentCandle.time) {
+    return;
+  }
 
   /*
    * New minute.
    */
-  if (candleTime > currentTimeMs) {
+  if (candleTime > currentCandle.time) {
     /*
-     * Send the completed candle one more time so
-     * the frontend definitely receives its final close.
+     * Make sure the previous candle is permanently
+     * stored in history.
      */
-    broadcastCandle(currentCandle);
+    addCandleToHistory(currentCandle);
 
     /*
-     * Create the new candle.
+     * Create the new live candle.
      */
-    currentCandle = createCandle(price, timestamp);
+    currentCandle = createCandle(numericPrice, timestamp);
+
+    if (!currentCandle) {
+      return;
+    }
+
+    addCandleToHistory(currentCandle);
 
     broadcastCandle(currentCandle);
 
@@ -85,119 +171,60 @@ function updateCandle(price, timestamp) {
   }
 
   /*
-   * Ignore trades that somehow arrive from
-   * an older minute.
+   * Same minute — update OHLC.
    */
-  if (candleTime < currentTimeMs) {
-    return;
-  }
+  currentCandle.high = Math.max(
+    currentCandle.high,
+    numericPrice
+  );
 
-  /*
-   * Update the current candle.
-   */
-  currentCandle.high = Math.max(currentCandle.high, price);
-  currentCandle.low = Math.min(currentCandle.low, price);
-  currentCandle.close = price;
+  currentCandle.low = Math.min(
+    currentCandle.low,
+    numericPrice
+  );
+
+  currentCandle.close = numericPrice;
+
+  addCandleToHistory(currentCandle);
 
   broadcastCandle(currentCandle);
-}
+};
 
-/* =========================================================
-   SSE
-========================================================= */
+/* -------------------------------------------------------
+   Finnhub WebSocket
+------------------------------------------------------- */
 
-function sendSSE(client, payload) {
-  try {
-    client.write(`data: ${JSON.stringify(payload)}\n\n`);
-  } catch (error) {
-    console.error("❌ Failed to send SSE message:", error.message);
-    clients.delete(client);
-  }
-}
-
-function broadcastCandle(candle) {
-  if (!candle || clients.size === 0) {
-    return;
-  }
-
-  const payload = {
-    type: "candle",
-    symbol: DEFAULT_SYMBOL,
-    interval: "1m",
-    candle: {
-      time: candle.time,
-      open: candle.open,
-      high: candle.high,
-      low: candle.low,
-      close: candle.close,
-    },
-  };
-
-  for (const client of clients) {
-    sendSSE(client, payload);
-  }
-}
-
-function broadcastStatus(status) {
-  const payload = {
-    type: "status",
-    symbol: DEFAULT_SYMBOL,
-    status,
-  };
-
-  for (const client of clients) {
-    sendSSE(client, payload);
-  }
-}
-
-/* =========================================================
-   FINNHUB WEBSOCKET
-========================================================= */
-
-function connectFinnhub() {
+const connectFinnhub = () => {
   if (!FINNHUB_API_KEY) {
     console.error(
-      "❌ Cannot connect to Finnhub because FINNHUB_API_KEY is missing."
+      "❌ FINNHUB_API_KEY is missing from environment variables."
     );
 
     return;
   }
 
-  /*
-   * Prevent duplicate connections.
-   */
   if (
     finnhubSocket &&
-    (finnhubSocket.readyState === WebSocket.OPEN ||
-      finnhubSocket.readyState === WebSocket.CONNECTING)
+    (
+      finnhubSocket.readyState === WebSocket.OPEN ||
+      finnhubSocket.readyState === WebSocket.CONNECTING
+    )
   ) {
     return;
   }
 
-  clearTimeout(reconnectTimer);
+  const socketUrl =
+    `wss://ws.finnhub.io?token=${FINNHUB_API_KEY}`;
 
-  const wsUrl = `wss://ws.finnhub.io?token=${FINNHUB_API_KEY}`;
+  console.log("🔌 Connecting to Finnhub...");
 
-  console.log("🔌 Connecting to Finnhub WebSocket...");
-
-  try {
-    finnhubSocket = new WebSocket(wsUrl);
-  } catch (error) {
-    console.error("❌ Failed to create Finnhub WebSocket:", error.message);
-
-    scheduleReconnect();
-
-    return;
-  }
+  finnhubSocket = new WebSocket(socketUrl);
 
   finnhubSocket.on("open", () => {
     reconnectAttempt = 0;
 
-    console.log("✅ Finnhub WebSocket connected.");
+    console.log("🟢 Finnhub WebSocket connected");
 
-    /*
-     * Subscribe to Tesla.
-     */
     finnhubSocket.send(
       JSON.stringify({
         type: "subscribe",
@@ -205,7 +232,9 @@ function connectFinnhub() {
       })
     );
 
-    console.log(`📡 Subscribed to ${DEFAULT_SYMBOL} trades.`);
+    console.log(
+      `📈 Subscribed to ${DEFAULT_SYMBOL}`
+    );
 
     broadcastStatus("connected");
   });
@@ -213,6 +242,10 @@ function connectFinnhub() {
   finnhubSocket.on("message", (rawMessage) => {
     try {
       const message = JSON.parse(rawMessage.toString());
+
+      if (!message) {
+        return;
+      }
 
       /*
        * Finnhub sends:
@@ -223,28 +256,23 @@ function connectFinnhub() {
        * }
        */
 
-      if (message.type !== "trade") {
-        return;
-      }
-
-      if (!Array.isArray(message.data)) {
+      if (
+        message.type !== "trade" ||
+        !Array.isArray(message.data)
+      ) {
         return;
       }
 
       for (const trade of message.data) {
-        /*
-         * Finnhub trade:
-         *
-         * {
-         *   p: price,
-         *   s: symbol,
-         *   t: timestamp,
-         *   v: volume
-         * }
-         */
+        if (!trade) continue;
 
         const price = Number(trade.p);
         const timestamp = Number(trade.t);
+        const symbol = trade.s;
+
+        if (symbol !== DEFAULT_SYMBOL) {
+          continue;
+        }
 
         if (!Number.isFinite(price)) {
           continue;
@@ -254,123 +282,101 @@ function connectFinnhub() {
           continue;
         }
 
-        if (trade.s && trade.s !== DEFAULT_SYMBOL) {
-          continue;
-        }
-
         updateCandle(price, timestamp);
       }
     } catch (error) {
       console.error(
-        "❌ Error processing Finnhub WebSocket message:",
+        "❌ Finnhub message processing error:",
         error.message
       );
     }
   });
 
   finnhubSocket.on("error", (error) => {
-    console.error("❌ Finnhub WebSocket error:", error.message);
-
-    broadcastStatus("error");
+    console.error(
+      "❌ Finnhub WebSocket error:",
+      error.message
+    );
   });
 
-  finnhubSocket.on("close", (code, reason) => {
-    const reasonText = reason
-      ? reason.toString()
-      : "No reason provided";
-
+  finnhubSocket.on("close", () => {
     console.warn(
-      `⚠️ Finnhub WebSocket closed. Code: ${code}. Reason: ${reasonText}`
+      "🟡 Finnhub WebSocket closed"
     );
 
     finnhubSocket = null;
 
     broadcastStatus("disconnected");
 
-    scheduleReconnect();
+    if (reconnectTimer) {
+      clearTimeout(reconnectTimer);
+    }
+
+    reconnectAttempt += 1;
+
+    const delay = Math.min(
+      1000 * 2 ** Math.min(reconnectAttempt, 5),
+      30000
+    );
+
+    console.log(
+      `🔄 Reconnecting to Finnhub in ${delay}ms...`
+    );
+
+    reconnectTimer = setTimeout(() => {
+      connectFinnhub();
+    }, delay);
   });
-}
+};
 
-/* =========================================================
-   RECONNECT
-========================================================= */
-
-function scheduleReconnect() {
-  clearTimeout(reconnectTimer);
-
-  reconnectAttempt += 1;
-
-  /*
-   * Exponential reconnect delay.
-   *
-   * 2s
-   * 4s
-   * 8s
-   * 16s
-   * ...
-   *
-   * Maximum 30 seconds.
-   */
-  const delay = Math.min(
-    2000 * Math.pow(2, reconnectAttempt - 1),
-    30000
-  );
-
-  console.log(
-    `🔄 Reconnecting to Finnhub in ${Math.round(delay / 1000)} seconds...`
-  );
-
-  reconnectTimer = setTimeout(() => {
-    connectFinnhub();
-  }, delay);
-}
-
-/* =========================================================
-   STREAM
-   GET /api/market/stream
-========================================================= */
+/* -------------------------------------------------------
+   SSE stream
+------------------------------------------------------- */
 
 router.get("/stream", (req, res) => {
   const requestedSymbol = String(
     req.query.symbol || DEFAULT_SYMBOL
   ).toUpperCase();
 
-  /*
-   * This market background currently supports TSLA only.
-   */
   if (requestedSymbol !== DEFAULT_SYMBOL) {
     return res.status(400).json({
       success: false,
-      message: `Only ${DEFAULT_SYMBOL} is supported by this stream.`,
+      message: `Only ${DEFAULT_SYMBOL} is supported.`,
     });
   }
 
-  /*
-   * SSE headers.
-   */
-  res.setHeader("Content-Type", "text/event-stream");
-  res.setHeader("Cache-Control", "no-cache, no-transform");
-  res.setHeader("Connection", "keep-alive");
-  res.setHeader("X-Accel-Buffering", "no");
+  res.setHeader(
+    "Content-Type",
+    "text/event-stream"
+  );
 
-  /*
-   * Flush headers if supported.
-   */
+  res.setHeader(
+    "Cache-Control",
+    "no-cache, no-transform"
+  );
+
+  res.setHeader(
+    "Connection",
+    "keep-alive"
+  );
+
+  res.setHeader(
+    "X-Accel-Buffering",
+    "no"
+  );
+
   if (typeof res.flushHeaders === "function") {
     res.flushHeaders();
   }
 
-  /*
-   * Add this connection to our clients.
-   */
   clients.add(res);
 
   console.log(
-    `📈 Market SSE client connected. Total clients: ${clients.size}`
+    `📡 Market client connected. Clients: ${clients.size}`
   );
 
   /*
-   * Initial connection message.
+   * Tell frontend that connection is ready.
    */
   sendSSE(res, {
     type: "connected",
@@ -379,128 +385,115 @@ router.get("/stream", (req, res) => {
   });
 
   /*
-   * If a candle already exists, immediately send it.
+   * Send the entire candle history immediately.
    *
-   * This prevents a newly opened frontend connection
-   * from waiting for another trade.
+   * This is the important part that keeps the
+   * chart populated instead of showing only one candle.
+   */
+  sendSSE(res, {
+    type: "history",
+    symbol: DEFAULT_SYMBOL,
+    interval: "1m",
+    candles: candleHistory,
+  });
+
+  /*
+   * Also send the current candle if one exists.
    */
   if (currentCandle) {
     sendSSE(res, {
       type: "candle",
       symbol: DEFAULT_SYMBOL,
       interval: "1m",
-      candle: {
-        time: currentCandle.time,
-        open: currentCandle.open,
-        high: currentCandle.high,
-        low: currentCandle.low,
-        close: currentCandle.close,
-      },
+      candle: currentCandle,
     });
   }
 
   /*
-   * Make sure the Finnhub connection exists.
+   * Make sure the provider connection is running.
    */
   connectFinnhub();
 
   /*
-   * Heartbeat prevents proxies/load balancers from
-   * considering the SSE connection idle.
+   * Heartbeat.
    */
   const heartbeat = setInterval(() => {
     try {
-      res.write(`: heartbeat ${Date.now()}\n\n`);
+      res.write(": heartbeat\n\n");
     } catch (error) {
       clearInterval(heartbeat);
     }
   }, 15000);
 
-  /*
-   * Client disconnected.
-   */
   req.on("close", () => {
     clearInterval(heartbeat);
 
     clients.delete(res);
 
     console.log(
-      `📉 Market SSE client disconnected. Total clients: ${clients.size}`
+      `📴 Market client disconnected. Clients: ${clients.size}`
     );
   });
 });
 
-/* =========================================================
-   CURRENT CANDLE
-   GET /api/market/current
-========================================================= */
+/* -------------------------------------------------------
+   Current candle
+------------------------------------------------------- */
 
 router.get("/current", (req, res) => {
-  if (!currentCandle) {
-    return res.json({
-      success: true,
-      symbol: DEFAULT_SYMBOL,
-      interval: "1m",
-      candle: null,
-    });
-  }
-
-  return res.json({
-    success: true,
-    symbol: DEFAULT_SYMBOL,
-    interval: "1m",
-    candle: {
-      time: currentCandle.time,
-      open: currentCandle.open,
-      high: currentCandle.high,
-      low: currentCandle.low,
-      close: currentCandle.close,
-    },
-  });
-});
-
-/* =========================================================
-   STATUS
-   GET /api/market/test
-========================================================= */
-
-router.get("/test", (req, res) => {
-  let websocketStatus = "disconnected";
-
-  if (
-    finnhubSocket &&
-    finnhubSocket.readyState === WebSocket.OPEN
-  ) {
-    websocketStatus = "connected";
-  } else if (
-    finnhubSocket &&
-    finnhubSocket.readyState === WebSocket.CONNECTING
-  ) {
-    websocketStatus = "connecting";
-  }
-
   res.json({
     success: true,
-    provider: "finnhub",
     symbol: DEFAULT_SYMBOL,
     interval: "1m",
-    websocket: websocketStatus,
-    clients: clients.size,
-    currentCandle: currentCandle
-      ? {
-          time: currentCandle.time,
-          open: currentCandle.open,
-          high: currentCandle.high,
-          low: currentCandle.low,
-          close: currentCandle.close,
-        }
-      : null,
+    candle: currentCandle,
   });
 });
 
-/* =========================================================
-   START FINNHUB CONNECTION
-========================================================= */
+/* -------------------------------------------------------
+   Candle history
+------------------------------------------------------- */
+
+router.get("/history", (req, res) => {
+  res.json({
+    success: true,
+    symbol: DEFAULT_SYMBOL,
+    interval: "1m",
+    candles: candleHistory,
+  });
+});
+
+/* -------------------------------------------------------
+   Debug / health
+------------------------------------------------------- */
+
+router.get("/test", (req, res) => {
+  res.json({
+    success: true,
+    provider: "Finnhub",
+    symbol: DEFAULT_SYMBOL,
+    interval: "1m",
+
+    websocket:
+      finnhubSocket?.readyState === WebSocket.OPEN
+        ? "connected"
+        : "disconnected",
+
+    clients: clients.size,
+
+    candleCount: candleHistory.length,
+
+    currentCandle,
+
+    latestCandle:
+      candleHistory.length > 0
+        ? candleHistory[candleHistory.length - 1]
+        : null,
+  });
+});
+
+/* -------------------------------------------------------
+   Start provider connection
+------------------------------------------------------- */
 
 connectFinnhub();
 
